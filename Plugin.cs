@@ -10,17 +10,18 @@ namespace Bark
     [ModdedGamemode]
     [BepInDependency("org.legoandmars.gorillatag.utilla", "1.5.0")]
     [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
-
     public class Plugin : BaseUnityPlugin
     {
-        bool initialized;
-        bool pluginEnabled = false;
+        public bool inRoom;
+        public bool initialized;
+
         public static AssetBundle assetBundle;
         public static MenuController menuController;
         public static GameObject monkeMenuPrefab;
+
         public void Setup()
         {
-            if (menuController || !pluginEnabled) return;
+            if (menuController || !enabled) return;
 
             try
             {
@@ -44,11 +45,11 @@ namespace Bark
             }
         }
 
-        void Start()
+        public void Awake()
         {
             try
             {
-                Utilla.Events.GameInitialized += OnGameInitialized;
+                Events.GameInitialized += OnGameInitialized;
                 assetBundle = AssetUtils.LoadAssetBundle("Bark/Resources/barkbundle");
                 monkeMenuPrefab = assetBundle.LoadAsset<GameObject>("MonkeMenu");
             }
@@ -58,39 +59,42 @@ namespace Bark
             }
         }
 
-
-        void OnEnable()
+        // Enable mod when we load in
+        public void OnGameInitialized(object sender, EventArgs e)
         {
-            this.pluginEnabled = true;
+            initialized = true;
+        }
+
+        public void OnEnable()
+        {
             HarmonyPatches.ApplyHarmonyPatches();
-            if (initialized)
+            if (initialized && inRoom)
                 Setup();
         }
 
-        void OnDisable()
+        public void OnDisable()
         {
-            this.pluginEnabled = false;
             HarmonyPatches.RemoveHarmonyPatches();
-            Cleanup();
+            if (initialized && inRoom)
+                Cleanup();
         }
 
-        // Disable mod if we join a public lobby
         [ModdedGamemodeJoin]
-        private void RoomJoined(string gamemode)
+        public void RoomJoined()
         {
+            inRoom = true;
+
+            if (!enabled) return;
             Setup();
         }
 
         [ModdedGamemodeLeave]
-        void RoomLeft(string gamemode)
+        public void RoomLeft()
         {
-            Cleanup();
-        }
+            inRoom = false;
 
-        // Enable mod when we load in
-        void OnGameInitialized(object sender, EventArgs e)
-        {
-            initialized = true;
+            if (!enabled) return;
+            Cleanup();
         }
     }
 }
