@@ -13,14 +13,15 @@ namespace Bark
 
     public class Plugin : BaseUnityPlugin
     {
-        bool initialized;
+        bool initialized, inRoom;
         bool pluginEnabled = false;
         public static AssetBundle assetBundle;
         public static MenuController menuController;
         public static GameObject monkeMenuPrefab;
+        
         public void Setup()
         {
-            if (menuController || !pluginEnabled) return;
+            if (menuController || !pluginEnabled || !inRoom) return;
 
             try
             {
@@ -69,21 +70,23 @@ namespace Bark
 
         void OnDisable()
         {
-            this.pluginEnabled = false;
+            this.pluginEnabled = false; 
             HarmonyPatches.RemoveHarmonyPatches();
             Cleanup();
         }
 
         // Disable mod if we join a public lobby
         [ModdedGamemodeJoin]
-        private void RoomJoined(string gamemode)
+        void RoomJoined(string gamemode)
         {
+            inRoom = true;
             Setup();
         }
 
         [ModdedGamemodeLeave]
         void RoomLeft(string gamemode)
         {
+            inRoom = false;
             Cleanup();
         }
 
