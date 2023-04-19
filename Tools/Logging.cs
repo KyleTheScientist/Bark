@@ -22,25 +22,25 @@ namespace Bark.Tools
         public static void LogFatal(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.LogFatal($"({methodInfo.ReflectedType.Name})s " + string.Join(" ", content));
+            logger.LogFatal($"({methodInfo.ReflectedType.Name}) " + string.Join(" ", content));
         }
 
         public static void LogWarning(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.LogWarning($"({methodInfo.ReflectedType.Name})s " + string.Join(" ", content));
+            logger.LogWarning($"({methodInfo.ReflectedType.Name}) " + string.Join(" ", content));
         }
 
         public static void LogInfo(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.LogInfo($"({methodInfo.ReflectedType.Name})s " + string.Join(" ", content));
+            logger.LogInfo($"({methodInfo.ReflectedType.Name}) " + string.Join(" ", content));
         }
 
         public static void LogDebug(params object[] content)
         {
             //var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            //logger.LogInfo($"*** Debug *** ({methodInfo.ReflectedType.Name}] )s + string.Join(" ", content));
+            //logger.LogInfo($"*** Debug *** ({methodInfo.ReflectedType.Name}]) + string.Join(" ", content));
         }
     }
 }

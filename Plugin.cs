@@ -72,10 +72,6 @@ namespace Bark
 
             try
             {
-                Logging.LogWarning("Debugmessage");
-                Logging.LogInfo("Info message");
-                Logging.LogWarning("Warning message");
-                Logging.LogFatal("Fatal message");
                 this.pluginEnabled = true;
                 HarmonyPatches.ApplyHarmonyPatches();
                 if (initialized)
