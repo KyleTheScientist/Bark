@@ -37,9 +37,9 @@ namespace Bark.GUI
                 // Locomotion
                 gameObject.AddComponent<Airplane>(),
                 gameObject.AddComponent<Grapple>(),
-                //gameObject.AddComponent<DoubleJump>(),
                 gameObject.AddComponent<Platforms>().Left(),
                 gameObject.AddComponent<Platforms>().Right(),
+                gameObject.AddComponent<DoubleJump>(),
                 gameObject.AddComponent<Speed>(),
 
                 //// Physics

@@ -40,7 +40,7 @@ namespace Bark.Tools
         public static void LogDebug(params object[] content)
         {
             //var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            //logger.LogInfo($"*** Debug *** ({methodInfo.ReflectedType.Name}]) + string.Join(" ", content));
+            //logger.LogInfo($"*** Debug *** ({methodInfo.ReflectedType.Name}) " + string.Join(" ", content));
         }
     }
 }

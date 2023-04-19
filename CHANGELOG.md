@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 1.1.1 (2023-Apr-19) - No Collide Fix
+
+Fixes
+* Resolved [Issue #5](https://github.com/KyleTheScientist/Bark/issues/5)
+
+Changes
+* Adjusted piggyback distance
+* Added back double jump
+
 ## 1.1.0 (2023-Apr-17) - Grappling Hooks
 
 Features

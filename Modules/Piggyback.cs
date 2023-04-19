@@ -11,6 +11,7 @@ namespace Bark.Modules
         private VRRig mountedRig;
         private bool latchedWithLeft;
         private const float mountDistance = 1f;
+        private Vector3 mountOffset = new Vector3(0, .05f, -.5f);
 
         protected override void Start()
         {
@@ -62,6 +63,14 @@ namespace Bark.Modules
             EnableNoClip();
         }
 
+
+        void Unmount()
+        {
+            mount = null;
+            mounted = false;
+            DisableNoClip();
+        }
+        
         void FixedUpdate()
         {
             if (RevokingConsent(mountedRig))
@@ -69,19 +78,10 @@ namespace Bark.Modules
 
             if (mounted)
             {
-                Vector3 position = mount.TransformPoint(new Vector3(0, .1f, -1f));
+                Vector3 position = mount.TransformPoint(mountOffset);
                 TeleportPatch.TeleportPlayer(position, mount.transform.eulerAngles.y);
             }
         }
-
-        void Unmount()
-        {
-            DisableNoClip();
-            mount = null;
-            mounted = false;
-        }
-
-
 
         public struct RigScanResult
         {
