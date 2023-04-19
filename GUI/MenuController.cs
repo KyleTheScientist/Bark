@@ -36,7 +36,7 @@ namespace Bark.GUI
             {
                 // Locomotion
                 gameObject.AddComponent<Airplane>(),
-                gameObject.AddComponent<Grapple>(),
+                gameObject.AddComponent<GrapplingHooks>(),
                 gameObject.AddComponent<Platforms>().Left(),
                 gameObject.AddComponent<Platforms>().Right(),
                 gameObject.AddComponent<DoubleJump>(),

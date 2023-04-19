@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.HID;
 
 namespace Bark.Modules
 {
-    public class Grapple : BarkModule
+    public class GrapplingHooks : BarkModule
     {
         private GameObject bananaGunPrefab, bananaGunL, bananaGunR;
         private Transform holsterL, holsterR;
@@ -89,7 +89,8 @@ namespace Bark.Modules
                 bananaGunL?.Obliterate();
                 bananaGunR?.Obliterate();
                 Logging.LogDebug("Cleaned up successfully.");
-            } catch (Exception e) { Logging.LogException(e); }
+            }
+            catch (Exception e) { Logging.LogException(e); }
         }
 
         protected override void OnEnable()
@@ -122,7 +123,8 @@ namespace Bark.Modules
         public Transform holster;
         private GameObject openModel, closedModel;
         private LineRenderer rope, laser;
-        bool isGrappling;
+        private bool isGrappling;
+        private float baseLaserWidth, baseRopeWidth;
         Vector3 hitPosition,
             baseModelOffsetClosed,
             baseModelOffsetOpen,
@@ -149,7 +151,9 @@ namespace Bark.Modules
             this.baseModelOffsetClosed = closedModel.transform.localPosition;
             this.baseModelOffsetOpen = openModel.transform.localPosition;
             this.rope = openModel.GetComponentInChildren<LineRenderer>();
+            this.baseRopeWidth = rope.startWidth;
             this.laser = closedModel.GetComponentInChildren<LineRenderer>();
+            this.baseLaserWidth = laser.startWidth;
         }
 
         public void Holster(Transform holster)
@@ -185,18 +189,12 @@ namespace Bark.Modules
 
         void FixedUpdate()
         {
-            if (!isGrappling) return;
-            var collider = Player.Instance.bodyCollider;
-            collider.attachedRigidbody.velocity +=
-                (hitPosition - collider.transform.position).normalized *
-                pullForce * Time.fixedDeltaTime;
-            collider.attachedRigidbody.velocity +=
-                (transform.forward) *
-                adjustForce * Time.fixedDeltaTime;
-        }
+            if(isSelected)
+            {
+                this.transform.localScale = Vector3.one * Player.Instance.scale;
+                this.transform.position = this.selectingInteractor.transform.position;
+            }
 
-        void Update()
-        {
             if (!isGrappling && isSelected)
             {
                 RaycastHit hit;
@@ -210,12 +208,29 @@ namespace Bark.Modules
                 laser.enabled = true;
                 laser.SetPosition(0, rope.transform.position);
                 laser.SetPosition(1, hit.point);
+                laser.startWidth = baseLaserWidth * Player.Instance.scale;
+                laser.endWidth = baseLaserWidth * Player.Instance.scale;
             }
-            else
+            else if (isGrappling)
             {
                 rope.SetPosition(0, rope.transform.position);
                 rope.SetPosition(1, hitPosition);
+                rope.startWidth = baseRopeWidth * Player.Instance.scale;
+                rope.endWidth = baseRopeWidth * Player.Instance.scale;
+                
+                var collider = Player.Instance.bodyCollider;
+                collider.attachedRigidbody.velocity +=
+                    (hitPosition - collider.transform.position).normalized *
+                    pullForce * Time.fixedDeltaTime * Player.Instance.scale;
+                collider.attachedRigidbody.velocity +=
+                    (transform.forward) *
+                    adjustForce * Time.fixedDeltaTime * Player.Instance.scale;
             }
+        }
+
+        void Update()
+        {
+
         }
 
         protected override void OnSelectEntered(XRBaseInteractor interactor)
