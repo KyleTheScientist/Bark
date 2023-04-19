@@ -4,6 +4,8 @@
 
 Fixes
 * Resolved [Issue #5](https://github.com/KyleTheScientist/Bark/issues/5)
+* Fixed scaling issues with the Grappling Hooks module
+
 
 Changes
 * Adjusted piggyback distance
