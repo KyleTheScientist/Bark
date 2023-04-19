@@ -50,7 +50,7 @@ namespace Bark.Modules
 
         public override string DisplayName()
         {
-            return "Speed";
+            return "Speed Boost";
         }
 
         public override string Tutorial()

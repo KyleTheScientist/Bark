@@ -29,7 +29,7 @@ namespace Bark.Modules
         void OnDestroy()
         {
             rig.mainSkin.material = this.baseMaterial;
-            Logging.Log($"Reset material to {this.baseMaterial.name}");
+            Logging.LogDebug($"Reset material to {this.baseMaterial.name}");
         }
     }
 
@@ -75,7 +75,7 @@ namespace Bark.Modules
         void Cleanup()
         {
             foreach (var marker in markers)
-                Destroy(marker);
+                marker?.Obliterate();
         }
 
         public override string DisplayName()

@@ -29,13 +29,15 @@ namespace Bark.GUI
 
         protected override void Awake()
         {
+            Logging.LogDebug("Awake");
             base.Awake();
 
             modules = new List<BarkModule>()
             {
                 // Locomotion
                 gameObject.AddComponent<Airplane>(),
-                gameObject.AddComponent<DoubleJump>(),
+                gameObject.AddComponent<Grapple>(),
+                //gameObject.AddComponent<DoubleJump>(),
                 gameObject.AddComponent<Platforms>().Left(),
                 gameObject.AddComponent<Platforms>().Right(),
                 gameObject.AddComponent<Speed>(),
@@ -57,6 +59,7 @@ namespace Bark.GUI
 
         void Start()
         {
+            Logging.LogDebug("Start");
             var tracker = gameObject.AddComponent<GestureTracker>();
             tracker.OnMeatBeat += () =>
             {
@@ -88,7 +91,7 @@ namespace Bark.GUI
 
         void BuildMenu()
         {
-            Logging.Log("Building menu...");
+            Logging.LogDebug("Building menu...");
             try
             {
                 // Set initial position
@@ -114,9 +117,9 @@ namespace Bark.GUI
                 ResetPosition();
 
 
-                Logging.Log("Build successful.");
+                Logging.LogDebug("Build successful.");
             }
-            catch (Exception ex) { Logging.Log(ex.Message); Logging.Log(ex.StackTrace); return; }
+            catch (Exception ex) { Logging.LogWarning(ex.Message); Logging.LogWarning(ex.StackTrace); return; }
             built = true;
         }
 

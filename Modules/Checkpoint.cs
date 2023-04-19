@@ -30,7 +30,7 @@ namespace Bark.Modules
             }
             catch (Exception e)
             {
-                Logging.Log(e.Message, e.StackTrace);
+                Logging.LogException(e);
             }
         }
 
@@ -114,8 +114,8 @@ namespace Bark.Modules
 
         void OnDestroy()
         {
-            Destroy(checkpointMarker.gameObject);
-            Destroy(bananaLine.gameObject);
+            checkpointMarker?.gameObject?.Obliterate();
+            bananaLine?.gameObject?.Obliterate();
         }
 
         public override string DisplayName()

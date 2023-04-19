@@ -1,11 +1,11 @@
-﻿using GorillaLocomotion;
+﻿using Bark.Tools;
+using GorillaLocomotion;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
-using Logging = Bark.Tools.Logging;
 
 namespace Bark.Gestures
 {
@@ -264,11 +264,11 @@ namespace Bark.Gestures
 
         public void OnDestroy()
         {
-            Logging.Log("Gesture Tracker Destroy");
-            Destroy(leftHand);
-            Destroy(rightHand);
-            Destroy(leftPointerObj);
-            Destroy(rightPointerObj);
+            Logging.LogDebug("Gesture Tracker Destroy");
+            leftHand?.Obliterate();
+            rightHand?.Obliterate();
+            leftPointerObj?.Obliterate();
+            rightPointerObj?.Obliterate();
             Instance = null;
             OnMeatBeat = null;
         }

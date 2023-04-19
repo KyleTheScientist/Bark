@@ -59,7 +59,7 @@ namespace Bark.Modules
             }
             catch (Exception e)
             {
-                Logging.Log(e.Message);
+                Logging.LogException(e);
             }
         }
 
@@ -70,7 +70,8 @@ namespace Bark.Modules
 
         public override string Tutorial()
         {
-            return "To fly, spread your arms out palms down and rotate your wrists to steer.";
+            return "To fly, do a T-pose (spread your arms out like wings on a plane). " +
+                "Rotate your wrists in unison to steer.";
         }
 
     }

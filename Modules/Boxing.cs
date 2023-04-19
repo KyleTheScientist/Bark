@@ -39,7 +39,7 @@ namespace Bark.Modules
             }
             catch (Exception e)
             {
-                Logging.Log(e, e.StackTrace);
+                Logging.LogException(e);
             }
         }
 
@@ -108,7 +108,7 @@ namespace Bark.Modules
 
                 observer.OnTriggerExited += (obj, collider) =>
                 {
-                    Logging.Log(collider.name);
+                    Logging.LogDebug(collider.name);
                     if (collider.name != "MM Glove") return;
                     if (collider == tracker.collider) 
                         tracker = null;
@@ -118,7 +118,7 @@ namespace Bark.Modules
             }
             catch (Exception e)
             {
-                Logging.Log(e, e.StackTrace);
+                Logging.LogException(e);
             }
         }
 
@@ -135,14 +135,14 @@ namespace Bark.Modules
 
         void Cleanup()
         {
-            Destroy(punchCollider.gameObject);
+            punchCollider?.gameObject?.Obliterate();
             foreach (GameObject g in gloves)
             {
-                Destroy(g);
+                g?.Obliterate();
             }
             foreach (BoxingMarker m in markers)
             {
-                Destroy(m);
+                m?.Obliterate();
             }
         }
 

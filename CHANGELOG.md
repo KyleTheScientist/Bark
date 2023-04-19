@@ -1,5 +1,19 @@
 # CHANGELOG.md
 
+## 1.1.0 (2023-Apr-17) 
+
+Features
+* New module - Grappling Hooks. Adds some banana grapple guns to your hips that you can grab and fire to pull yourself around.
+
+Changes
+* Reduced the wind-up time on the teleport from 2 seconds to 1
+
+Fixes
+* Resolved [Issue #1](https://github.com/KyleTheScientist/Bark/issues/1)
+
+Removed
+* Temporarily removed the Double Jump module (it should be back eventually, I just want to rework it a bit).
+
 ## 1.0.1 (2023-Apr-17) - Hotfix
 
 Fixes

@@ -18,7 +18,7 @@ namespace Bark
         public static AssetBundle assetBundle;
         public static MenuController menuController;
         public static GameObject monkeMenuPrefab;
-        
+
         public void Setup()
         {
             if (menuController || !pluginEnabled || !inRoom) return;
@@ -29,7 +29,7 @@ namespace Bark
             }
             catch (Exception error)
             {
-                Logging.Log(error, error.StackTrace);
+                Logging.LogFatal(error, error.StackTrace);
             }
         }
 
@@ -37,12 +37,19 @@ namespace Bark
         {
             try
             {
-                Destroy(menuController?.gameObject);
+                Logging.LogDebug(menuController is null);
+                Logging.LogDebug(menuController?.gameObject is null);
+                menuController?.gameObject?.Obliterate();
             }
             catch (Exception error)
             {
-                Logging.Log(error, error.StackTrace);
+                Logging.LogFatal(error, error.StackTrace);
             }
+        }
+
+        void Awake()
+        {
+            Logging.Init();
         }
 
         void Start()
@@ -55,27 +62,46 @@ namespace Bark
             }
             catch (Exception e)
             {
-                Logging.Log(e, e.StackTrace);
+                Logging.LogFatal(e, e.StackTrace);
             }
         }
 
 
         void OnEnable()
         {
-            this.pluginEnabled = true;
-            HarmonyPatches.ApplyHarmonyPatches();
-            if (initialized)
-                Setup();
+
+            try
+            {
+                Logging.LogWarning("Debugmessage");
+                Logging.LogInfo("Info message");
+                Logging.LogWarning("Warning message");
+                Logging.LogFatal("Fatal message");
+                this.pluginEnabled = true;
+                HarmonyPatches.ApplyHarmonyPatches();
+                if (initialized)
+                    Setup();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+            }
         }
 
         void OnDisable()
         {
-            this.pluginEnabled = false; 
-            HarmonyPatches.RemoveHarmonyPatches();
-            Cleanup();
+            try
+            {
+                this.pluginEnabled = false;
+                HarmonyPatches.RemoveHarmonyPatches();
+                Cleanup();
+            }
+            catch (Exception e)
+            {
+                Logging.LogException(e);
+            }
         }
 
-        // Disable mod if we join a public lobby
         [ModdedGamemodeJoin]
         void RoomJoined(string gamemode)
         {
@@ -90,7 +116,6 @@ namespace Bark
             Cleanup();
         }
 
-        // Enable mod when we load in
         void OnGameInitialized(object sender, EventArgs e)
         {
             initialized = true;

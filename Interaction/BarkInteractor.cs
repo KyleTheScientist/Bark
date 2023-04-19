@@ -8,7 +8,7 @@ namespace Bark.Gestures
     public class BarkInteractor : XRDirectInteractor
     {
         public static XRInteractionManager manager;
-        
+
         protected override void Awake()
         {
             base.Awake();
@@ -22,7 +22,7 @@ namespace Bark.Gestures
                 this.enableInteractions = true;
                 this.xrController = GetController(this.name.Contains("Left"));
             }
-            catch (Exception ex) { Logging.Log(ex.Message); Logging.Log(ex.StackTrace); return; }
+            catch (Exception e) { Logging.LogException(e); }
         }
         public XRController GetController(bool isLeft)
         {
@@ -39,11 +39,17 @@ namespace Bark.Gestures
             }
             return null;
         }
+        
+        public void RemoveFromValidTargets(XRBaseInteractable interactable)
+        {
+            if (validTargets.Contains(interactable))
+                this.validTargets.Remove(interactable);
+        }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            if (manager != null)
+            if (manager)
                 Destroy(manager);
         }
     }

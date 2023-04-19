@@ -31,11 +31,10 @@ namespace Bark.Modules
 
                 material = ghost.GetComponent<Renderer>().material;
                 platform.gameObject.SetActive(false);
-            } catch (Exception e)
-            {
-                Logging.Log(e, e.StackTrace);
             }
+            catch (Exception e) { Logging.LogException(e); }
         }
+
 
         void FixedUpdate()
         {
@@ -60,10 +59,7 @@ namespace Bark.Modules
                 ghost.transform.localScale = platform.transform.localScale;
                 platform.layer = NoClip.active ? NoClip.layer : 0;
             }
-            catch (Exception e)
-            {
-                Logging.Log(e, e.StackTrace);
-            }
+            catch (Exception e) { Logging.LogException(e); }
         }
 
         public Platforms Left()
@@ -95,8 +91,8 @@ namespace Bark.Modules
 
         void OnDestroy()
         {
-            Destroy(platform);
-            Destroy(ghost);
+            platform?.Obliterate();
+            ghost?.Obliterate();
         }
 
         public override string DisplayName()

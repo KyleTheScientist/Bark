@@ -1,41 +1,50 @@
 ﻿using Bark.Tools;
 using UnityEngine;
 
-namespace SpectatorGUI
+namespace Bark.Tools
 {
     public static class Extensions
     {
-        public static void Log(this GameObject obj)
+        public static void Log(this GameObject self)
         {
 
-            Logging.Log($"\"{obj.name}\": {{");
+            Logging.LogDebug($"\"{self.name}\": {{");
 
             // Log the components on the object
-            Logging.Log("\"Components\": [");
-            var comps = obj.GetComponents<Component>();
+            Logging.LogDebug("\"Components\": [");
+            var comps = self.GetComponents<Component>();
             int i = 0;
-            foreach (var comp in obj.GetComponents<Component>())
+            foreach (var comp in self.GetComponents<Component>())
             {
-                Logging.Log($"\"{comp.GetType()}\"");
+                Logging.LogDebug($"\"{comp.GetType()}\"");
                 i++;
                 if (i < comps.Length)
-                    Logging.Log(",");
+                    Logging.LogDebug(",");
             }
-            Logging.Log("],");
+            Logging.LogDebug("],");
 
-            Logging.Log("\"Children\": {");
+            Logging.LogDebug("\"Children\": {");
             // Log the children
             i = 0;
-            foreach (Transform transform in obj.transform)
+            foreach (Transform transform in self.transform)
             {
                 transform.gameObject.Log();
                 i++;
-                if (i < obj.transform.childCount)
-                    Logging.Log(",");
+                if (i < self.transform.childCount)
+                    Logging.LogDebug(",");
             }
-            Logging.Log("}");
-            Logging.Log("}");
+            Logging.LogDebug("}");
+            Logging.LogDebug("}");
         }
 
+        public static void Obliterate(this GameObject self)
+        {
+            GameObject.Destroy(self);
+        }
+
+        public static void Obliterate(this Component self)
+        {
+            GameObject.Destroy(self);
+        }
     }
 }

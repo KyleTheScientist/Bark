@@ -13,11 +13,8 @@ namespace Bark.Modules
     {
         private Transform teleportMarker, window;
         private bool isTeleporting;
-        private int layerMask;
-        protected void Awake()
-        {
-            layerMask = LayerMask.GetMask("Default", "Gorilla Object");
-        }
+        private const float teleportWindupTime = 1f;
+        public static int layerMask = LayerMask.GetMask("Default", "Gorilla Object");
 
         protected override void Start()
         {
@@ -32,10 +29,8 @@ namespace Bark.Modules
                 teleportMarker.gameObject.SetActive(false);
                 GestureTracker.Instance.OnIlluminati += OnIlluminati;
             }
-            catch (Exception e)
-            {
-                Logging.Log(e.Message, e.StackTrace);
-            }
+            catch (Exception e) { Logging.LogException(e); }
+
         }
 
         private void OnIlluminati(Vector3 obj)
@@ -50,7 +45,7 @@ namespace Bark.Modules
             teleportMarker.gameObject.SetActive(true);
             float startTime = Time.time;
             GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(Random.Range(40, 56), false, 0.1f);
-            Transform 
+            Transform
                 leftHand = GestureTracker.Instance.leftPalmInteractor.transform,
                 rightHand = GestureTracker.Instance.rightPalmInteractor.transform;
             while (GestureTracker.Instance.isIlluminatiing)
@@ -72,7 +67,7 @@ namespace Bark.Modules
                     yield return new WaitForEndOfFrame();
                     continue;
                 }
-                float scale = Mathf.Lerp(0, Player.Instance.scale, (Time.time - startTime) / 2f);
+                float scale = Mathf.Lerp(0, Player.Instance.scale, (Time.time - startTime) / teleportWindupTime);
                 teleportMarker.position = hit.point - forward * Player.Instance.scale;
                 teleportMarker.localScale = Vector3.one * scale;
                 if (Mathf.Abs(scale - Player.Instance.scale) < .01f)
@@ -93,7 +88,7 @@ namespace Bark.Modules
 
         void OnDestroy()
         {
-            Destroy(teleportMarker.gameObject);
+            teleportMarker?.gameObject?.Obliterate();
         }
 
         public override string DisplayName()
