@@ -3,14 +3,15 @@
 *Bark* is a mod for the VR game Gorilla Tag. It allows the player to summon a 3D interface into the game that toggles various fun/useful mechanics on and off. Because it is only enabled in modded lobbies, this mod is safe to use online.
 
 ![](Marketing/interface.png)
+![](https://youtu.be/geyMo9pVSEE)
 
 ## Features
 *Bark* has various modules that can be toggled on and off, including:
 
 ### Movement
-* `Platforms (Left/Right)` - **Press the grip button** on your controller to create a floating platform in the air that you can stand on. There's a toggle for each hand so that you can disable one if it clashes with another mod's inputs.
-* `Double Jump` - **Press the primary button (A) on your right controller** in the air to get a boost in the direction you're looking.
 * `Airplane` - This allows the player to fly around. **Spread your arms out like and airplane** to activate and use your wrists to steer!
+* `Grappling Hooks` - **Grab one of the grapple guns** off of your hip holster with **either grip button and then press the trigger to fire**
+* `Platforms (Left/Right)` - **Press the grip button** on your controller to create a floating platform in the air that you can stand on. There's a toggle for each hand so that you can disable one if it clashes with another mod's inputs.
 * `Speed` - Significantly increases the player's movement speed
 ### Physics
 * `Low Gravity` - Decreases the strength of gravity

@@ -1,6 +1,6 @@
 # CHANGELOG.md
 
-## 1.1.0 (2023-Apr-17) 
+## 1.1.0 (2023-Apr-17) - Grappling Hooks
 
 Features
 * New module - Grappling Hooks. Adds some banana grapple guns to your hips that you can grab and fire to pull yourself around.
