@@ -3,14 +3,14 @@ using Bark.Tools;
 using System;
 using UnityEngine;
 using UnityEngine.XR;
+using Bark.Extensions;
+using Bark.Gestures;
 
 namespace Bark.Modules
 {
     public class Platforms : BarkModule
     {
         public GameObject platform, ghost;
-        private bool isPressed;
-        private Vector3 dimensions = new Vector3(1, 1, 1);
         private XRNode xrNode;
         private Transform hand;
         private float spawnTime;
@@ -38,34 +38,40 @@ namespace Bark.Modules
 
         void FixedUpdate()
         {
+            float transparency = (Time.time - spawnTime) / 1f;
+            material.color = new Color(1, 1, 1, Mathf.Lerp(1, 0, transparency));
+            platform.layer = NoClip.active ? NoClip.layer : 0;
+        }
 
-            InputDevices.GetDeviceAtXRNode(xrNode).TryGetFeatureValue(CommonUsages.gripButton, out isPressed);
-
-            if (!platform.gameObject.activeSelf && isPressed)
+        public void OnGrip()
+        {
+            if (enabled)
             {
+                platform.SetActive(true);
                 platform.transform.position = hand.position;
-                ghost.transform.position = hand.position;
                 platform.transform.rotation = hand.rotation;
+                float scaleX = xrNode == XRNode.LeftHand ? -1 : 1;
+                platform.transform.localScale = new Vector3(scaleX, 1, 1) * Player.Instance.scale;
+
+                ghost.transform.position = hand.position;
                 ghost.transform.rotation = hand.rotation;
+                ghost.transform.localScale = platform.transform.localScale;
+
                 spawnTime = Time.time;
             }
+        }
 
-            try
-            {
-                platform.SetActive(enabled && isPressed);
-                float transparency = (Time.time - spawnTime) / 1f;
-                material.color = new Color(1, 1, 1, Mathf.Lerp(1, 0, transparency));
-                platform.transform.localScale = dimensions * Player.Instance.scale;
-                ghost.transform.localScale = platform.transform.localScale;
-                platform.layer = NoClip.active ? NoClip.layer : 0;
-            }
-            catch (Exception e) { Logging.LogException(e); }
+        public void OnRelease()
+        {
+            platform?.SetActive(false);
         }
 
         public Platforms Left()
         {
             hand = Player.Instance.leftHandTransform;
             xrNode = XRNode.LeftHand;
+            GestureTracker.Instance.OnLeftGripPressed += OnGrip;
+            GestureTracker.Instance.OnLeftGripReleased += OnRelease;
             return this;
         }
 
@@ -73,6 +79,8 @@ namespace Bark.Modules
         {
             hand = Player.Instance.rightHandTransform;
             xrNode = XRNode.RightHand;
+            GestureTracker.Instance.OnRightGripPressed += OnGrip;
+            GestureTracker.Instance.OnRightGripReleased += OnRelease;
             return this;
         }
 

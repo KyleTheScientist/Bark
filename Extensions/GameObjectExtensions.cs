@@ -1,9 +1,9 @@
 ﻿using Bark.Tools;
 using UnityEngine;
 
-namespace Bark.Tools
+namespace Bark.Extensions
 {
-    public static class Extensions
+    public static class GameObjectExtensions
     {
         public static void Log(this GameObject self)
         {
@@ -39,12 +39,12 @@ namespace Bark.Tools
 
         public static void Obliterate(this GameObject self)
         {
-            GameObject.Destroy(self);
+            Object.Destroy(self);
         }
 
         public static void Obliterate(this Component self)
         {
-            GameObject.Destroy(self);
+            Object.Destroy(self);
         }
     }
 }

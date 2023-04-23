@@ -1,11 +1,33 @@
 # CHANGELOG.md
 
+## 1.1.2 - Bugs and bugs and bugs, oh my
+
+Changes
+- You can no longer activate No Collide while in a tight spot, preventing the player from getting teleported under the map
+- Walking through level triggers now removes your checkpoint and plays a sound effect to prevent people from unloading areas before joining public lobbies.
+- Checkpoint now makes a sound when the checkpoint is successfully placed
+- Piggyback now makes a sound when you get kicked off
+- Buttons now turn gray when not interactable
+- Buttons now vibrate when you press them
+- Chest beats now expire after 1 second, so that they won't collect over time and trigger the menu on accident
+- Improved Airplane tutorial
+- Made Teleport a little easier to activate and improved the tutorial
+- Made the Boxing collider a little smaller
+- Palm colliders are on the rig's hands now instead of the player's actual hand locations. This may reduce misleading feedback.
+	- This might be a bad idea because of the smoothing, and I might roll this back at some point
+- Refactored a lot of the code for readability and consistency
+
+Fixes
+- Fixed NoClip and Piggyback warping you into the floor
+- The page buttons can no longer be pressed on accident when you throw the menu
+- Fixed Unity errors being thrown by the BarkModule class
+- Fixed Double Jump tutorial
+
 ## 1.1.1 (2023-Apr-19) - No Collide Fix
 
 Fixes
 * Resolved [Issue #5](https://github.com/KyleTheScientist/Bark/issues/5)
 * Fixed scaling issues with the Grappling Hooks module
-
 
 Changes
 * Adjusted piggyback distance

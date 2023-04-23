@@ -1,4 +1,6 @@
-﻿using Bark.Tools;
+﻿    using Bark.Extensions;
+using Bark.Modules;
+using Bark.Tools;
 using GorillaLocomotion;
 using System;
 using System.Collections.Generic;
@@ -14,13 +16,13 @@ namespace Bark.Gestures
     {
         public static GestureTracker Instance;
 
-        public Action OnMeatBeat;
+        public InputDevice leftController, rightController;
         public GameObject
             chest,
             leftPointerObj, rightPointerObj,
             leftHand, rightHand;
 
-        public bool isIlluminatiing = false;
+        public BodyVectors leftHandVectors, rightHandVectors, headVectors;
 
         public BarkInteractor
             leftPalmInteractor, rightPalmInteractor,
@@ -28,10 +30,12 @@ namespace Bark.Gestures
 
         private Transform leftPointerTransform, rightPointerTransform, leftThumbTransform, rightThumbTransform;
 
+        public const string palmPath =
+            "Global/Local VRRig/Local Gorilla Player/rig/body/shoulder.{0}/upper_arm.{0}/forearm.{0}/hand.{0}/palm.01.{0}";
         public const string pointerFingerPath =
-            "Global/Local VRRig/Local Gorilla Player/rig/body/shoulder.{0}/upper_arm.{0}/forearm.{0}/hand.{0}/palm.01.{0}/f_index.01.{0}/f_index.02.{0}/f_index.03.{0}/";
+            palmPath + "/f_index.01.{0}/f_index.02.{0}/f_index.03.{0}";
         public const string thumbPath =
-            "Global/Local VRRig/Local Gorilla Player/rig/body/shoulder.{0}/upper_arm.{0}/forearm.{0}/hand.{0}/palm.01.{0}/thumb.01.{0}/thumb.02.{0}/thumb.03.{0}/";
+            palmPath + "/thumb.01.{0}/thumb.02.{0}/thumb.03.{0}";
 
         public bool leftGripped, rightGripped, leftWasGripped, rightWasGripped;
         public Action
@@ -42,22 +46,32 @@ namespace Bark.Gestures
         public Action
             OnLeftTriggerPressed, OnRightTriggerPressed,
             OnLeftTriggerReleased, OnRightTriggerReleased;
-        public Action<Vector3> OnGlide, OnIlluminati;
 
-        public BodyVectors leftHandVectors, rightHandVectors, headVectors;
+        // Gesture Actions
+        public Action OnMeatBeat;
+        private Queue<int> meatBeatCollisions = new Queue<int>();
+        private float lastBeat;
+
+        public Action<Vector3> OnGlide;
+        public Action OnIlluminati, OnKamehameha;
+        public bool isIlluminatiing = false, isChargingKamehameha;
 
 
         public struct BodyVectors
         {
-            public Vector3 forward, right, up;
+            public Vector3 pointerDirection, palmNormal, thumbDirection;
         }
 
         void Awake() { Instance = this; }
 
         void Start()
         {
+
             try
             {
+                Logging.LogDebug("Start");
+                leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+                rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
                 BuildColliders();
                 var observer = chest.AddComponent<CollisionObserver>();
                 observer.OnTriggerEntered += OnChestBeat;
@@ -69,14 +83,20 @@ namespace Bark.Gestures
             }
         }
 
+        void FixedUpdate()
+        {
+            // If it's been more than one second since you last beat your chest, 
+            if (Time.time - lastBeat > 1f)
+                meatBeatCollisions.Clear();
+        }
+
         void Update()
         {
             TrackButtonPresses();
             TrackBodyVectors();
             TrackGlideGesture();
             isIlluminatiing = TrackIlluminatiGesture();
-            
-            
+            //isChargingKamehameha = TrackKamehamehaGesture();
         }
 
         void TrackBodyVectors()
@@ -84,24 +104,24 @@ namespace Bark.Gestures
             var left = Player.Instance.leftHandTransform;
             leftHandVectors = new BodyVectors()
             {
-                forward = left.forward,
-                right = left.right,
-                up = left.up
+                pointerDirection = left.forward,
+                palmNormal = left.right,
+                thumbDirection = left.up
             };
             var right = Player.Instance.rightHandTransform;
             rightHandVectors = new BodyVectors()
             {
-                forward = right.forward,
-                right = right.right * -1,
-                up = right.up
+                pointerDirection = right.forward,
+                palmNormal = right.right * -1,
+                thumbDirection = right.up
             };
 
             var head = Player.Instance.headCollider.transform;
             headVectors = new BodyVectors()
             {
-                forward = head.forward,
-                right = head.right,
-                up = head.up
+                pointerDirection = head.forward,
+                palmNormal = head.right,
+                thumbDirection = head.up
             };
         }
 
@@ -110,47 +130,77 @@ namespace Bark.Gestures
         {
             var scale = Player.Instance.scale;
             // Check if thumb and pointer are touching
-            if (Vector3.Distance(leftPointerTransform.position, rightPointerTransform.position) > illProximityThreshold * scale) return false;
-            if (Vector3.Distance(leftThumbTransform.position, rightThumbTransform.position) > illProximityThreshold * scale) return false;
+            if (Vector3.Distance(
+                    leftPointerTransform.position, rightPointerTransform.position
+                ) > illProximityThreshold * scale) return false;
+            if (Vector3.Distance(
+                    leftThumbTransform.position, rightThumbTransform.position
+                ) > illProximityThreshold * scale) return false;
 
-            // Check if the two hands are facing in the same direction on their local up axes with plus or minus 20 degrees accuracy
-            float angle = Vector3.Angle(leftHandVectors.right, rightHandVectors.right);
-            if (angle > 45)
+            if (PalmsFacingSameWay())
+            {
+                OnIlluminati?.Invoke();
+                return true;
+            }
+            return false;
+        }
+
+        bool TrackKamehamehaGesture()
+        {
+            var scale = Player.Instance.scale;
+            // Check if palms are too far away. If so, leave.
+            if (
+                Vector3.Distance(
+                    leftPalmInteractor.transform.position,
+                    rightPalmInteractor.transform.position
+                ) > .25f * scale)
                 return false;
 
-            // Check if the indicated directions is facing in the same direction as the eyes
-            Vector3 direction = (leftHandVectors.right + rightHandVectors.right) / 2;
-            angle = Vector3.Angle(direction, headVectors.forward);
-            if (angle > 45)
-                return false;
-
-            OnIlluminati?.Invoke(direction);
-            return true;
+            if (PalmsFacingEachOther() && FingersFacingAway())
+            {
+                OnKamehameha?.Invoke();
+                return true;
+            }
+            return false;
         }
 
         void TrackGlideGesture()
         {
-            // Check if the two transforms are facing away from each other on their local forward axes
-            if (Vector3.Dot(leftHandVectors.forward, rightHandVectors.forward) > 0f)
-                return;
-
-            // Check if the two transforms are facing in the same direction on their local up axes with plus or minus 20 degrees accuracy
-            float angle = Vector3.Angle(leftHandVectors.right, rightHandVectors.right);
-            if (angle > 45)
-                return;
-
-            // Check that the glide direction is toward where the player is facing
-            Vector3 direction = (leftHandVectors.up + rightHandVectors.up) / 2;
-            if (Vector3.Dot(direction, headVectors.forward) > 0f)
-                OnGlide?.Invoke(direction);
+            if (FingersFacingAway() && PalmsFacingSameWay())
+            {
+                // Check that the glide direction is toward where the player is facing
+                Vector3 direction = (leftHandVectors.thumbDirection + rightHandVectors.thumbDirection) / 2;
+                if (Vector3.Dot(direction, headVectors.pointerDirection) > 0f)
+                    OnGlide?.Invoke(direction);
+            }
+        }
+        public bool PalmsFacingEachOther()
+        {
+            Vector3 relativePosition = leftHand.transform.InverseTransformPoint(rightHand.transform.position);
+            if (relativePosition.x < 0f) return false;
+            return Vector3.Dot(leftHandVectors.palmNormal, rightHandVectors.palmNormal) < -.5f;
         }
 
+        public bool PalmsFacingSameWay()
+        {
+            return Vector3.Dot(leftHandVectors.palmNormal, rightHandVectors.palmNormal) > .5f;
+        }
+
+        public bool FingersFacingAway()
+        {
+            Vector3 relativePosition = leftHand.transform.InverseTransformPoint(rightHand.transform.position);
+            if (relativePosition.z > 0f) return false;
+            return Vector3.Dot(leftHandVectors.pointerDirection, rightHandVectors.pointerDirection) < -.5f;
+        }
+        
         void TrackButtonPresses()
         {
             leftWasGripped = leftGripped;
             rightWasGripped = rightGripped;
-            InputDevices.GetDeviceAtXRNode(XRNode.LeftHand).TryGetFeatureValue(CommonUsages.gripButton, out leftGripped);
-            InputDevices.GetDeviceAtXRNode(XRNode.RightHand).TryGetFeatureValue(CommonUsages.gripButton, out rightGripped);
+            
+            leftController.TryGetFeatureValue(CommonUsages.gripButton, out leftGripped);
+            rightController.TryGetFeatureValue(CommonUsages.gripButton, out rightGripped);
+
             if (!leftWasGripped && leftGripped)
                 OnLeftGripPressed?.Invoke();
             if (leftWasGripped && !leftGripped)
@@ -163,8 +213,10 @@ namespace Bark.Gestures
             leftWasTriggered = leftTriggered;
             rightWasTriggered = rightTriggered;
             float lTriggerAmount, rTriggerAmount;
-            InputDevices.GetDeviceAtXRNode(XRNode.LeftHand).TryGetFeatureValue(CommonUsages.trigger, out lTriggerAmount);
-            InputDevices.GetDeviceAtXRNode(XRNode.RightHand).TryGetFeatureValue(CommonUsages.trigger, out rTriggerAmount);
+            
+            leftController.TryGetFeatureValue(CommonUsages.trigger, out lTriggerAmount);
+            rightController.TryGetFeatureValue(CommonUsages.trigger, out rTriggerAmount);
+
             leftTriggered = lTriggerAmount > .9f;
             rightTriggered = rTriggerAmount > .9f;
             if (!leftWasTriggered && leftTriggered)
@@ -181,30 +233,31 @@ namespace Bark.Gestures
             }
         }
 
-        Queue<int> collisions = new Queue<int>();
         void OnChestBeat(GameObject obj, Collider collider)
         {
-            //Logging.Log($"[{obj.name}] was triggered by [{collider.gameObject.name}]");
-            if (collisions.Count > 3)
-                collisions.Dequeue();
+            lastBeat = Time.time;
+            if (meatBeatCollisions.Count > 3)
+                meatBeatCollisions.Dequeue();
             if (collider.gameObject == leftHand)
-                collisions.Enqueue(0);
+                meatBeatCollisions.Enqueue(0);
             else if (collider.gameObject == rightHand)
-                collisions.Enqueue(1);
-            if (collisions.Count < 4) return;
+                meatBeatCollisions.Enqueue(1);
+            if (meatBeatCollisions.Count < 4) return;
             int current, last = -1;
-            for (int i = 0; i < collisions.Count; i++)
+            for (int i = 0; i < meatBeatCollisions.Count; i++)
             {
-                current = collisions.ElementAt(i);
+                current = meatBeatCollisions.ElementAt(i);
                 if (last == current) return;
                 last = current;
             }
-            collisions.Clear();
+            meatBeatCollisions.Clear();
             OnMeatBeat?.Invoke();
         }
 
         void BuildColliders()
         {
+            Logging.LogDebug("BuildColliders");
+
             var player = Player.Instance;
             chest = new GameObject("Body Gesture Collider");
             chest.AddComponent<CapsuleCollider>().isTrigger = true;
@@ -216,13 +269,15 @@ namespace Bark.Gestures
                 radius = 1 / 4f;
             chest.transform.localScale = new Vector3(radius, height, radius);
 
-            var leftHandAttach = player.transform.FindChildRecursive("[LeftHand Controller] Attach");
-            leftPalmInteractor = CreateInteractor("Left Palm Interactor", leftHandAttach, 1 / 16f);
+            var leftPalm = GameObject.Find(string.Format(palmPath, "L")).transform;
+            leftPalmInteractor = CreateInteractor("Left Palm Interactor", leftPalm, 1 / 16f);
             leftHand = leftPalmInteractor.gameObject;
+            leftHand.transform.localRotation = Quaternion.Euler(-90, -90, 0);
 
-            var rightHandAttach = player.transform.FindChildRecursive("[RightHand Controller] Attach");
-            rightPalmInteractor = CreateInteractor("Right Palm Interactor", rightHandAttach, 1 / 16f);
+            var rightPalm = GameObject.Find(string.Format(palmPath, "R")).transform;
+            rightPalmInteractor = CreateInteractor("Right Palm Interactor", rightPalm, 1 / 16f);
             rightHand = rightPalmInteractor.gameObject;
+            rightHand.transform.localRotation = Quaternion.Euler(-90, 0, 0);
 
             leftPointerTransform = GameObject.Find(string.Format(pointerFingerPath, "L")).transform;
             leftPointerInteractor = CreateInteractor("Left Pointer Interactor", leftPointerTransform, 1 / 32f);
@@ -271,6 +326,12 @@ namespace Bark.Gestures
             rightPointerObj?.Obliterate();
             Instance = null;
             OnMeatBeat = null;
+        }
+
+        public void HapticPulse(bool isLeft, float strength = .5f, float duration = .05f)
+        {
+            var hand = isLeft ? leftController : rightController;
+            hand.SendHapticImpulse(0u, strength, duration);
         }
 
     }

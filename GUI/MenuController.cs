@@ -7,7 +7,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 using Player = GorillaLocomotion.Player;
 using System.Collections.Generic;
 using Bark.Modules;
-using System.Linq;
+using Photon.Pun;
 
 namespace Bark.GUI
 {
@@ -25,49 +25,56 @@ namespace Bark.GUI
         private List<Transform> pages;
         private List<ButtonController> buttons;
         private List<BarkModule> modules;
-        private Text helpText;
+        public Text helpText;
 
         protected override void Awake()
         {
-            Logging.LogDebug("Awake");
-            base.Awake();
-
-            modules = new List<BarkModule>()
+            try
             {
-                // Locomotion
-                gameObject.AddComponent<Airplane>(),
-                gameObject.AddComponent<GrapplingHooks>(),
-                gameObject.AddComponent<Platforms>().Left(),
-                gameObject.AddComponent<Platforms>().Right(),
-                gameObject.AddComponent<DoubleJump>(),
-                gameObject.AddComponent<Speed>(),
-
-                //// Physics
-                gameObject.AddComponent<NoClip>(),
-                gameObject.AddComponent<LowGravity>(),
-
-                //// Teleportation
-                gameObject.AddComponent<Checkpoint>(),
-                gameObject.AddComponent<Teleport>(),
+                Logging.LogDebug("Awake");
+                base.Awake();
                 
-                //// Other Players
-                gameObject.AddComponent<Boxing>(),
-                gameObject.AddComponent<Piggyback>(),
-                gameObject.AddComponent<XRay>(),
-            };
-        }
+                gameObject.AddComponent<PositionValidator>();
+                var tracker = gameObject.AddComponent<GestureTracker>();
+                tracker.OnMeatBeat += () =>
+                {
+                    if (!built)
+                        BuildMenu();
+                    else
+                        ResetPosition();
+                };
 
-        void Start()
-        {
-            Logging.LogDebug("Start");
-            var tracker = gameObject.AddComponent<GestureTracker>();
-            tracker.OnMeatBeat += () =>
-            {
-                if (!built)
-                    BuildMenu();
-                else
-                    ResetPosition();
-            };
+                modules = new List<BarkModule>()
+                {
+                    // Locomotion
+                    gameObject.AddComponent<Airplane>(),
+                    gameObject.AddComponent<GrapplingHooks>(),
+                    gameObject.AddComponent<Platforms>().Left(),
+                    gameObject.AddComponent<Platforms>().Right(),
+                    gameObject.AddComponent<DoubleJump>(),
+                    gameObject.AddComponent<Speed>(),
+
+                    //// Physics
+                    gameObject.AddComponent<NoClip>(),
+                    gameObject.AddComponent<LowGravity>(),
+
+                    //// Teleportation
+                    gameObject.AddComponent<Checkpoint>(),
+                    gameObject.AddComponent<Teleport>(),
+                
+                    //// Other Players
+                    gameObject.AddComponent<Boxing>(),
+                    gameObject.AddComponent<Piggyback>(),
+                    gameObject.AddComponent<XRay>(),
+                };
+                
+                if (PhotonNetwork.LocalPlayer.NickName.ToUpper() == "THERATTIDEVR")
+                {
+                    modules.Add(gameObject.AddComponent<RatSword>());
+                }
+
+            }
+            catch (Exception e) { Logging.LogException(e); }
         }
 
         void FixedUpdate()
@@ -85,7 +92,7 @@ namespace Bark.GUI
             transform.localRotation = Quaternion.identity;
             foreach (var button in buttons)
             {
-                button.Interactable = true;
+                button.RemoveBlocker(ButtonController.Blocker.MENU_FALLING);
             }
         }
 
@@ -129,7 +136,7 @@ namespace Bark.GUI
             int buttonsPerPage = pageTemplate.childCount - 2;
             int numPages = (modules.Count / buttonsPerPage) + 1;
 
-            pages = new List<Transform>() { pageTemplate }; 
+            pages = new List<Transform>() { pageTemplate };
             for (int i = 0; i < numPages - 1; i++)
                 pages.Add(Instantiate(pageTemplate, this.menuBase.transform));
 
@@ -146,8 +153,8 @@ namespace Bark.GUI
                 btnController.OnPressed += (obj, pressed) =>
                 {
                     module.enabled = pressed;
-                    if(pressed)
-                        helpText.text = module.DisplayName().ToUpper() + 
+                    if (pressed)
+                        helpText.text = module.DisplayName().ToUpper() +
                             "\n\n" + module.Tutorial().ToUpper();
                 };
                 module.button = btnController;
@@ -163,6 +170,7 @@ namespace Bark.GUI
                         var btnController = button.gameObject.AddComponent<ButtonController>();
                         btnController.OnPressed += PreviousPage;
                         btnController.SetText("Prev Page");
+                        buttons.Add(btnController);
                         continue;
                     }
                     else if (button.name == "Button Right" && page != pages[pages.Count - 1])
@@ -170,10 +178,12 @@ namespace Bark.GUI
                         var btnController = button.gameObject.AddComponent<ButtonController>();
                         btnController.OnPressed += NextPage;
                         btnController.SetText("Next Page");
+                        buttons.Add(btnController);
                         continue;
                     }
                     else if (!button.GetComponent<ButtonController>())
                         button.gameObject.SetActive(false);
+
                 }
                 page.gameObject.SetActive(false);
             }
@@ -203,7 +213,7 @@ namespace Bark.GUI
         public void SetupInteraction()
         {
             this.gravityOnDetach = true;
-            this.movementType = XRBaseInteractable.MovementType.Instantaneous;
+            this.movementType = MovementType.Instantaneous;
             this.retainTransformParent = false;
             this.throwOnDetach = true;
             this.interactionLayerMask = LayerMask.GetMask("Water");
@@ -213,7 +223,7 @@ namespace Bark.GUI
                 GetComponent<Rigidbody>().isKinematic = false;
                 foreach (var button in buttons)
                 {
-                    button.Interactable = false;
+                    button.AddBlocker(ButtonController.Blocker.MENU_FALLING);
                 }
             });
             this.onSelectEntered.AddListener((args) =>
@@ -221,7 +231,7 @@ namespace Bark.GUI
                 GetComponent<Rigidbody>().isKinematic = true;
                 foreach (var button in buttons)
                 {
-                    button.Interactable = true;
+                    button.RemoveBlocker(ButtonController.Blocker.MENU_FALLING);
                 }
             });
 

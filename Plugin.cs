@@ -4,6 +4,7 @@ using UnityEngine;
 using Utilla;
 using Bark.GUI;
 using Bark.Tools;
+using Bark.Extensions;
 
 namespace Bark
 {
@@ -22,6 +23,7 @@ namespace Bark
         public void Setup()
         {
             if (menuController || !pluginEnabled || !inRoom) return;
+            Logging.LogDebug("Setting up");
 
             try
             {
@@ -37,8 +39,7 @@ namespace Bark
         {
             try
             {
-                Logging.LogDebug(menuController is null);
-                Logging.LogDebug(menuController?.gameObject is null);
+                Logging.LogDebug("Cleaning up");
                 menuController?.gameObject?.Obliterate();
             }
             catch (Exception error)
@@ -56,6 +57,7 @@ namespace Bark
         {
             try
             {
+                Logging.LogDebug("Start");
                 Utilla.Events.GameInitialized += OnGameInitialized;
                 assetBundle = AssetUtils.LoadAssetBundle("Bark/Resources/barkbundle");
                 monkeMenuPrefab = assetBundle.LoadAsset<GameObject>("MonkeMenu");
@@ -69,9 +71,9 @@ namespace Bark
 
         void OnEnable()
         {
-
             try
             {
+                Logging.LogDebug("OnEnable");
                 this.pluginEnabled = true;
                 HarmonyPatches.ApplyHarmonyPatches();
                 if (initialized)
@@ -88,6 +90,7 @@ namespace Bark
         {
             try
             {
+                Logging.LogDebug("OnDisable");
                 this.pluginEnabled = false;
                 HarmonyPatches.RemoveHarmonyPatches();
                 Cleanup();
@@ -101,6 +104,7 @@ namespace Bark
         [ModdedGamemodeJoin]
         void RoomJoined(string gamemode)
         {
+            Logging.LogDebug("RoomJoined");
             inRoom = true;
             Setup();
         }
@@ -108,12 +112,14 @@ namespace Bark
         [ModdedGamemodeLeave]
         void RoomLeft(string gamemode)
         {
+            Logging.LogDebug("RoomLeft");
             inRoom = false;
             Cleanup();
         }
 
         void OnGameInitialized(object sender, EventArgs e)
         {
+            Logging.LogDebug("OnGameInitialized");
             initialized = true;
         }
     }

@@ -70,8 +70,9 @@ namespace Bark.Modules
 
         public override string Tutorial()
         {
-            return "To fly, do a T-pose (spread your arms out like wings on a plane). " +
-                "Rotate your wrists in unison to steer.";
+            return "To fly, do a T-pose (spread your arms out like wings on a plane). \n" +
+                "To fly up, rotate your palms so they face forward. \n" +
+                "To fly down, rotate your palms so they face backward.";
         }
 
     }

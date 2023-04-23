@@ -1,5 +1,6 @@
 ﻿using Bark.Gestures;
 using Bark.Patches;
+using GorillaLocomotion;
 using UnityEngine;
 
 namespace Bark.Modules
@@ -12,7 +13,10 @@ namespace Bark.Modules
         private bool latchedWithLeft;
         private const float mountDistance = 1f;
         private Vector3 mountOffset = new Vector3(0, .05f, -.5f);
+        private Vector3 mountPosition;
 
+        public static Piggyback Instance;
+        void Awake() { Instance = this; }
         protected override void Start()
         {
             base.Start();
@@ -57,6 +61,12 @@ namespace Bark.Modules
 
         void Mount(Transform t, VRRig rig)
         {
+            if(!PositionValidator.Instance.isValidAndStable)
+            {
+                GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 1f);
+                return;
+            }
+            mountPosition = Player.Instance.bodyCollider.transform.position;
             mountedRig = rig;
             mounted = true;
             mount = t;
@@ -68,18 +78,30 @@ namespace Bark.Modules
         {
             mount = null;
             mounted = false;
+            mountedRig = null;
+            mount = null;
             DisableNoClip();
+            Invoke(nameof(WarpBack), .05f);
         }
-        
+        void WarpBack()
+        {
+            TeleportPatch.TeleportPlayer(mountPosition);
+        }
         void FixedUpdate()
         {
-            if (RevokingConsent(mountedRig))
-                Unmount();
 
             if (mounted)
             {
-                Vector3 position = mount.TransformPoint(mountOffset);
-                TeleportPatch.TeleportPlayer(position, mount.transform.eulerAngles.y);
+                if (RevokingConsent(mountedRig))
+                {
+                    Unmount();
+                    GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(98, false, 1f);
+                }
+                else
+                {
+                    Vector3 position = mount.TransformPoint(mountOffset);
+                    TeleportPatch.TeleportPlayer(position, mount.transform.eulerAngles.y);
+                }
             }
         }
 
@@ -158,12 +180,16 @@ namespace Bark.Modules
 
         void EnableNoClip()
         {
-            Plugin.menuController.GetComponent<NoClip>().enabled = true;
+            var noclip = Plugin.menuController.GetComponent<NoClip>();
+            noclip.button.AddBlocker(ButtonController.Blocker.PIGGYBACKING);
+            noclip.enabled = true;
         }
 
         void DisableNoClip()
         {
-            Plugin.menuController.GetComponent<NoClip>().enabled = false;
+            var noclip = Plugin.menuController.GetComponent<NoClip>();
+            noclip.button.RemoveBlocker(ButtonController.Blocker.PIGGYBACKING);
+            noclip.enabled = false;
         }
 
         protected override void OnDisable()

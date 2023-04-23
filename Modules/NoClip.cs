@@ -1,4 +1,6 @@
-﻿using Bark.Patches;
+﻿using System;
+using System.Collections;
+using Bark.Patches;
 using Bark.Tools;
 using GorillaLocomotion;
 using System.Collections.Generic;
@@ -8,88 +10,85 @@ namespace Bark.Modules
 {
     public class NoClip : BarkModule
     {
+        public static NoClip Instance;
+
         private LayerMask baseMask;
         private bool baseHeadIsTrigger, baseBodyIsTrigger;
         public static bool active;
         public static int layer = 29, layerMask = 1 << layer;
         private Vector3 activationLocation;
         private float activationAngle;
-        private List<GorillaTriggerInfo> disabledTriggers;
 
         private struct GorillaTriggerInfo
         {
-            public GorillaTriggerBox trigger;
+            public Collider collider;
             public bool wasEnabled;
         }
 
+        void Awake() { Instance = this; }
+
         protected override void OnEnable()
         {
-            base.OnEnable();
-            disabledTriggers = new List<GorillaTriggerInfo>();
-            foreach(var trigger in FindObjectsOfType<GorillaTriggerBox>())
+            try
             {
-                if (!trigger.gameObject.activeSelf) continue;
-                disabledTriggers.Add(new GorillaTriggerInfo()
+                base.OnEnable();
+                Logging.LogDebug("Disabling triggers");
+                activationLocation = Player.Instance.bodyCollider.transform.position;
+                activationAngle = Player.Instance.bodyCollider.transform.eulerAngles.y;
+                if (!Piggyback.mounted)
                 {
-                    trigger = trigger,
-                    wasEnabled = trigger.gameObject.activeSelf
-                });
-                trigger.gameObject.SetActive(false);
-                Logging.LogDebug("Disabled", trigger.name);
-            }
-
-            activationLocation = Player.Instance.transform.position;
-            activationAngle = Player.Instance.bodyCollider.transform.eulerAngles.y;
-            if (!Piggyback.mounted)
-            {
-                foreach (var platformModule in Plugin.menuController.GetComponents<Platforms>())
-                {
-                    platformModule.enabled = true;
+                    try
+                    {
+                        foreach (var platformModule in Plugin.menuController.GetComponents<Platforms>())
+                        {
+                            platformModule.enabled = true;
+                        }
+                    }
+                    catch
+                    {
+                        Logging.LogDebug("Failed to enable platforms for noclip.");
+                    }
                 }
+
+                TriggerBoxPatches.triggersEnabled = false;
+                baseMask = Player.Instance.locomotionEnabledLayers;
+                Player.Instance.locomotionEnabledLayers = layerMask;
+
+                baseBodyIsTrigger = Player.Instance.bodyCollider.isTrigger;
+                Player.Instance.bodyCollider.isTrigger = true;
+
+                baseHeadIsTrigger = Player.Instance.headCollider.isTrigger;
+                Player.Instance.headCollider.isTrigger = true;
+                active = true;
             }
-            baseMask = Player.Instance.locomotionEnabledLayers;
-            Player.Instance.locomotionEnabledLayers = layerMask;
-
-            baseBodyIsTrigger = Player.Instance.bodyCollider.isTrigger;
-            Player.Instance.bodyCollider.isTrigger = true;
-
-            baseHeadIsTrigger = Player.Instance.headCollider.isTrigger;
-            Player.Instance.headCollider.isTrigger = true;
-            active = true;
+            catch (Exception e) { Logging.LogException(e); }
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
-            Cleanup();
+            StartCoroutine(Cleanup());
         }
 
         void OnDestroy()
         {
-            Cleanup();
+            StartCoroutine(Cleanup());
         }
 
-        void Cleanup()
+        IEnumerator Cleanup()
         {
-            if (!active) return;
+            Logging.LogDebug("Cleaning up noclip");
+
+            if (!active) yield break;
             Player.Instance.locomotionEnabledLayers = baseMask;
             Player.Instance.bodyCollider.isTrigger = baseBodyIsTrigger;
             Player.Instance.headCollider.isTrigger = baseHeadIsTrigger;
             TeleportPatch.TeleportPlayer(activationLocation, activationAngle);
             active = false;
-            Invoke(nameof(EnableTriggerBoxes), .1f);
-        }
-
-        void EnableTriggerBoxes()
-        {
-            foreach (var triggerInfo in disabledTriggers)
-            {
-                if (triggerInfo.wasEnabled && triggerInfo.trigger?.gameObject)
-                {
-                    triggerInfo.trigger.gameObject.SetActive(true);
-                    Logging.LogDebug("Enabled", triggerInfo.trigger.name);
-                }
-            }
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            TriggerBoxPatches.triggersEnabled = true;
+            Logging.LogDebug("Enabling triggers");
         }
 
         public override string DisplayName()

@@ -1,20 +1,27 @@
 ﻿using GorillaLocomotion;
+using Bark.Extensions;
 using Bark.Gestures;
 using Bark.Patches;
 using Bark.Tools;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Bark.Modules
 {
     public class Checkpoint : BarkModule
     {
+        public static Checkpoint Instance;
+
         private Transform checkpointMarker;
         private LineRenderer bananaLine;
-        private Vector3 checkpointPosition;
-        private float checkpointRotation, checkpointScale;
+        private Vector3 checkpointPosition, checkpointMarkerPosition;
+        private float checkpointRotation;
         private bool pointSet;
+
+
+        void Awake() { Instance = this; }
 
         protected override void Start()
         {
@@ -36,7 +43,7 @@ namespace Bark.Modules
 
         void LeftTriggered()
         {
-            if (this.enabled)
+            if (this.enabled && !NoClip.active)
                 StartCoroutine(GrowBananas());
         }
 
@@ -51,23 +58,34 @@ namespace Bark.Modules
         {
             checkpointMarker.gameObject.SetActive(true);
             float startTime = Time.time;
-            while (GestureTracker.Instance.leftTriggered)
+            while (GestureTracker.Instance.leftTriggered && !NoClip.active)
             {
                 float scale = Mathf.Lerp(0, Player.Instance.scale, (Time.time - startTime) / 2f);
                 checkpointMarker.position = Player.Instance.leftHandTransform.position + Vector3.up * .15f * Player.Instance.scale;
                 checkpointMarker.localScale = Vector3.one * scale;
                 if (Mathf.Abs(scale - Player.Instance.scale) < .01f)
                 {
-                    checkpointPosition = checkpointMarker.position;
+                    GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(UnityEngine.Random.Range(40, 56), false, 0.1f);
+                    GestureTracker.Instance.HapticPulse(true);
+                    checkpointPosition = Player.Instance.bodyCollider.transform.position;
                     checkpointRotation = Player.Instance.headCollider.transform.eulerAngles.y;
-                    checkpointScale = Player.Instance.scale;
                     pointSet = true;
+                    checkpointMarker.localScale = Vector3.one * Player.Instance.scale;
+                    checkpointMarkerPosition = checkpointMarker.position;
                     break;
                 }
                 yield return new WaitForFixedUpdate();
             }
-            checkpointMarker.localScale = Vector3.one * Player.Instance.scale;
-            checkpointMarker.position = checkpointPosition;
+            if (!pointSet)
+            {
+                checkpointMarker.localScale = Vector3.zero;
+                checkpointMarker.gameObject.SetActive(pointSet);
+            }
+            else
+            {
+                checkpointMarker.position = checkpointMarkerPosition;
+                checkpointMarker.localScale = Vector3.one * Player.Instance.scale;
+            }
         }
 
         // Warps the player to the checkpoint
@@ -76,15 +94,15 @@ namespace Bark.Modules
             bananaLine.gameObject.SetActive(true);
             float startTime = Time.time;
             Vector3 startPos, endPos;
-            while (GestureTracker.Instance.rightTriggered)
+            while (GestureTracker.Instance.rightTriggered && pointSet)
             {
                 startPos = Player.Instance.rightHandTransform.position;
                 bananaLine.SetPosition(1, startPos);
-                endPos = Vector3.Lerp(startPos, checkpointPosition, (Time.time - startTime) / 2f);
+                endPos = Vector3.Lerp(startPos, checkpointMarker.transform.position, (Time.time - startTime) / 2f);
                 bananaLine.SetPosition(0, endPos);
                 bananaLine.startWidth = bananaLine.endWidth = Player.Instance.scale * .1f;
                 bananaLine.material.mainTextureScale = new Vector2(Player.Instance.scale, 1);
-                if (Vector3.Distance(endPos, checkpointPosition) < .01f)
+                if (Vector3.Distance(endPos, checkpointMarker.transform.position) < .01f)
                 {
                     TeleportPatch.TeleportPlayer(checkpointPosition, checkpointRotation);
                     break;
@@ -99,23 +117,55 @@ namespace Bark.Modules
             checkpointMarker.Rotate(Vector3.up, 90 * Time.fixedDeltaTime, Space.World);
         }
 
+        List<GorillaTriggerBox> markedTriggers;
         protected override void OnEnable()
         {
             base.OnEnable();
-            checkpointMarker.gameObject.SetActive(true);
+            checkpointMarker.gameObject.SetActive(pointSet);
+            markedTriggers = new List<GorillaTriggerBox>();
+            foreach (var triggerBox in FindObjectsOfType<GorillaTriggerBox>())
+            {
+                triggerBox.gameObject.AddComponent<CollisionObserver>().OnTriggerStayed += (box, collider) => {
+                    if (collider == Player.Instance.bodyCollider)
+                    {
+                        ClearCheckpoint();
+                    }
+                };
+                markedTriggers.Add(triggerBox);
+            }
+        }
+
+
+        public void ClearCheckpoint()
+        {
+            if (!pointSet) return;
+            Logging.LogDebug("Clearing Checkpoint");
+
+            GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 1f);
+            checkpointMarker.gameObject.SetActive(false);
+            pointSet = false;
+            bananaLine.gameObject.SetActive(false);
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
-            bananaLine.gameObject.SetActive(false);
-            checkpointMarker.gameObject.SetActive(false);
+            Cleanup();   
         }
 
         void OnDestroy()
         {
-            checkpointMarker?.gameObject?.Obliterate();
-            bananaLine?.gameObject?.Obliterate();
+            Cleanup();
+        }
+
+        void Cleanup()
+        {
+            bananaLine.gameObject.SetActive(false);
+            checkpointMarker.gameObject.SetActive(false);
+            foreach (var triggerBox in markedTriggers)
+            {
+                triggerBox.GetComponent<CollisionObserver>()?.Obliterate();
+            }
         }
 
         public override string DisplayName()

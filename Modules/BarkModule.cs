@@ -15,12 +15,14 @@ namespace Bark.Modules
 
         protected virtual void OnEnable()
         {
-            this.button.IsPressed = true;
+            if(this.button)
+                this.button.IsPressed = true;
         }
 
         protected virtual void OnDisable()
         {
-            this.button.IsPressed = false;
+            if(this.button)
+                this.button.IsPressed = false;
         }
 
     }

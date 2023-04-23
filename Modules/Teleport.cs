@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using Bark.Extensions;
 
 namespace Bark.Modules
 {
@@ -33,7 +34,7 @@ namespace Bark.Modules
 
         }
 
-        private void OnIlluminati(Vector3 obj)
+        private void OnIlluminati()
         {
             if (this.enabled && !isTeleporting)
                 StartCoroutine(GrowBananas());
@@ -53,7 +54,7 @@ namespace Bark.Modules
                 window.transform.position = (leftHand.position + rightHand.position) / 2;
 
                 RaycastHit hit, windowHit;
-                var forward = GestureTracker.Instance.headVectors.forward;
+                var forward = GestureTracker.Instance.headVectors.pointerDirection;
                 Ray ray = new Ray(
                     Player.Instance.headCollider.transform.position,
                     forward
@@ -98,8 +99,8 @@ namespace Bark.Modules
 
         public override string Tutorial()
         {
-            return "To teleport, make a triangle with your thumbs and index fingers and look through it for a few seconds. " +
-                "A chime will play, and you will be teleported to the indicator that appears where you're looking.";
+            return "To teleport, make a triangle with your thumbs and index fingers and hold it up to your eyes. " +
+                "You will be teleported to the indicator that appears where your head is pointing.";
         }
 
     }

@@ -3,6 +3,8 @@ using Bark.Tools;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Bark.Extensions;
+
 namespace Bark.Modules
 {
 
@@ -98,6 +100,7 @@ namespace Bark.Modules
 
                 punchCollider = capsule.GetComponent<Collider>();
                 punchCollider.isTrigger = true;
+                punchCollider.transform.localScale *= .75f;
 
                 var observer = capsule.AddComponent<CollisionObserver>();
                 observer.OnTriggerEntered += (obj, collider) =>

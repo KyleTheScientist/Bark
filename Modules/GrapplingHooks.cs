@@ -4,7 +4,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 using Bark.Gestures;
 using GorillaLocomotion;
 using Bark.Tools;
-using UnityEngine.InputSystem.HID;
+using Bark.Extensions;
 
 namespace Bark.Modules
 {
@@ -18,10 +18,6 @@ namespace Bark.Modules
         {
             try
             {
-                Application.logMessageReceived += (logString, stackTrace, type) =>
-                {
-                    //Logging.LogFatal(logString, stackTrace);
-                };
                 bananaGunPrefab = Plugin.assetBundle.LoadAsset<GameObject>("Banana Gun");
             }
             catch (Exception e)
@@ -276,15 +272,15 @@ namespace Bark.Modules
 
         void Open()
         {
-            openModel.SetActive(true);
-            closedModel.SetActive(false);
+            openModel?.SetActive(true);
+            closedModel?.SetActive(false);
             GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(96, false, 0.05f);
         }
 
         void Close()
         {
-            openModel.SetActive(false);
-            closedModel.SetActive(true);
+            openModel?.SetActive(false);
+            closedModel?.SetActive(true);
             isGrappling = false;
         }
 

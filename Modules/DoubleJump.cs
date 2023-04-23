@@ -41,7 +41,7 @@ namespace Bark.Modules
 
         public override string Tutorial()
         {
-            return "Press [A / Primary] on your right controller to do a double jump in the air.";
+            return "Press [A / B] on your right controller to do a double jump in the air.";
         }
 
     }
