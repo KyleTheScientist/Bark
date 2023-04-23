@@ -159,7 +159,8 @@ namespace Bark.Modules
             this.transform.SetParent(holster, false);
             this.transform.localPosition = new Vector3(0, 0, 0);
             this.transform.localRotation = Quaternion.identity;
-            laser.enabled = false;
+            if(laser)
+                laser.enabled = false;
         }
 
         protected override void OnActivate(XRBaseInteractor interactor)
@@ -224,11 +225,6 @@ namespace Bark.Modules
             }
         }
 
-        void Update()
-        {
-
-        }
-
         protected override void OnSelectEntered(XRBaseInteractor interactor)
         {
             base.OnSelectEntered(interactor);
@@ -264,8 +260,10 @@ namespace Bark.Modules
             this.retainTransformParent = true;
             this.throwOnDetach = false;
             this.gameObject.layer = 4;
-            this.openModel.layer = 4;
-            this.closedModel.layer = 4;
+            if(openModel)
+                    this.openModel.layer = 4;
+            if(closedModel)
+                this.closedModel.layer = 4;
             this.interactionLayerMask = LayerMask.GetMask("Water");
             this.interactionManager = BarkInteractor.manager;
         }
@@ -286,9 +284,7 @@ namespace Bark.Modules
 
         protected override void OnDestroy()
         {
-            Logging.LogDebug("Destroying...");
             base.OnDestroy();
-            Logging.LogDebug("Destroy Successful");
         }
     }
 }
