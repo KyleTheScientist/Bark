@@ -17,6 +17,7 @@ namespace Bark.Modules
         protected override void OnEnable()
         {
             base.OnEnable();
+
             try
             {
                 sword = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Rat Sword"));
@@ -24,13 +25,16 @@ namespace Bark.Modules
                 sword.transform.localPosition = new Vector3(-0.4782f, 0.1f, 0.4f);
                 sword.transform.localRotation = Quaternion.Euler(9, 0, 0);
                 sword.transform.localScale /= 2;
+                sword.SetActive(false);
+                GestureTracker.Instance.OnRightGripPressed += () => { sword.SetActive(true); };
+                GestureTracker.Instance.OnRightGripReleased += () => { sword.SetActive(false); };
             }
             catch(Exception e) { Logging.LogException(e); }
         }
 
         protected override void OnDisable()
         {
-            base.OnDisable();
+            base.OnDisable(); 
             sword?.Obliterate();
         }
 
@@ -41,7 +45,8 @@ namespace Bark.Modules
 
         public override string Tutorial()
         {
-            return "I met a lil' kid in canyons who wanted me to make him a sword.";
+            return "I met a lil' kid in canyons who wanted me to make him a sword.\n" +
+                "[Grip] to wield your weapon, rat kid.";
         }
     }
 }

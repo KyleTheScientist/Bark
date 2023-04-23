@@ -26,22 +26,9 @@ namespace Bark.Gestures
             try
             {
 
-                if (Time.frameCount % 120 == 0)
-                {
-                    Collider[] debugCollisions = Physics.OverlapSphere(
-                        Player.Instance.leftHandTransform.position,
-                        .1f,
-                        Player.Instance.locomotionEnabledLayers
-                    );
-                    foreach (var c in debugCollisions)
-                    {
-                        Logging.LogDebug(c.name);
-                    }
-                }
-
                 Collider[] collisions = Physics.OverlapSphere(
                     Player.Instance.lastHeadPosition,
-                    .25f,
+                    .15f,
                     Player.Instance.locomotionEnabledLayers
                 );
 
