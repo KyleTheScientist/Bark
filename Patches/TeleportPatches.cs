@@ -5,7 +5,7 @@ using GorillaLocomotion;
 using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
-using Bark.Tools;
+using Bark.Modules.Physics;
 
 namespace Bark.Patches
 {
@@ -13,7 +13,8 @@ namespace Bark.Patches
     [HarmonyPatch("LateUpdate", MethodType.Normal)]
     internal class TeleportPatch
     {
-        private static bool _isTeleporting = false;
+        private static bool _isTeleporting = false,
+            _rotate = false;
         private static Vector3 _teleportPosition;
         private static float _teleportRotation;
 
@@ -30,7 +31,8 @@ namespace Bark.Patches
                     playerRigidBody.isKinematic = true;
 
                     __instance.transform.position = correctedPosition;
-                    __instance.Turn(_teleportRotation - __instance.headCollider.transform.rotation.eulerAngles.y);
+                    if(_rotate)
+                        __instance.Turn(_teleportRotation - __instance.headCollider.transform.rotation.eulerAngles.y);
 
                     ___lastPosition = correctedPosition;
                     ___velocityHistory = new Vector3[__instance.velocityHistorySize];
@@ -58,10 +60,11 @@ namespace Bark.Patches
         {
             if (_isTeleporting)
                 return;
-
+            Freeze.Instance.enabled = false;
             _teleportPosition = destinationPosition;
             _teleportRotation = destinationRotation;
             _isTeleporting = true;
+            _rotate = true;
         }
 
         internal static void TeleportPlayer(Vector3 destinationPosition)
@@ -69,8 +72,10 @@ namespace Bark.Patches
             if (_isTeleporting)
                 return;
 
+            Freeze.Instance.enabled = false;
             _teleportPosition = destinationPosition;
             _isTeleporting = true;
+            _rotate = false;
         }
     }
 }

@@ -3,10 +3,11 @@ using System.Collections;
 using Bark.Patches;
 using Bark.Tools;
 using GorillaLocomotion;
-using System.Collections.Generic;
 using UnityEngine;
+using Bark.Modules.PlayerInteractions;
+using Bark.Modules.Movement;
 
-namespace Bark.Modules
+namespace Bark.Modules.Physics
 {
     public class NoClip : BarkModule
     {
@@ -64,18 +65,12 @@ namespace Bark.Modules
             catch (Exception e) { Logging.LogException(e); }
         }
 
-        protected override void OnDisable()
+        protected override void Cleanup() 
         {
-            base.OnDisable();
-            StartCoroutine(Cleanup());
+            StartCoroutine(CleanupRoutine());
         }
 
-        void OnDestroy()
-        {
-            StartCoroutine(Cleanup());
-        }
-
-        IEnumerator Cleanup()
+        IEnumerator CleanupRoutine()
         {
             Logging.LogDebug("Cleaning up noclip");
 

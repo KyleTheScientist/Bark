@@ -9,7 +9,7 @@ using Random = UnityEngine.Random;
 using Bark.Extensions;
 using Photon.Pun;
 
-namespace Bark.Modules
+namespace Bark.Modules.Misc
 {
     public class RatSword : BarkModule
     {
@@ -29,12 +29,11 @@ namespace Bark.Modules
                 GestureTracker.Instance.OnRightGripPressed += () => { sword.SetActive(true); };
                 GestureTracker.Instance.OnRightGripReleased += () => { sword.SetActive(false); };
             }
-            catch(Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.LogException(e); }
         }
 
-        protected override void OnDisable()
+        protected override void Cleanup()
         {
-            base.OnDisable(); 
             sword?.Obliterate();
         }
 

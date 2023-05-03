@@ -1,39 +1,31 @@
 ﻿using UnityEngine;
 
-namespace Bark.Modules
+namespace Bark.Modules.Physics
 {
     public class LowGravity : BarkModule
     {
+        public static LowGravity Instance;
         Vector3 baseGravity;
         public float gravityScale = .25f;
-        private bool active;
+        public bool active { get; private set; }
+
         void Awake()
         {
-            baseGravity = Physics.gravity;
+            Instance = this;
+            baseGravity = UnityEngine.Physics.gravity;
         }
 
         protected override void OnEnable()
         {
             base.OnEnable();
-            Physics.gravity = baseGravity * gravityScale;
+            UnityEngine.Physics.gravity = baseGravity * gravityScale;
             active = true;
         }
 
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            Cleanup();
-        }
-
-        void OnDestroy()
-        {
-            Cleanup();
-        }
-
-        void Cleanup()
+        protected override void Cleanup()
         {
             if (!active) return;
-            Physics.gravity = baseGravity;
+            UnityEngine.Physics.gravity = baseGravity;
             active = false;
         }
 

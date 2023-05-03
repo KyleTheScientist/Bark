@@ -27,18 +27,7 @@ namespace Bark.Modules
             Player.Instance.velocityLimit = baseVelocityLimit * scale;
         }
 
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            Cleanup();
-        }
-
-        void OnDestroy()
-        {
-            Cleanup();
-        }
-
-        void Cleanup()
+        protected override void Cleanup()
         {
             if (active)
             {

@@ -7,6 +7,6 @@
     {
         public const string GUID = "com.kylethescientist.gorillatag.bark";
         public const string Name = "Bark";
-        public const string Version = "1.1.2";
+        public const string Version = "1.2.0.1";
     }
 }

@@ -6,7 +6,7 @@ using GorillaLocomotion;
 using Bark.Tools;
 using Bark.Extensions;
 
-namespace Bark.Modules
+namespace Bark.Modules.Movement
 {
     public class GrapplingHooks : BarkModule
     {
@@ -67,9 +67,7 @@ namespace Bark.Modules
                 Logging.LogException(e);
             }
         }
-
-
-        void Cleanup()
+        protected override void Cleanup()
         {
             try
             {
@@ -93,12 +91,6 @@ namespace Bark.Modules
         {
             base.OnEnable();
             Setup();
-        }
-
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            Cleanup();
         }
 
         public override string DisplayName()
@@ -142,24 +134,24 @@ namespace Bark.Modules
                 Logging.LogDebug("Selected", interactable.name);
             });
 
-            this.openModel = transform.Find("Banana Gun Open").gameObject;
-            this.closedModel = transform.Find("Banana Gun Closed").gameObject;
-            this.baseModelOffsetClosed = closedModel.transform.localPosition;
-            this.baseModelOffsetOpen = openModel.transform.localPosition;
-            this.rope = openModel.GetComponentInChildren<LineRenderer>();
-            this.baseRopeWidth = rope.startWidth;
-            this.laser = closedModel.GetComponentInChildren<LineRenderer>();
-            this.baseLaserWidth = laser.startWidth;
+            openModel = transform.Find("Banana Gun Open").gameObject;
+            closedModel = transform.Find("Banana Gun Closed").gameObject;
+            baseModelOffsetClosed = closedModel.transform.localPosition;
+            baseModelOffsetOpen = openModel.transform.localPosition;
+            rope = openModel.GetComponentInChildren<LineRenderer>();
+            baseRopeWidth = rope.startWidth;
+            laser = closedModel.GetComponentInChildren<LineRenderer>();
+            baseLaserWidth = laser.startWidth;
         }
 
         public void Holster(Transform holster)
         {
             Close();
             this.holster = holster;
-            this.transform.SetParent(holster, false);
-            this.transform.localPosition = new Vector3(0, 0, 0);
-            this.transform.localRotation = Quaternion.identity;
-            if(laser)
+            transform.SetParent(holster, false);
+            transform.localPosition = new Vector3(0, 0, 0);
+            transform.localRotation = Quaternion.identity;
+            if (laser)
                 laser.enabled = false;
         }
 
@@ -167,8 +159,8 @@ namespace Bark.Modules
         {
             base.OnActivate(interactor);
             RaycastHit hit;
-            Ray ray = new Ray(rope.transform.position, this.transform.forward);
-            Physics.Raycast(ray, out hit, maxLength, Teleport.layerMask);
+            Ray ray = new Ray(rope.transform.position, transform.forward);
+            UnityEngine.Physics.Raycast(ray, out hit, maxLength, Teleport.layerMask);
             if (!hit.transform) return;
 
             Open();
@@ -186,17 +178,17 @@ namespace Bark.Modules
 
         void FixedUpdate()
         {
-            if(isSelected)
+            if (isSelected)
             {
-                this.transform.localScale = Vector3.one * Player.Instance.scale;
-                this.transform.position = this.selectingInteractor.transform.position;
+                transform.localScale = Vector3.one * Player.Instance.scale;
+                transform.position = selectingInteractor.transform.position;
             }
 
             if (!isGrappling && isSelected)
             {
                 RaycastHit hit;
-                Ray ray = new Ray(rope.transform.position, this.transform.forward);
-                Physics.Raycast(ray, out hit, maxLength, Teleport.layerMask);
+                Ray ray = new Ray(rope.transform.position, transform.forward);
+                UnityEngine.Physics.Raycast(ray, out hit, maxLength, Teleport.layerMask);
                 if (!hit.transform)
                 {
                     laser.enabled = false;
@@ -214,13 +206,13 @@ namespace Bark.Modules
                 rope.SetPosition(1, hitPosition);
                 rope.startWidth = baseRopeWidth * Player.Instance.scale;
                 rope.endWidth = baseRopeWidth * Player.Instance.scale;
-                
+
                 var collider = Player.Instance.bodyCollider;
                 collider.attachedRigidbody.velocity +=
                     (hitPosition - collider.transform.position).normalized *
                     pullForce * Time.fixedDeltaTime * Player.Instance.scale;
                 collider.attachedRigidbody.velocity +=
-                    (transform.forward) *
+                    transform.forward *
                     adjustForce * Time.fixedDeltaTime * Player.Instance.scale;
             }
         }
@@ -255,17 +247,17 @@ namespace Bark.Modules
 
         public void SetupInteraction()
         {
-            this.gravityOnDetach = false;
-            this.movementType = XRBaseInteractable.MovementType.Instantaneous;
-            this.retainTransformParent = true;
-            this.throwOnDetach = false;
-            this.gameObject.layer = 4;
-            if(openModel)
-                    this.openModel.layer = 4;
-            if(closedModel)
-                this.closedModel.layer = 4;
-            this.interactionLayerMask = LayerMask.GetMask("Water");
-            this.interactionManager = BarkInteractor.manager;
+            gravityOnDetach = false;
+            movementType = MovementType.Instantaneous;
+            retainTransformParent = true;
+            throwOnDetach = false;
+            gameObject.layer = 4;
+            if (openModel)
+                openModel.layer = 4;
+            if (closedModel)
+                closedModel.layer = 4;
+            interactionLayerMask = LayerMask.GetMask("Water");
+            interactionManager = BarkInteractor.manager;
         }
 
         void Open()

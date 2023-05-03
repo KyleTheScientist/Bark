@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Bark.Modules
+namespace Bark.Modules.Movement
 {
     public class Airplane : BarkModule
     {
@@ -14,7 +14,6 @@ namespace Bark.Modules
         protected override void Start()
         {
             base.Start();
-            GestureTracker.Instance.OnGlide += OnGlide;
         }
 
         void OnGlide(Vector3 direction)
@@ -63,6 +62,17 @@ namespace Bark.Modules
             }
         }
 
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            GestureTracker.Instance.OnGlide += OnGlide;
+        }
+
+        protected override void Cleanup()
+        {
+            GestureTracker.Instance.OnGlide -= OnGlide;
+        }
+
         public override string DisplayName()
         {
             return "Airplane";
@@ -70,10 +80,12 @@ namespace Bark.Modules
 
         public override string Tutorial()
         {
-            return "To fly, do a T-pose (spread your arms out like wings on a plane). \n" +
-                "To fly up, rotate your palms so they face forward. \n" +
-                "To fly down, rotate your palms so they face backward.";
+            return "- To fly, do a T-pose (spread your arms out like wings on a plane). \n" +
+                "- To fly up, rotate your palms so they face forward. \n" +
+                "- To fly down, rotate your palms so they face backward.";
         }
 
     }
 }
+
+

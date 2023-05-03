@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.XR;
 
-namespace Bark.Modules
+namespace Bark.Modules.Movement
 {
     public class DoubleJump : BarkModule
     {
@@ -31,8 +31,10 @@ namespace Bark.Modules
                 _rigidbody.velocity = new Vector3(direction.x, direction.y, direction.z) * _player.maxJumpSpeed * _player.scale;
                 canDoubleJump = false;
             }
-            
+
         }
+
+        protected override void Cleanup() { }
 
         public override string DisplayName()
         {

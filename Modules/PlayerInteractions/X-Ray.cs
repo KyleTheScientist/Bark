@@ -3,7 +3,7 @@ using Bark.Tools;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Bark.Modules
+namespace Bark.Modules.PlayerInteractions
 {
     public class XRayMarker : MonoBehaviour
     {
@@ -11,26 +11,27 @@ namespace Bark.Modules
         VRRig rig;
         void Start()
         {
-            this.rig = this.GetComponent<VRRig>();
-            this.material = Instantiate(Plugin.assetBundle.LoadAsset<Material>("X-Ray Material"));
-            this.Update();
+            rig = GetComponent<VRRig>();
+            material = Instantiate(Plugin.assetBundle.LoadAsset<Material>("X-Ray Material"));
+            Update();
         }
 
         public void Update()
         {
-            if (!rig.mainSkin.material.name.Contains("X-Ray")) {
-                this.baseMaterial = rig.mainSkin.material;
-                this.material.color = this.baseMaterial.color;
-                this.material.mainTexture = this.baseMaterial.mainTexture;
-                this.material.SetTexture("_MainTex", this.baseMaterial.mainTexture);
+            if (!rig.mainSkin.material.name.Contains("X-Ray"))
+            {
+                baseMaterial = rig.mainSkin.material;
+                material.color = baseMaterial.color;
+                material.mainTexture = baseMaterial.mainTexture;
+                material.SetTexture("_MainTex", baseMaterial.mainTexture);
                 rig.mainSkin.material = material;
             }
         }
 
         void OnDestroy()
         {
-            rig.mainSkin.material = this.baseMaterial;
-            Logging.LogDebug($"Reset material to {this.baseMaterial.name}");
+            rig.mainSkin.material = baseMaterial;
+            Logging.LogDebug($"Reset material to {baseMaterial.name}");
         }
     }
 
@@ -62,18 +63,7 @@ namespace Bark.Modules
             ApplyMaterial();
         }
 
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            Cleanup();
-        }
-
-        void OnDestroy()
-        {
-            Cleanup();
-        }
-
-        void Cleanup()
+        protected override void Cleanup()
         {
             foreach (var marker in markers)
                 marker?.Obliterate();

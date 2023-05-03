@@ -5,8 +5,9 @@ using UnityEngine;
 using UnityEngine.XR;
 using Bark.Extensions;
 using Bark.Gestures;
+using Bark.Modules.Physics;
 
-namespace Bark.Modules
+namespace Bark.Modules.Movement
 {
     public class Platforms : BarkModule
     {
@@ -16,10 +17,22 @@ namespace Bark.Modules
         private float spawnTime;
         private Material material;
 
-        void Awake()
+        protected override void OnEnable()
         {
+            base.OnEnable();
             try
             {
+                if (xrNode == XRNode.LeftHand)
+                {
+                    GestureTracker.Instance.OnLeftGripPressed += OnGrip;
+                    GestureTracker.Instance.OnLeftGripReleased += OnRelease;
+                }
+                else if (xrNode == XRNode.RightHand)
+                {
+                    GestureTracker.Instance.OnRightGripPressed += OnGrip;
+                    GestureTracker.Instance.OnRightGripReleased += OnRelease;
+                }
+
                 platform = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Cloud"));
                 platform.name = "Cloud Solid";
                 platform.GetComponent<Renderer>().enabled = false;
@@ -33,14 +46,6 @@ namespace Bark.Modules
                 platform.gameObject.SetActive(false);
             }
             catch (Exception e) { Logging.LogException(e); }
-        }
-
-
-        void FixedUpdate()
-        {
-            float transparency = (Time.time - spawnTime) / 1f;
-            material.color = new Color(1, 1, 1, Mathf.Lerp(1, 0, transparency));
-            platform.layer = NoClip.active ? NoClip.layer : 0;
         }
 
         public void OnGrip()
@@ -70,8 +75,7 @@ namespace Bark.Modules
         {
             hand = Player.Instance.leftHandTransform;
             xrNode = XRNode.LeftHand;
-            GestureTracker.Instance.OnLeftGripPressed += OnGrip;
-            GestureTracker.Instance.OnLeftGripReleased += OnRelease;
+
             return this;
         }
 
@@ -79,28 +83,32 @@ namespace Bark.Modules
         {
             hand = Player.Instance.rightHandTransform;
             xrNode = XRNode.RightHand;
-            GestureTracker.Instance.OnRightGripPressed += OnGrip;
-            GestureTracker.Instance.OnRightGripReleased += OnRelease;
             return this;
         }
 
-        protected override void OnEnable()
+        void FixedUpdate()
         {
-            base.OnEnable();
-            ghost.SetActive(true);
+            float transparency = (Time.time - spawnTime) / 1f;
+            material.color = new Color(1, 1, 1, Mathf.Lerp(1, 0, transparency));
+            platform.layer = NoClip.active ? NoClip.layer : 0;
         }
 
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            platform.SetActive(false);
-            ghost.SetActive(false);
-        }
-
-        void OnDestroy()
+        protected override void Cleanup()
         {
             platform?.Obliterate();
             ghost?.Obliterate();
+            if (xrNode == XRNode.LeftHand)
+            {
+
+                GestureTracker.Instance.OnLeftGripPressed -= OnGrip;
+                GestureTracker.Instance.OnLeftGripReleased -= OnRelease;
+            }
+            else if (xrNode == XRNode.RightHand)
+            {
+                GestureTracker.Instance.OnRightGripPressed -= OnGrip;
+                GestureTracker.Instance.OnRightGripReleased -= OnRelease;
+            }
+
         }
 
         public override string DisplayName()

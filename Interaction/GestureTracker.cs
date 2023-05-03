@@ -28,7 +28,7 @@ namespace Bark.Gestures
             leftPalmInteractor, rightPalmInteractor,
             leftPointerInteractor, rightPointerInteractor;
 
-        private Transform leftPointerTransform, rightPointerTransform, leftThumbTransform, rightThumbTransform;
+        public Transform leftPointerTransform, rightPointerTransform, leftThumbTransform, rightThumbTransform;
 
         public const string palmPath =
             "Global/Local VRRig/Local Gorilla Player/rig/body/shoulder.{0}/upper_arm.{0}/forearm.{0}/hand.{0}/palm.01.{0}";

@@ -10,7 +10,7 @@ public class ButtonController : XRBaseInteractable
 {
     public enum Blocker
     {
-        MENU_FALLING, NOCLIP_BOUNDARY, PIGGYBACKING
+        MENU_FALLING, NOCLIP_BOUNDARY, PIGGYBACKING, BUTTON_PRESSED
     }
 
     private Dictionary<Blocker, string> blockerText = new Dictionary<Blocker, string>()
@@ -81,6 +81,14 @@ public class ButtonController : XRBaseInteractable
         GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(67, false, 0.05f);
         var hand = collider.name.Contains("Left") ? GestureTracker.Instance.leftController : GestureTracker.Instance.rightController;
         hand.SendHapticImpulse(0u, 0.1f, 0.1f);
+        Plugin.menuController.AddBlockerToAllButtons(Blocker.BUTTON_PRESSED);
+        Invoke(nameof(RemoveCooldownBlocker), .1f);
+    }
+
+    void RemoveCooldownBlocker()
+    {
+        Plugin.menuController.RemoveBlockerFromAllButtons(Blocker.BUTTON_PRESSED);
+
     }
 
     protected override void OnHoverExited(XRBaseInteractor interactor)

@@ -1,8 +1,28 @@
 # CHANGELOG.md
 
+## 1.2.0 - Wall Running
+
+Features
+- Added the **Wall Run** module
+	- This module allows you to seamlessly transition between walking on the floor to walls and ceilings.
+- Added the **Slippery Hands** module
+	- This module makes every surface slippery like ice. You can ski anywhere!
+- Added the **Freeze** module
+	- This mod freezes your player in place, essentially disabling physics for your body. Good for setting up camera angles, or just taking a breather!
+
+Changes
+- **All new look!**
+	- Prettied up the menu a little and moved the help text to the side for easier reading.
+	- The version is now always displayed at the bottom of the screen.
+- Teleport is now much more user-friendly. 
+- You can now move your head freely while using Piggyback
+- Buttons now have a short cooldown after being pressed to prevent double-tapping
+- Refactored some of the code structure
+
 ## 1.1.2 - Bugs and bugs and bugs, oh my
 
 Changes
+- Platforms are less sticky
 - You can no longer activate No Collide while in a tight spot, preventing the player from getting teleported under the map
 - Walking through level triggers now removes your checkpoint and plays a sound effect to prevent people from unloading areas before joining public lobbies.
 - Checkpoint now makes a sound when the checkpoint is successfully placed

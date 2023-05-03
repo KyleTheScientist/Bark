@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Bark.Modules.Movement;
 using Bark.Modules;
 
 namespace Bark.Patches

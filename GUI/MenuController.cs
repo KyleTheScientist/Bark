@@ -1,13 +1,19 @@
-﻿using Bark.Gestures;
-using Bark.Tools;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
-using Player = GorillaLocomotion.Player;
-using System.Collections.Generic;
+using Bark.Gestures;
 using Bark.Modules;
+using Bark.Modules.Misc;
+using Bark.Modules.Movement;
+using Bark.Modules.Physics;
+using Bark.Modules.PlayerInteractions;
+using Bark.Modules.Teleportation;
+using Bark.Tools;
 using Photon.Pun;
+using Player = GorillaLocomotion.Player;
 
 namespace Bark.GUI
 {
@@ -33,7 +39,7 @@ namespace Bark.GUI
             {
                 Logging.LogDebug("Awake");
                 base.Awake();
-                
+
                 gameObject.AddComponent<PositionValidator>();
                 var tracker = gameObject.AddComponent<GestureTracker>();
                 tracker.OnMeatBeat += () =>
@@ -51,11 +57,13 @@ namespace Bark.GUI
                     gameObject.AddComponent<GrapplingHooks>(),
                     gameObject.AddComponent<Platforms>().Left(),
                     gameObject.AddComponent<Platforms>().Right(),
-                    gameObject.AddComponent<DoubleJump>(),
+                    gameObject.AddComponent<Wallrun>(),
                     gameObject.AddComponent<Speed>(),
 
                     //// Physics
                     gameObject.AddComponent<NoClip>(),
+                    gameObject.AddComponent<Freeze>(),
+                    gameObject.AddComponent<Slippery>(),
                     gameObject.AddComponent<LowGravity>(),
 
                     //// Teleportation
@@ -67,7 +75,7 @@ namespace Bark.GUI
                     gameObject.AddComponent<Piggyback>(),
                     gameObject.AddComponent<XRay>(),
                 };
-                
+
                 if (PhotonNetwork.LocalPlayer.NickName.ToUpper() == "THERATTIDEVR")
                 {
                     modules.Add(gameObject.AddComponent<RatSword>());
@@ -110,8 +118,9 @@ namespace Bark.GUI
                 menuBase.layer = 4;
 
                 helpText = menuBase.transform.Find("Help Canvas").GetComponentInChildren<Text>();
-                helpText.font = GameObject.FindObjectOfType<GorillaLevelScreen>().myText.font;
-                helpText.text = $"{PluginInfo.Name} {PluginInfo.Version}";
+                helpText.text = "Enable a module to see its tutorial.";
+                menuBase.transform.Find("Version Canvas").GetComponentInChildren<Text>().text = 
+                    $"{PluginInfo.Name} {PluginInfo.Version}";
 
                 var collider = menuBase.AddComponent<BoxCollider>();
                 menuDimensions = collider.bounds.extents;
@@ -130,11 +139,14 @@ namespace Bark.GUI
             built = true;
         }
 
+        bool includeDebugButtons = false;
         public void SetupButtons()
         {
             var pageTemplate = this.menuBase.transform.Find("Page");
             int buttonsPerPage = pageTemplate.childCount - 2;
             int numPages = (modules.Count / buttonsPerPage) + 1;
+            if (includeDebugButtons)
+                numPages++;
 
             pages = new List<Transform>() { pageTemplate };
             for (int i = 0; i < numPages - 1; i++)
@@ -160,6 +172,19 @@ namespace Bark.GUI
                 module.button = btnController;
                 btnController.SetText(module.DisplayName().ToUpper());
             }
+
+            AddDebugButton("Rip Textures", (btn, isPressed) =>
+            {
+                try
+                {
+                    TextureRipper.Rip();
+                    GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 0.1f);
+                }
+                catch (Exception e)
+                {
+                    Logging.LogException(e);
+                }
+            });
 
             foreach (Transform page in pages)
             {
@@ -191,6 +216,19 @@ namespace Bark.GUI
 
         }
 
+        int debugButtons = 0;
+        private void AddDebugButton(string title, Action<ButtonController, bool> onPress)
+        {
+            if (!includeDebugButtons) return;
+            var page = pages.Last();
+            var button = page.Find($"Button {debugButtons}").gameObject;
+            var btnController = button.gameObject.AddComponent<ButtonController>();
+            btnController.OnPressed += onPress;
+            btnController.SetText(title);
+            buttons.Add(btnController);
+            debugButtons++;
+        }
+
         private int pageIndex = 0;
         public void PreviousPage(ButtonController button, bool isPressed)
         {
@@ -210,6 +248,7 @@ namespace Bark.GUI
                 pages[i].gameObject.SetActive(i == pageIndex);
             }
         }
+
         public void SetupInteraction()
         {
             this.gravityOnDetach = true;
@@ -221,18 +260,12 @@ namespace Bark.GUI
             this.onSelectExited.AddListener((args) =>
             {
                 GetComponent<Rigidbody>().isKinematic = false;
-                foreach (var button in buttons)
-                {
-                    button.AddBlocker(ButtonController.Blocker.MENU_FALLING);
-                }
+                AddBlockerToAllButtons(ButtonController.Blocker.MENU_FALLING);
             });
             this.onSelectEntered.AddListener((args) =>
             {
                 GetComponent<Rigidbody>().isKinematic = true;
-                foreach (var button in buttons)
-                {
-                    button.RemoveBlocker(ButtonController.Blocker.MENU_FALLING);
-                }
+                RemoveBlockerFromAllButtons(ButtonController.Blocker.MENU_FALLING);
             });
 
         }
@@ -248,6 +281,23 @@ namespace Bark.GUI
                 }
             }
             return null;
+        }
+
+        public void AddBlockerToAllButtons(ButtonController.Blocker blocker)
+        {
+            foreach (var button in buttons)
+            {
+                button.AddBlocker(blocker);
+            }
+        }
+
+        public void RemoveBlockerFromAllButtons(ButtonController.Blocker blocker)
+        {
+            foreach (var button in buttons)
+            {
+                button.RemoveBlocker(blocker);
+
+            }
         }
     }
 }

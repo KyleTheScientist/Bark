@@ -8,6 +8,8 @@ namespace Bark.Modules
         public abstract string Tutorial();
         public ButtonController button;
 
+        protected abstract void Cleanup();
+
         protected virtual void Start()
         {
             this.enabled = false;
@@ -23,6 +25,11 @@ namespace Bark.Modules
         {
             if(this.button)
                 this.button.IsPressed = false;
+            this.Cleanup();
+        }
+        protected virtual void OnDestroy()
+        {
+            this.Cleanup();
         }
 
     }

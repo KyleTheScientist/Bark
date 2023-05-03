@@ -3,12 +3,13 @@ using Bark.Extensions;
 using Bark.Gestures;
 using Bark.Patches;
 using Bark.Tools;
+using Bark.Modules.Physics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Bark.Modules
+namespace Bark.Modules.Teleportation
 {
     public class Checkpoint : BarkModule
     {
@@ -43,13 +44,13 @@ namespace Bark.Modules
 
         void LeftTriggered()
         {
-            if (this.enabled && !NoClip.active)
+            if (enabled && !NoClip.active)
                 StartCoroutine(GrowBananas());
         }
 
         void RightTriggered()
         {
-            if (this.enabled && pointSet)
+            if (enabled && pointSet)
                 StartCoroutine(GoBananas());
         }
 
@@ -125,7 +126,8 @@ namespace Bark.Modules
             markedTriggers = new List<GorillaTriggerBox>();
             foreach (var triggerBox in FindObjectsOfType<GorillaTriggerBox>())
             {
-                triggerBox.gameObject.AddComponent<CollisionObserver>().OnTriggerStayed += (box, collider) => {
+                triggerBox.gameObject.AddComponent<CollisionObserver>().OnTriggerStayed += (box, collider) =>
+                {
                     if (collider == Player.Instance.bodyCollider)
                     {
                         ClearCheckpoint();
@@ -147,18 +149,7 @@ namespace Bark.Modules
             bananaLine.gameObject.SetActive(false);
         }
 
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            Cleanup();   
-        }
-
-        void OnDestroy()
-        {
-            Cleanup();
-        }
-
-        void Cleanup()
+        protected override void Cleanup()
         {
             bananaLine.gameObject.SetActive(false);
             checkpointMarker.gameObject.SetActive(false);

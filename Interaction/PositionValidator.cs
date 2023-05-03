@@ -1,13 +1,9 @@
-﻿using Bark.Extensions;
-using Bark.Modules;
-using Bark.Tools;
+﻿using System;
 using GorillaLocomotion;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Bark.Modules.Physics;
+using Bark.Modules.PlayerInteractions;
+using Bark.Tools;
 using UnityEngine;
-using UnityEngine.XR;
-using UnityEngine.XR.Interaction.Toolkit;
 
 namespace Bark.Gestures
 {

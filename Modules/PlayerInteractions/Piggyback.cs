@@ -1,9 +1,10 @@
 ﻿using Bark.Gestures;
 using Bark.Patches;
+using Bark.Modules.Physics;
 using GorillaLocomotion;
 using UnityEngine;
 
-namespace Bark.Modules
+namespace Bark.Modules.PlayerInteractions
 {
     public class Piggyback : BarkModule
     {
@@ -61,7 +62,7 @@ namespace Bark.Modules
 
         void Mount(Transform t, VRRig rig)
         {
-            if(!PositionValidator.Instance.isValidAndStable)
+            if (!PositionValidator.Instance.isValidAndStable)
             {
                 GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 1f);
                 return;
@@ -100,7 +101,7 @@ namespace Bark.Modules
                 else
                 {
                     Vector3 position = mount.TransformPoint(mountOffset);
-                    TeleportPatch.TeleportPlayer(position, mount.transform.eulerAngles.y);
+                    TeleportPatch.TeleportPlayer(position);
                 }
             }
         }
@@ -142,40 +143,36 @@ namespace Bark.Modules
 
         bool GivingConsent(VRRig rig)
         {
-            return (
-                (
+            return
+
                     rig.rightIndex.calcT > .5f &&
                     rig.rightMiddle.calcT > .5f &&
                     rig.rightThumb.calcT < .25f &&
                     Vector3.Dot(Vector3.up, rig.leftHandTransform.forward) > 0
-                )
+
                 ||
-                (
+
                     rig.leftIndex.calcT > .5f &&
                     rig.leftMiddle.calcT > .5f &&
                     rig.leftThumb.calcT < .25f &&
                     Vector3.Dot(Vector3.up, rig.rightHandTransform.forward) > 0
-                )
-            );
+
+            ;
         }
 
         bool RevokingConsent(VRRig rig)
         {
-            return (
-                (
+            return
                     rig.rightIndex.calcT > .5f &&
                     rig.rightMiddle.calcT > .5f &&
                     rig.rightThumb.calcT < .25f &&
                     Vector3.Dot(Vector3.down, rig.rightHandTransform.forward) > 0
-                )
                 ||
-                (
                     rig.leftIndex.calcT > .5f &&
                     rig.leftMiddle.calcT > .5f &&
                     rig.leftThumb.calcT < .25f &&
                     Vector3.Dot(Vector3.down, rig.leftHandTransform.forward) > 0
-                )
-            );
+            ;
         }
 
         void EnableNoClip()
@@ -192,17 +189,11 @@ namespace Bark.Modules
             noclip.enabled = false;
         }
 
-        protected override void OnDisable()
+        protected override void Cleanup()
         {
-            base.OnDisable();
             if (mounted)
                 Unmount();
-        }
 
-        void OnDestroy()
-        {
-            if (mounted)
-                Unmount();
         }
 
         public override string DisplayName()

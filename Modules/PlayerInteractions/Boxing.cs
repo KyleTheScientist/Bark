@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Bark.Extensions;
 
-namespace Bark.Modules
+namespace Bark.Modules.PlayerInteractions
 {
 
     public class BoxingMarker : MonoBehaviour { }
@@ -113,7 +113,7 @@ namespace Bark.Modules
                 {
                     Logging.LogDebug(collider.name);
                     if (collider.name != "MM Glove") return;
-                    if (collider == tracker.collider) 
+                    if (collider == tracker.collider)
                         tracker = null;
                 };
 
@@ -125,18 +125,7 @@ namespace Bark.Modules
             }
         }
 
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            Cleanup();
-        }
-
-        void OnDestroy()
-        {
-            Cleanup();
-        }
-
-        void Cleanup()
+        protected override void Cleanup()
         {
             punchCollider?.gameObject?.Obliterate();
             foreach (GameObject g in gloves)
