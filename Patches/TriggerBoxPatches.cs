@@ -48,7 +48,7 @@ namespace Bark.Patches
                 if (!triggersEnabled)
                 {
                     Logging.LogDebug("Player fell out of map, disabling noclip");
-                    NoClip.Instance.enabled = false;
+                    NoCollide.Instance.enabled = false;
                 }
                 return triggersEnabled;
             }

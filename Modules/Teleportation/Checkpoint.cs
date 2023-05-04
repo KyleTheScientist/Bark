@@ -1,6 +1,7 @@
 ﻿using GorillaLocomotion;
 using Bark.Extensions;
 using Bark.Gestures;
+using Bark.GUI;
 using Bark.Patches;
 using Bark.Tools;
 using Bark.Modules.Physics;
@@ -29,8 +30,6 @@ namespace Bark.Modules.Teleportation
             try
             {
                 base.Start();
-                GestureTracker.Instance.OnLeftTriggerPressed += LeftTriggered;
-                GestureTracker.Instance.OnRightTriggerPressed += RightTriggered;
                 checkpointMarker = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Checkpoint Banana")).transform;
                 checkpointMarker.gameObject.SetActive(false);
                 bananaLine = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Banana Line")).GetComponent<LineRenderer>();
@@ -44,7 +43,7 @@ namespace Bark.Modules.Teleportation
 
         void LeftTriggered()
         {
-            if (enabled && !NoClip.active)
+            if (enabled && !NoCollide.active)
                 StartCoroutine(GrowBananas());
         }
 
@@ -59,7 +58,7 @@ namespace Bark.Modules.Teleportation
         {
             checkpointMarker.gameObject.SetActive(true);
             float startTime = Time.time;
-            while (GestureTracker.Instance.leftTriggered && !NoClip.active)
+            while (GestureTracker.Instance.leftTriggered && !NoCollide.active)
             {
                 float scale = Mathf.Lerp(0, Player.Instance.scale, (Time.time - startTime) / 2f);
                 checkpointMarker.position = Player.Instance.leftHandTransform.position + Vector3.up * .15f * Player.Instance.scale;
@@ -121,6 +120,7 @@ namespace Bark.Modules.Teleportation
         List<GorillaTriggerBox> markedTriggers;
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             checkpointMarker.gameObject.SetActive(pointSet);
             markedTriggers = new List<GorillaTriggerBox>();
@@ -135,6 +135,8 @@ namespace Bark.Modules.Teleportation
                 };
                 markedTriggers.Add(triggerBox);
             }
+            GestureTracker.Instance.OnLeftTriggerPressed += LeftTriggered;
+            GestureTracker.Instance.OnRightTriggerPressed += RightTriggered;
         }
 
 
@@ -157,6 +159,8 @@ namespace Bark.Modules.Teleportation
             {
                 triggerBox.GetComponent<CollisionObserver>()?.Obliterate();
             }
+            GestureTracker.Instance.OnLeftTriggerPressed -= LeftTriggered;
+            GestureTracker.Instance.OnRightTriggerPressed -= RightTriggered;
         }
 
         public override string DisplayName()

@@ -1,37 +1,30 @@
 ﻿using GorillaLocomotion;
+using Bark.Extensions;
 using Bark.Gestures;
+using Bark.GUI;
+using Bark.Modules.Physics;
 using Bark.Patches;
 using Bark.Tools;
 using System;
 using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
-using Bark.Extensions;
-using Bark.Modules.Physics;
 
 namespace Bark.Modules
 {
     public class Teleport : BarkModule
     {
+        public static readonly int layerMask = LayerMask.GetMask("Default", "Gorilla Object"); 
+
         private Transform teleportMarker, window;
         private bool isTeleporting;
         private const float teleportWindupTime = 1f;
-        public static int layerMask = LayerMask.GetMask("Default", "Gorilla Object");
         private DebugPoly poly;
         private SphereCollider windowCollider;
 
-        protected override void Start()
-        {
-            try
-            {
-                base.Start();
-            }
-            catch (Exception e) { Logging.LogException(e); }
-
-        }
-
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             try
             {
@@ -40,7 +33,7 @@ namespace Bark.Modules
                 window = new GameObject("Teleport Window").transform;
                 windowCollider = window.gameObject.AddComponent<SphereCollider>();
                 windowCollider.isTrigger = true;
-                window.gameObject.layer = NoClip.layer;
+                window.gameObject.layer = NoCollide.layer;
                 poly = window.gameObject.AddComponent<DebugPoly>();
                 GestureTracker.Instance.OnIlluminati += OnIlluminati;
             } catch (Exception e) { Logging.LogException(e); }
@@ -51,7 +44,9 @@ namespace Bark.Modules
             if (this.enabled)
             {
                 if (!isTeleporting)
+                {
                     StartCoroutine(GrowBananas());
+                }
             }
         }
 
@@ -143,6 +138,7 @@ namespace Bark.Modules
             GestureTracker.Instance.OnIlluminati -= OnIlluminati;
             teleportMarker?.gameObject?.Obliterate();
             window?.gameObject?.Obliterate();
+            isTeleporting = false;
         }
 
         public override string DisplayName()

@@ -1,9 +1,10 @@
 ﻿using Bark.Extensions;
+using Bark.GUI;
 using Bark.Tools;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Bark.Modules.PlayerInteractions
+namespace Bark.Modules.Multiplayer
 {
     public class XRayMarker : MonoBehaviour
     {
@@ -58,6 +59,7 @@ namespace Bark.Modules.PlayerInteractions
         }
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             markers = new List<XRayMarker>();
             ApplyMaterial();

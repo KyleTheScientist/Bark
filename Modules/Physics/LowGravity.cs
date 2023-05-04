@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Bark.GUI;
+using UnityEngine;
 
 namespace Bark.Modules.Physics
 {
@@ -17,6 +18,7 @@ namespace Bark.Modules.Physics
 
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             UnityEngine.Physics.gravity = baseGravity * gravityScale;
             active = true;

@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections;
+using Bark.GUI;
 using Bark.Patches;
 using Bark.Tools;
 using GorillaLocomotion;
 using UnityEngine;
-using Bark.Modules.PlayerInteractions;
+using Bark.Modules.Multiplayer;
 using Bark.Modules.Movement;
 
 namespace Bark.Modules.Physics
 {
-    public class NoClip : BarkModule
+    public class NoCollide : BarkModule
     {
-        public static NoClip Instance;
+        public static NoCollide Instance;
 
         private LayerMask baseMask;
         private bool baseHeadIsTrigger, baseBodyIsTrigger;
@@ -32,6 +33,7 @@ namespace Bark.Modules.Physics
         {
             try
             {
+                if (!MenuController.Instance.Built) return;
                 base.OnEnable();
                 Logging.LogDebug("Disabling triggers");
                 activationLocation = Player.Instance.bodyCollider.transform.position;

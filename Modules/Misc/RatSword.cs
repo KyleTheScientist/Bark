@@ -1,13 +1,9 @@
-﻿using GorillaLocomotion;
+﻿using Bark.Extensions;
 using Bark.Gestures;
-using Bark.Patches;
+using Bark.GUI;
 using Bark.Tools;
 using System;
-using System.Collections;
 using UnityEngine;
-using Random = UnityEngine.Random;
-using Bark.Extensions;
-using Photon.Pun;
 
 namespace Bark.Modules.Misc
 {
@@ -16,6 +12,7 @@ namespace Bark.Modules.Misc
         private GameObject sword;
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
 
             try

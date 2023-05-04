@@ -1,7 +1,7 @@
 ﻿using System;
 using GorillaLocomotion;
 using Bark.Modules.Physics;
-using Bark.Modules.PlayerInteractions;
+using Bark.Modules.Multiplayer;
 using Bark.Tools;
 using UnityEngine;
 
@@ -39,16 +39,16 @@ namespace Bark.Gestures
                     lastValidPosition = Player.Instance.bodyCollider.transform.position;
                     hasValidPosition = true;
                     isValidAndStable = true;
-                    if (NoClip.Instance?.button)
-                        NoClip.Instance.button.RemoveBlocker(ButtonController.Blocker.NOCLIP_BOUNDARY);
+                    if (NoCollide.Instance?.button)
+                        NoCollide.Instance.button.RemoveBlocker(ButtonController.Blocker.NOCLIP_BOUNDARY);
                     if (Piggyback.Instance?.button)
                         Piggyback.Instance.button.RemoveBlocker(ButtonController.Blocker.NOCLIP_BOUNDARY);
                 }
                 else if (!isValid)
                 {
                     isValidAndStable = false;
-                    if (NoClip.Instance?.button)
-                        NoClip.Instance.button.AddBlocker(ButtonController.Blocker.NOCLIP_BOUNDARY);
+                    if (NoCollide.Instance?.button)
+                        NoCollide.Instance.button.AddBlocker(ButtonController.Blocker.NOCLIP_BOUNDARY);
                     if (Piggyback.Instance?.button)
                         Piggyback.Instance.button.AddBlocker(ButtonController.Blocker.NOCLIP_BOUNDARY);
                 }

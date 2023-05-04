@@ -1,12 +1,9 @@
 ﻿using GorillaLocomotion;
-using Bark.Gestures;
 using Bark.Tools;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 using System.Reflection;
-using UnityEngine.InputSystem.HID;
 using Bark.Modules.Physics;
+using Bark.GUI;
 
 namespace Bark.Modules.Movement
 {
@@ -21,6 +18,7 @@ namespace Bark.Modules.Movement
 
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
         }
 
@@ -35,7 +33,7 @@ namespace Bark.Modules.Movement
             }
             else
             {
-                if(Vector3.Distance(player.bodyCollider.transform.position, hit.point) > 2)
+                if (Vector3.Distance(player.bodyCollider.transform.position, hit.point) > 2)
                     Cleanup();
             }
         }

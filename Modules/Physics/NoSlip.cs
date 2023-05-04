@@ -1,12 +1,13 @@
 ﻿using Bark.GUI;
+using Bark.Patches;
 using GorillaLocomotion;
 using UnityEngine;
 
 namespace Bark.Modules.Physics
 {
-    public class Freeze : BarkModule
+    public class NoSlip: BarkModule
     {
-        public static Freeze Instance;
+        public static NoSlip Instance;
 
         void Awake() { Instance = this; }
 
@@ -14,22 +15,23 @@ namespace Bark.Modules.Physics
         {
             if (!MenuController.Instance.Built) return;
             base.OnEnable();
-            Player.Instance.bodyCollider.attachedRigidbody.isKinematic = true;
+            if (SlipperyHands.Instance)
+                SlipperyHands.Instance.enabled = false;
         }
 
-        protected override void Cleanup()
+        protected override void Cleanup() 
         {
-            Player.Instance.bodyCollider.attachedRigidbody.isKinematic = false;
+            string s = $"The functionality for this module is in {nameof(SlidePatch) }";
         }
 
         public override string DisplayName()
         {
-            return "Freeze";
+            return "No Slip";
         }
 
         public override string Tutorial()
         {
-            return "Effect: Freezes you in place.";
+            return "Effect: You no longer slide on slippery surfaces.";
         }
 
     }

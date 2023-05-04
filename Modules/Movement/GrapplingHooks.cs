@@ -2,9 +2,10 @@
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using Bark.Gestures;
-using GorillaLocomotion;
+using Bark.GUI;
 using Bark.Tools;
 using Bark.Extensions;
+using GorillaLocomotion;
 
 namespace Bark.Modules.Movement
 {
@@ -89,6 +90,7 @@ namespace Bark.Modules.Movement
 
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             Setup();
         }

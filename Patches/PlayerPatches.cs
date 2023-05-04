@@ -28,8 +28,10 @@ namespace Bark.Patches
     {
         private static void Postfix(Player __instance, ref float __result)
         {
-            if(Slippery.Instance)
-            __result = Slippery.Instance.enabled ? 1 : __result;
+            if(SlipperyHands.Instance)
+                    __result = SlipperyHands.Instance.enabled ? 1 : __result;
+            if(NoSlip.Instance)
+                __result = NoSlip.Instance.enabled ? 0 : __result;
         }
     }
 }

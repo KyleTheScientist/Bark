@@ -1,4 +1,5 @@
-﻿using GorillaLocomotion;
+﻿using Bark.GUI;
+using GorillaLocomotion;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -12,6 +13,7 @@ namespace Bark.Modules.Movement
 
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             _player = Player.Instance;
             _rigidbody = _player.bodyCollider.attachedRigidbody;

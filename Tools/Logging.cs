@@ -10,37 +10,36 @@ namespace Bark.Tools
         public static void Init()
         {
             logger = Logger.CreateLogSource("Bark");
-            
         }
 
         public static void LogException(Exception e)
         {
-
-            LogWarning(e.Message, e.StackTrace);
+            var methodInfo = new StackTrace().GetFrame(1).GetMethod();
+            logger.LogWarning($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", e.Message, e.StackTrace));
         }
 
         public static void LogFatal(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.LogFatal($"({methodInfo.ReflectedType.Name}) " + string.Join(" ", content));
+            logger.LogFatal($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
         }
 
         public static void LogWarning(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.LogWarning($"({methodInfo.ReflectedType.Name}) " + string.Join(" ", content));
+            logger.LogWarning($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
         }
 
         public static void LogInfo(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.LogInfo($"({methodInfo.ReflectedType.Name}) " + string.Join(" ", content));
+            logger.LogInfo($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
         }
 
         public static void LogDebug(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.LogInfo($"*** Debug *** ({methodInfo.ReflectedType.Name}) " + string.Join(" ", content));
+            logger.LogInfo($"*** Debug *** ({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
         }
     }
 }

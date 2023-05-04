@@ -14,7 +14,7 @@ namespace Bark
 
     public class Plugin : BaseUnityPlugin
     {
-        bool initialized, inRoom;
+        public static bool initialized, inRoom;
         bool pluginEnabled = false;
         public static AssetBundle assetBundle;
         public static MenuController menuController;
@@ -60,7 +60,7 @@ namespace Bark
                 Logging.LogDebug("Start");
                 Utilla.Events.GameInitialized += OnGameInitialized;
                 assetBundle = AssetUtils.LoadAssetBundle("Bark/Resources/barkbundle");
-                monkeMenuPrefab = assetBundle.LoadAsset<GameObject>("MonkeMenu");
+                monkeMenuPrefab = assetBundle.LoadAsset<GameObject>("Bark Menu");
             }
             catch (Exception e)
             {

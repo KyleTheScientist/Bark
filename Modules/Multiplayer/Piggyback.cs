@@ -1,10 +1,11 @@
-﻿using Bark.Gestures;
+﻿using Bark.GUI;
+using Bark.Gestures;
 using Bark.Patches;
 using Bark.Modules.Physics;
 using GorillaLocomotion;
 using UnityEngine;
 
-namespace Bark.Modules.PlayerInteractions
+namespace Bark.Modules.Multiplayer
 {
     public class Piggyback : BarkModule
     {
@@ -21,52 +22,10 @@ namespace Bark.Modules.PlayerInteractions
         protected override void Start()
         {
             base.Start();
-            GestureTracker.Instance.OnRightGripReleased += () =>
-            {
-                if (enabled && mounted && !latchedWithLeft)
-                    Unmount();
-            };
-            GestureTracker.Instance.OnRightGripPressed += () =>
-            {
-                RigScanResult closest = ClosestRig(GestureTracker.Instance.rightHand.transform);
-                if (closest.distance < mountDistance && enabled && !mounted)
-                {
-                    if (GivingConsent(closest.rig))
-                    {
-                        Mount(closest.transform, closest.rig);
-                        latchedWithLeft = false;
-                    }
-                }
-            };
-
-            GestureTracker.Instance.OnLeftGripReleased += () =>
-            {
-                if (enabled && mounted && latchedWithLeft)
-                    Unmount();
-            };
-            GestureTracker.Instance.OnLeftGripPressed += () =>
-            {
-                RigScanResult closest = ClosestRig(GestureTracker.Instance.leftHand.transform);
-                if (closest.distance < mountDistance && enabled && !mounted)
-                {
-                    if (GivingConsent(closest.rig))
-                    {
-                        Mount(closest.transform, closest.rig);
-                        latchedWithLeft = true;
-                    }
-                }
-            };
-
-
         }
 
         void Mount(Transform t, VRRig rig)
         {
-            if (!PositionValidator.Instance.isValidAndStable)
-            {
-                GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 1f);
-                return;
-            }
             mountPosition = Player.Instance.bodyCollider.transform.position;
             mountedRig = rig;
             mounted = true;
@@ -177,22 +136,77 @@ namespace Bark.Modules.PlayerInteractions
 
         void EnableNoClip()
         {
-            var noclip = Plugin.menuController.GetComponent<NoClip>();
+            var noclip = Plugin.menuController.GetComponent<NoCollide>();
             noclip.button.AddBlocker(ButtonController.Blocker.PIGGYBACKING);
             noclip.enabled = true;
         }
 
         void DisableNoClip()
         {
-            var noclip = Plugin.menuController.GetComponent<NoClip>();
+            var noclip = Plugin.menuController.GetComponent<NoCollide>();
             noclip.button.RemoveBlocker(ButtonController.Blocker.PIGGYBACKING);
             noclip.enabled = false;
+        }
+
+        bool TryMount()
+        {
+            RigScanResult closest = ClosestRig(GestureTracker.Instance.rightHand.transform);
+            if (closest.distance < mountDistance && enabled && !mounted)
+            {
+                if (GivingConsent(closest.rig))
+                {
+                    if (!PositionValidator.Instance.isValidAndStable)
+                    {
+                        GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 1f);
+                        return false;
+                    }
+                    Mount(closest.transform, closest.rig);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void LatchLeft()
+        {
+            latchedWithLeft = TryMount();
+        }
+
+        void LatchRight()
+        {
+            latchedWithLeft = !TryMount();
+        }
+
+        void UnlatchLeft()
+        {
+            if (enabled && mounted && latchedWithLeft)
+                Unmount();
+        }
+
+        void UnlatchRight()
+        {
+            if (enabled && mounted && !latchedWithLeft)
+                Unmount();
+        }
+
+        protected override void OnEnable()
+        {
+            if (!MenuController.Instance.Built) return;
+            base.OnEnable();
+            GestureTracker.Instance.OnLeftGripPressed += LatchLeft;
+            GestureTracker.Instance.OnLeftGripReleased += UnlatchLeft;
+            GestureTracker.Instance.OnRightGripPressed += LatchRight;
+            GestureTracker.Instance.OnRightGripReleased += UnlatchRight;
         }
 
         protected override void Cleanup()
         {
             if (mounted)
                 Unmount();
+            GestureTracker.Instance.OnLeftGripPressed -= LatchLeft;
+            GestureTracker.Instance.OnLeftGripReleased -= UnlatchLeft;
+            GestureTracker.Instance.OnRightGripPressed -= LatchRight;
+            GestureTracker.Instance.OnRightGripReleased -= UnlatchRight;
 
         }
 

@@ -1,4 +1,4 @@
-﻿    using Bark.Extensions;
+﻿using Bark.Extensions;
 using Bark.Modules;
 using Bark.Tools;
 using GorillaLocomotion;
@@ -101,14 +101,14 @@ namespace Bark.Gestures
 
         void TrackBodyVectors()
         {
-            var left = Player.Instance.leftHandTransform;
+            var left = leftHand.transform;
             leftHandVectors = new BodyVectors()
             {
                 pointerDirection = left.forward,
                 palmNormal = left.right,
                 thumbDirection = left.up
             };
-            var right = Player.Instance.rightHandTransform;
+            var right = rightHand.transform;
             rightHandVectors = new BodyVectors()
             {
                 pointerDirection = right.forward,
@@ -192,12 +192,12 @@ namespace Bark.Gestures
             if (relativePosition.z > 0f) return false;
             return Vector3.Dot(leftHandVectors.pointerDirection, rightHandVectors.pointerDirection) < -.5f;
         }
-        
+
         void TrackButtonPresses()
         {
             leftWasGripped = leftGripped;
             rightWasGripped = rightGripped;
-            
+
             leftController.TryGetFeatureValue(CommonUsages.gripButton, out leftGripped);
             rightController.TryGetFeatureValue(CommonUsages.gripButton, out rightGripped);
 
@@ -213,7 +213,7 @@ namespace Bark.Gestures
             leftWasTriggered = leftTriggered;
             rightWasTriggered = rightTriggered;
             float lTriggerAmount, rTriggerAmount;
-            
+
             leftController.TryGetFeatureValue(CommonUsages.trigger, out lTriggerAmount);
             rightController.TryGetFeatureValue(CommonUsages.trigger, out rTriggerAmount);
 

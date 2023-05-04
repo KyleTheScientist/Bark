@@ -1,4 +1,5 @@
-﻿using GorillaLocomotion;
+﻿using Bark.GUI;
+using GorillaLocomotion;
 
 namespace Bark.Modules
 {
@@ -20,6 +21,7 @@ namespace Bark.Modules
 
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             active = true;
             scale = _scale;

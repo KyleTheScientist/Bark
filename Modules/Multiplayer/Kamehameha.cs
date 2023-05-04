@@ -1,14 +1,14 @@
 ﻿using GorillaLocomotion;
+using Bark.Extensions;
+using Bark.GUI;
 using Bark.Gestures;
-using Bark.Patches;
 using Bark.Tools;
 using System;
 using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
-using Bark.Extensions;
 
-namespace Bark.Modules.PlayerInteractions
+namespace Bark.Modules.Multiplayer
 {
     public class Kamehameha : BarkModule
     {
@@ -23,6 +23,7 @@ namespace Bark.Modules.PlayerInteractions
             try
             {
                 base.Start();
+                if (!MenuController.Instance.Built) return; // This all needs to be moved to OnEnable before it can work
                 bananaLine = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Laser Sight")).GetComponent<LineRenderer>();
                 bananaLine.gameObject.SetActive(false);
                 orb = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;

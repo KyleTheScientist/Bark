@@ -1,5 +1,6 @@
 ﻿using GorillaLocomotion;
 using Bark.Gestures;
+using Bark.GUI;
 using Bark.Tools;
 using System;
 using System.Collections.Generic;
@@ -64,6 +65,7 @@ namespace Bark.Modules.Movement
 
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             GestureTracker.Instance.OnGlide += OnGlide;
         }

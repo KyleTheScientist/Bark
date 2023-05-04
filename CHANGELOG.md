@@ -7,6 +7,8 @@ Features
 	- This module allows you to seamlessly transition between walking on the floor to walls and ceilings.
 - Added the **Slippery Hands** module
 	- This module makes every surface slippery like ice. You can ski anywhere!
+- Added the **No Slip** module
+	- This module disables all sliding (I already had the opposite made so why not just invert it?).
 - Added the **Freeze** module
 	- This mod freezes your player in place, essentially disabling physics for your body. Good for setting up camera angles, or just taking a breather!
 
@@ -17,7 +19,16 @@ Changes
 - Teleport is now much more user-friendly. 
 - You can now move your head freely while using Piggyback
 - Buttons now have a short cooldown after being pressed to prevent double-tapping
+- Buttons now stay pressed in while you hold them down
 - Refactored some of the code structure
+
+Fixes
+- Airplane now works the consistently across Steam & Oculus stores. Previously Steam users would have to bend their arms and extra
+45 degrees to make the mod work. (o O o )
+- Reduced lag when opening the interface for the first time
+
+Removed
+- Removed Double Jump. It just doesn't fit in with the rest of the mod very well.
 
 ## 1.1.2 - Bugs and bugs and bugs, oh my
 

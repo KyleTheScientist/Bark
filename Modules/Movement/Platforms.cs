@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.XR;
 using Bark.Extensions;
 using Bark.Gestures;
+using Bark.GUI;
 using Bark.Modules.Physics;
 
 namespace Bark.Modules.Movement
@@ -19,6 +20,7 @@ namespace Bark.Modules.Movement
 
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             try
             {
@@ -90,7 +92,7 @@ namespace Bark.Modules.Movement
         {
             float transparency = (Time.time - spawnTime) / 1f;
             material.color = new Color(1, 1, 1, Mathf.Lerp(1, 0, transparency));
-            platform.layer = NoClip.active ? NoClip.layer : 0;
+            platform.layer = NoCollide.active ? NoCollide.layer : 0;
         }
 
         protected override void Cleanup()

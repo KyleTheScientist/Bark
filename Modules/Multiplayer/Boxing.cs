@@ -1,11 +1,12 @@
-﻿using GorillaLocomotion;
+﻿using Bark.Extensions;
+using Bark.GUI;
 using Bark.Tools;
+using GorillaLocomotion;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Bark.Extensions;
 
-namespace Bark.Modules.PlayerInteractions
+namespace Bark.Modules.Multiplayer
 {
 
     public class BoxingMarker : MonoBehaviour { }
@@ -89,6 +90,7 @@ namespace Bark.Modules.PlayerInteractions
 
         protected override void OnEnable()
         {
+            if (!MenuController.Instance.Built) return;
             base.OnEnable();
             try
             {

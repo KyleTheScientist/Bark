@@ -16,7 +16,7 @@
 ## Modules
 
 ### Airplane
-- The user should be able to fly and steer by t-posing and rotating palms
+- The user should be able to fly and steer by T-posing and rotating palms
 - The user should not be able to fly while holding any triggers
 - The user should not be able to fly after Airplane is disabled
 
@@ -47,9 +47,8 @@
 - The user's speed should reset after Speed Boost is disabled
 
 ### Wall Run
-
 - The user should be able to walk on walls and ceilings
-- Gravity should reset if the user is too far from the last placed they touched
+- Gravity should reset if the user is too far from the last place they touched
 - The direction gravity should reset if Wall Run is disabled
 
 ### Freeze 
@@ -111,7 +110,7 @@
 - The banana should disappear if Teleport is disabled while the user is teleporting
 - The rainbow triangle should disappear if Teleport is disabled while the user is teleporting
 - The user should not be able to teleport after Teleport is disabled
-- The user
+
 
 ## Cohesion (Validate that mods that cover similar ground can be used together)
 

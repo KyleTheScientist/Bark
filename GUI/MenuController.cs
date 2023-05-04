@@ -9,7 +9,7 @@ using Bark.Modules;
 using Bark.Modules.Misc;
 using Bark.Modules.Movement;
 using Bark.Modules.Physics;
-using Bark.Modules.PlayerInteractions;
+using Bark.Modules.Multiplayer;
 using Bark.Modules.Teleportation;
 using Bark.Tools;
 using Photon.Pun;
@@ -19,7 +19,8 @@ namespace Bark.GUI
 {
     public class MenuController : XRGrabInteractable
     {
-        bool built;
+        public static MenuController Instance;
+        public bool Built { get; private set; }
         public Vector3
             initialMenuOffset = new Vector3(0, .035f, .65f),
             btnDimensions = new Vector3(.3f, .05f, .05f),
@@ -27,7 +28,6 @@ namespace Bark.GUI
             attachPointOffset,
             buttonOffset;
         public Rigidbody _rigidbody;
-        public GameObject menuBase;
         private List<Transform> pages;
         private List<ButtonController> buttons;
         private List<BarkModule> modules;
@@ -35,6 +35,7 @@ namespace Bark.GUI
 
         protected override void Awake()
         {
+            Instance = this;
             try
             {
                 Logging.LogDebug("Awake");
@@ -44,7 +45,7 @@ namespace Bark.GUI
                 var tracker = gameObject.AddComponent<GestureTracker>();
                 tracker.OnMeatBeat += () =>
                 {
-                    if (!built)
+                    if (!Built)
                         BuildMenu();
                     else
                         ResetPosition();
@@ -57,14 +58,15 @@ namespace Bark.GUI
                     gameObject.AddComponent<GrapplingHooks>(),
                     gameObject.AddComponent<Platforms>().Left(),
                     gameObject.AddComponent<Platforms>().Right(),
-                    gameObject.AddComponent<Wallrun>(),
                     gameObject.AddComponent<Speed>(),
+                    gameObject.AddComponent<Wallrun>(),
 
                     //// Physics
-                    gameObject.AddComponent<NoClip>(),
                     gameObject.AddComponent<Freeze>(),
-                    gameObject.AddComponent<Slippery>(),
                     gameObject.AddComponent<LowGravity>(),
+                    gameObject.AddComponent<NoCollide>(),
+                    gameObject.AddComponent<NoSlip>(),
+                    gameObject.AddComponent<SlipperyHands>(),
 
                     //// Teleportation
                     gameObject.AddComponent<Checkpoint>(),
@@ -109,22 +111,16 @@ namespace Bark.GUI
             Logging.LogDebug("Building menu...");
             try
             {
-                // Set initial position
-                _rigidbody = gameObject.GetComponent<Rigidbody>();
-                gameObject.layer = 4;
-
-                // Make it so you can grab the menu
-                menuBase = transform.Find("Bark").gameObject;
-                menuBase.layer = 4;
-
-                helpText = menuBase.transform.Find("Help Canvas").GetComponentInChildren<Text>();
+                helpText = this.gameObject.transform.Find("Help Canvas").GetComponentInChildren<Text>();
                 helpText.text = "Enable a module to see its tutorial.";
-                menuBase.transform.Find("Version Canvas").GetComponentInChildren<Text>().text = 
+                this.gameObject.transform.Find("Version Canvas").GetComponentInChildren<Text>().text =
                     $"{PluginInfo.Name} {PluginInfo.Version}";
 
-                var collider = menuBase.AddComponent<BoxCollider>();
+                var collider = this.gameObject.AddComponent<BoxCollider>();
+                _rigidbody = gameObject.GetComponent<Rigidbody>();
+                _rigidbody.isKinematic = true;
                 menuDimensions = collider.bounds.extents;
-                buttonOffset = menuBase.transform.localPosition + (collider.bounds.min.z * Vector3.forward);
+                buttonOffset = this.gameObject.transform.localPosition + (collider.bounds.min.z * Vector3.forward);
 
                 collider.isTrigger = true;
                 this.colliders.Add(collider);
@@ -136,21 +132,21 @@ namespace Bark.GUI
                 Logging.LogDebug("Build successful.");
             }
             catch (Exception ex) { Logging.LogWarning(ex.Message); Logging.LogWarning(ex.StackTrace); return; }
-            built = true;
+            Built = true;
         }
 
         bool includeDebugButtons = false;
-        public void SetupButtons()
+        public void SetupButtons    ()
         {
-            var pageTemplate = this.menuBase.transform.Find("Page");
-            int buttonsPerPage = pageTemplate.childCount - 2;
-            int numPages = (modules.Count / buttonsPerPage) + 1;
+            var pageTemplate = this.gameObject.transform.Find("Page");
+            int buttonsPerPage = pageTemplate.childCount - 2; // Excludes the prev/next page btns
+            int numPages = ((modules.Count - 1) / buttonsPerPage) + 1;
             if (includeDebugButtons)
                 numPages++;
 
             pages = new List<Transform>() { pageTemplate };
             for (int i = 0; i < numPages - 1; i++)
-                pages.Add(Instantiate(pageTemplate, this.menuBase.transform));
+                pages.Add(Instantiate(pageTemplate, this.gameObject.transform));
 
             buttons = new List<ButtonController>();
             for (int i = 0; i < modules.Count; i++)
@@ -173,18 +169,7 @@ namespace Bark.GUI
                 btnController.SetText(module.DisplayName().ToUpper());
             }
 
-            AddDebugButton("Rip Textures", (btn, isPressed) =>
-            {
-                try
-                {
-                    TextureRipper.Rip();
-                    GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 0.1f);
-                }
-                catch (Exception e)
-                {
-                    Logging.LogException(e);
-                }
-            });
+            AddDebugButtons();
 
             foreach (Transform page in pages)
             {
@@ -214,6 +199,15 @@ namespace Bark.GUI
             }
             pageTemplate.gameObject.SetActive(true);
 
+        }
+
+        private void AddDebugButtons()
+        {
+            AddDebugButton("Rip Textures", (btn, isPressed) =>
+            {
+                TextureRipper.Rip();
+                 GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 0.1f);
+            });
         }
 
         int debugButtons = 0;
@@ -296,7 +290,6 @@ namespace Bark.GUI
             foreach (var button in buttons)
             {
                 button.RemoveBlocker(blocker);
-
             }
         }
     }
