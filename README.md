@@ -12,13 +12,17 @@
 * `Grappling Hooks` - **Grab one of the grapple guns** off of your hip holster with **either grip button and then press the trigger to fire**
 * `Platforms (Left/Right)` - **Press the grip button** on your controller to create a floating platform in the air that you can stand on. There's a toggle for each hand so that you can disable one if it clashes with another mod's inputs.
 * `Speed` - Significantly increases the player's movement speed
+* `Wall Run` - Allows you to seamlessly transition between running on floors, walls, and ceilings!
 ### Physics
+* `Freeze` - Freezes your velocity at zero so you can remain in one spot in the air
 * `Low Gravity` - Decreases the strength of gravity
 * `No Collide` - Allows the player to fall through solid objects. Enabling this automatically enables platforms so you don't fall to your death!
+* `No Slip` - Disables sliding on slippery surfaces, like ice.
+* `Slippery Hands` - Makes everything slippery so you can ski anywhere!
 ### Teleportation
 * `Checkpoint` - **Grip the left trigger** to start summoning a holographic banana above your hand. Grip the *right trigger* to warp back to it.
 * `Teleport` - **Make a triangle with your thumbs and index fingers and peer through it** to initiate a teleport. Use your head to aim more finely.
-### Interactions
+### Multiplayer
 * `Boxing` - Better known as "punch mod", this allows the player to be punched around by others in the lobby. You can't be punched while touching the ground.
 * `Piggyback` - Allows you to ride other players! To mount someone, **have them give you two-thumbs-up**, and then **grip their shoulder**. If they **give you two thumbs down** at any point, you'll stop riding them. *Consent is important!*
 * `X-Ray` - Allows you to see other players through walls.
@@ -29,7 +33,9 @@ These modules can be useful for exploring the game world, experimenting with gam
 When you join a modded lobby, simply beat on your chest like a gorilla in an alternating fashion with both hands 4 times (LRLR or RLRL). This will summon the interface in front of you. To hide the interface, simply grab it and throw it away.
 
 ## Installation
-To use *Bark*, you will need to have [Monke Mod Manager](https://github.com/DeadlyKitten/MonkeModManager/releases) installed. Once you have installed the mod loader, simply extract the `Bark-vX.X.X.zip` file into your game folder.
+To use *Bark*, you will need to have [Monke Mod Manager](https://github.com/DeadlyKitten/MonkeModManager/releases) installed. Make sure to check Utilla. Once you have installed the mod loader, simply drop the `Bark.dll` file into your plugins folder.
+
+![Installation GIF](https://github.com/KyleTheScientist/Bark/blob/master/Marketing/HowToInstall.gif)
 
 ## Important notes
 

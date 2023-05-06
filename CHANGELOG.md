@@ -1,6 +1,6 @@
 # CHANGELOG.md
 
-## 1.2.0 - Wall Running
+## 1.2.0 - The Physics Update
 
 Features
 - Added the **Wall Run** module
