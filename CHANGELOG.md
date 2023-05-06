@@ -1,6 +1,11 @@
 # CHANGELOG.md
 
-## 1.2.0 - The Physics Update
+## 1.2.1 (2023-May-6) - Checkpoint Fix
+Fixes
+- Checkpoint now works again. Something in the map changed which caused it to break.
+
+
+## 1.2.0 (2023-May-6) - The Physics Update
 
 Features
 - Added the **Wall Run** module

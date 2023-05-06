@@ -21,7 +21,7 @@ namespace Bark.Modules.Teleportation
         private Vector3 checkpointPosition, checkpointMarkerPosition;
         private float checkpointRotation;
         private bool pointSet;
-
+        GameObject checkpointPrefab, bananaLinePrefab;
 
         void Awake() { Instance = this; }
 
@@ -30,10 +30,10 @@ namespace Bark.Modules.Teleportation
             try
             {
                 base.Start();
-                checkpointMarker = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Checkpoint Banana")).transform;
-                checkpointMarker.gameObject.SetActive(false);
-                bananaLine = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Banana Line")).GetComponent<LineRenderer>();
-                bananaLine.gameObject.SetActive(false);
+                checkpointPrefab = Plugin.assetBundle.LoadAsset<GameObject>("Checkpoint Banana");
+                checkpointPrefab.gameObject.SetActive(false);
+                bananaLinePrefab = Plugin.assetBundle.LoadAsset<GameObject>("Banana Line");
+                bananaLinePrefab.gameObject.SetActive(false);
             }
             catch (Exception e)
             {
@@ -120,31 +120,39 @@ namespace Bark.Modules.Teleportation
         List<GorillaTriggerBox> markedTriggers;
         protected override void OnEnable()
         {
-            if (!MenuController.Instance.Built) return;
-            base.OnEnable();
-            checkpointMarker.gameObject.SetActive(pointSet);
-            markedTriggers = new List<GorillaTriggerBox>();
-            foreach (var triggerBox in FindObjectsOfType<GorillaTriggerBox>())
+            try
             {
-                triggerBox.gameObject.AddComponent<CollisionObserver>().OnTriggerStayed += (box, collider) =>
+                if (!MenuController.Instance.Built) return;
+                base.OnEnable();
+                checkpointMarker = Instantiate(checkpointPrefab).transform;
+                checkpointMarker.position = checkpointPosition;
+                checkpointMarker.gameObject.SetActive(pointSet);
+                bananaLine = Instantiate(bananaLinePrefab).GetComponent<LineRenderer>();
+                markedTriggers = new List<GorillaTriggerBox>();
+                foreach (var triggerBox in FindObjectsOfType<GorillaTriggerBox>())
                 {
-                    if (collider == Player.Instance.bodyCollider)
+                    if (triggerBox?.gameObject?.GetComponent<CollisionObserver>()) continue;
+                    var observer = triggerBox.gameObject.AddComponent<CollisionObserver>();
+                    // Sometimes you just can't add a collision observer for some reason. If this happens, give up.
+                    if (!triggerBox?.gameObject?.GetComponent<CollisionObserver>()) continue;
+
+                    observer.OnTriggerStayed += (box, collider) =>
                     {
-                        ClearCheckpoint();
-                    }
-                };
-                markedTriggers.Add(triggerBox);
+                        if (collider == Player.Instance.bodyCollider)
+                            ClearCheckpoint();
+                    };
+                    markedTriggers.Add(triggerBox);
+                }
+                GestureTracker.Instance.OnLeftTriggerPressed += LeftTriggered;
+                GestureTracker.Instance.OnRightTriggerPressed += RightTriggered;
             }
-            GestureTracker.Instance.OnLeftTriggerPressed += LeftTriggered;
-            GestureTracker.Instance.OnRightTriggerPressed += RightTriggered;
+            catch (Exception e) { Logging.LogException(e); }
         }
 
 
         public void ClearCheckpoint()
         {
             if (!pointSet) return;
-            Logging.LogDebug("Clearing Checkpoint");
-
             GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 1f);
             checkpointMarker.gameObject.SetActive(false);
             pointSet = false;
@@ -153,8 +161,8 @@ namespace Bark.Modules.Teleportation
 
         protected override void Cleanup()
         {
-            bananaLine.gameObject.SetActive(false);
-            checkpointMarker.gameObject.SetActive(false);
+            bananaLine?.gameObject.Obliterate();
+            checkpointMarker?.gameObject.Obliterate();
             foreach (var triggerBox in markedTriggers)
             {
                 triggerBox.GetComponent<CollisionObserver>()?.Obliterate();
