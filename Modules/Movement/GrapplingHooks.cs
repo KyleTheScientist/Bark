@@ -72,18 +72,17 @@ namespace Bark.Modules.Movement
         {
             try
             {
-                Logging.LogDebug("Cleaning up...");
-
-                GestureTracker.Instance.leftPalmInteractor
-                    .RemoveFromValidTargets(bananaGunL.GetComponent<BananaGun>());
-                GestureTracker.Instance.rightPalmInteractor
-                    .RemoveFromValidTargets(bananaGunR.GetComponent<BananaGun>());
+                if(bananaGunL)
+                        GestureTracker.Instance?.leftPalmInteractor?
+                        .RemoveFromValidTargets(bananaGunL.GetComponent<BananaGun>());
+                if(bananaGunR)
+                    GestureTracker.Instance?.rightPalmInteractor?
+                        .RemoveFromValidTargets(bananaGunR.GetComponent<BananaGun>());
 
                 holsterL?.Obliterate();
                 holsterR?.Obliterate();
                 bananaGunL?.Obliterate();
                 bananaGunR?.Obliterate();
-                Logging.LogDebug("Cleaned up successfully.");
             }
             catch (Exception e) { Logging.LogException(e); }
         }
@@ -124,18 +123,13 @@ namespace Bark.Modules.Movement
 
 
         private float
-            pullForce = 10f,
+            pullForce = 10f, 
             adjustForce = 5f,
             maxLength = 30f;
 
         protected override void Awake()
         {
             base.Awake();
-            GestureTracker.Instance.rightPalmInteractor.onSelectEntered.AddListener((interactable) =>
-            {
-                Logging.LogDebug("Selected", interactable.name);
-            });
-
             openModel = transform.Find("Banana Gun Open").gameObject;
             closedModel = transform.Find("Banana Gun Closed").gameObject;
             baseModelOffsetClosed = closedModel.transform.localPosition;
