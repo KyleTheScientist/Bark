@@ -140,7 +140,7 @@ namespace Bark.GUI
         {
             var pageTemplate = this.gameObject.transform.Find("Page");
             int buttonsPerPage = pageTemplate.childCount - 2; // Excludes the prev/next page btns
-            int numPages = ((modules.Count) / buttonsPerPage) + 1;
+            int numPages = ((modules.Count - 1) / buttonsPerPage) + 1;
             if (includeDebugButtons)
                 numPages++;
 
