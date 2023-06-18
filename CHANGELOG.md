@@ -1,5 +1,38 @@
 # CHANGELOG.md
 
+## 1.3.0 (2023-Jun-18) - The Computer Interface Update
+Features
+- Added the **Telekinesis** module which allows players to pick you and throw you
+  with The Force!
+- Added configurable settings for a handful of mods
+	- General
+		- `Open menu` - Which button you press to open the menu
+		- `Open hand` - Which hand's buttons can open the menu
+	- Airplane
+		- `Speed` - How fast you fly
+		- `Steer with` - Whether you steer with your wrists or head
+	- Boxing
+		- `Punch force` - How far you'll fly when people punch you
+	- Grappling Hooks
+		- `Rope type` - Whether the rope will pull you or stay at the same length
+		- `Springiness` - If rope type is set to elastic, how springy the ropes are
+		- `Steering` - How much influence you have on your velocity while swinging
+		- `Max length` - How far the grappling hooks can reach
+	- Gravity
+		- `Multiplier` - How strong gravity will be while the module is active
+	- Platforms
+		- `Sticky` - Whether or not your hands stick to the platforms
+		- `Input` - Which button you press to activate the platform
+	- Speed Boost
+		- `Speed` - How fast you run while the module is active
+
+Changes
+- Renamed `Speed` to `Speed Boost`
+- Renamed `Low Gravity` to `Gravity`
+
+Fixes
+- The menu and all the mods work again!
+
 ## 1.2.1 (2023-May-6) - Checkpoint Fix
 Fixes
 - Checkpoint now works again. Something in the map changed which caused it to break.

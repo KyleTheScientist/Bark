@@ -35,17 +35,17 @@ namespace Bark.Modules.Physics
 
         protected override void ReloadConfiguration()
         {
-            gravityScale = GravityMultiplier.Value / 5f;
+            gravityScale = Multiplier.Value / 5f;
             gravityScale = Mathf.Pow(gravityScale, 2f);
             UnityEngine.Physics.gravity = baseGravity * gravityScale;
         }
 
-        public static ConfigEntry<int> GravityMultiplier;
+        public static ConfigEntry<int> Multiplier;
         public static void BindConfigEntries()
         {
-            GravityMultiplier = Plugin.configFile.Bind(
+            Multiplier = Plugin.configFile.Bind(
                 section: DisplayName,
-                key: "gravityMultiplier",
+                key: "multiplier",
                 defaultValue: 2,
                 description: "How strong gravity will be (0=No gravity, 5=Normal gravity, 10=2x Jupiter Gravity)"
             );

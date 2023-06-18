@@ -25,6 +25,8 @@
 ### Multiplayer
 * `Boxing` - Better known as "punch mod", this allows the player to be punched around by others in the lobby. You can't be punched while touching the ground.
 * `Piggyback` - Allows you to ride other players! To mount someone, **have them give you two-thumbs-up**, and then **grip their shoulder**. If they **give you two thumbs down** at any point, you'll stop riding them. *Consent is important!*
+* `Telekinesis` - If another player points at you with their grip button pressed, they can
+  pick you up and throw you from afar.
 * `X-Ray` - Allows you to see other players through walls.
 
 These modules can be useful for exploring the game world, experimenting with gameplay mechanics, or just having fun with friends. They are **not** meant to be used to harass others, which can result in a ban from the game.
