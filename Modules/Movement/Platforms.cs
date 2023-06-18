@@ -7,16 +7,29 @@ using Bark.Extensions;
 using Bark.Gestures;
 using Bark.GUI;
 using Bark.Modules.Physics;
-
+using BepInEx.Configuration;
 namespace Bark.Modules.Movement
 {
     public class Platforms : BarkModule
     {
+        public static readonly string DisplayName = "Platforms";
+        public static GameObject platformPrefab;
         public GameObject platform, ghost;
+        BoxCollider normalCollider, stickyCollider;
         private XRNode xrNode;
         private Transform hand;
         private float spawnTime;
         private Material material;
+        InputTracker input;
+
+        void Awake()
+        {
+            if (!platformPrefab)
+            {
+                platformPrefab = Plugin.assetBundle.LoadAsset<GameObject>("Cloud");
+                platformPrefab.SetActive(false);
+            }
+        }
 
         protected override void OnEnable()
         {
@@ -24,42 +37,39 @@ namespace Bark.Modules.Movement
             base.OnEnable();
             try
             {
-                if (xrNode == XRNode.LeftHand)
-                {
-                    GestureTracker.Instance.OnLeftGripPressed += OnGrip;
-                    GestureTracker.Instance.OnLeftGripReleased += OnRelease;
-                }
-                else if (xrNode == XRNode.RightHand)
-                {
-                    GestureTracker.Instance.OnRightGripPressed += OnGrip;
-                    GestureTracker.Instance.OnRightGripReleased += OnRelease;
-                }
-
-                platform = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Cloud"));
+                platform = Instantiate(platformPrefab);
                 platform.name = "Cloud Solid";
                 platform.GetComponent<Renderer>().enabled = false;
-                platform.AddComponent<GorillaSurfaceOverride>().overrideIndex = 110;
+                normalCollider = platform.transform.Find("Normal Collider").GetComponent<BoxCollider>();
+                stickyCollider = platform.transform.Find("Sticky Collider").GetComponent<BoxCollider>();
+                normalCollider.gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 110;
+                stickyCollider.gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 110;
 
-                ghost = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Cloud"));
+                ghost = Instantiate(platformPrefab);
                 ghost.name = "Cloud Renderer";
-                ghost.GetComponent<Collider>().enabled = false;
+                foreach (var collider in ghost.GetComponentsInChildren<Collider>())
+                    collider.enabled = false;
 
                 material = ghost.GetComponent<Renderer>().material;
                 platform.gameObject.SetActive(false);
+                ReloadConfiguration();
             }
             catch (Exception e) { Logging.LogException(e); }
         }
 
+        bool gripped;
         public void OnGrip()
         {
             if (enabled)
             {
+                gripped = true;
                 platform.SetActive(true);
                 platform.transform.position = hand.position;
                 platform.transform.rotation = hand.rotation;
                 float scaleX = xrNode == XRNode.LeftHand ? -1 : 1;
                 platform.transform.localScale = new Vector3(scaleX, 1, 1) * Player.Instance.scale;
 
+                ghost.SetActive(true);
                 ghost.transform.position = hand.position;
                 ghost.transform.rotation = hand.rotation;
                 ghost.transform.localScale = platform.transform.localScale;
@@ -70,12 +80,13 @@ namespace Bark.Modules.Movement
 
         public void OnRelease()
         {
+            gripped = false;
             platform?.SetActive(false);
         }
 
         public Platforms Left()
         {
-            hand = Player.Instance.leftHandTransform;
+            hand = Player.Instance.leftControllerTransform;
             xrNode = XRNode.LeftHand;
 
             return this;
@@ -83,37 +94,74 @@ namespace Bark.Modules.Movement
 
         public Platforms Right()
         {
-            hand = Player.Instance.rightHandTransform;
+            hand = Player.Instance.rightControllerTransform;
             xrNode = XRNode.RightHand;
             return this;
         }
 
         void FixedUpdate()
         {
+            if (!Sticky.Value && gripped)
+                spawnTime = Time.time;
             float transparency = (Time.time - spawnTime) / 1f;
             material.color = new Color(1, 1, 1, Mathf.Lerp(1, 0, transparency));
-            platform.layer = NoCollide.active ? NoCollide.layer : 0;
+            normalCollider.gameObject.layer = NoCollide.active ? NoCollide.layer : 0;
+            stickyCollider.gameObject.layer = NoCollide.active ? NoCollide.layer : 0;
         }
 
         protected override void Cleanup()
         {
             platform?.Obliterate();
             ghost?.Obliterate();
-            if (xrNode == XRNode.LeftHand)
+            if (input != null)
             {
-
-                GestureTracker.Instance.OnLeftGripPressed -= OnGrip;
-                GestureTracker.Instance.OnLeftGripReleased -= OnRelease;
-            }
-            else if (xrNode == XRNode.RightHand)
-            {
-                GestureTracker.Instance.OnRightGripPressed -= OnGrip;
-                GestureTracker.Instance.OnRightGripReleased -= OnRelease;
+                input.OnPressed -= OnGrip;
+                input.OnReleased -= OnRelease;
             }
 
         }
+        protected override void ReloadConfiguration()
+        {
+            normalCollider.enabled = !Sticky.Value;
+            stickyCollider.enabled = Sticky.Value;
 
-        public override string DisplayName()
+            if (input != null)
+            {
+                input.OnPressed -= OnGrip;
+                input.OnReleased -= OnRelease;
+            }
+            input = GestureTracker.Instance.GetInputTracker(Input.Value, xrNode);
+            input.OnPressed += OnGrip;
+            input.OnReleased += OnRelease;
+        }
+
+        public static ConfigEntry<bool> Sticky;
+        public static ConfigEntry<string> Input;
+        public static void BindConfigEntries()
+        {
+            try
+            {
+                Sticky = Plugin.configFile.Bind(
+                    section: DisplayName,
+                    key: "sticky",
+                    defaultValue: false,
+                    description: "Whether or not your hands stick to the platforms"
+                );
+
+                Input = Plugin.configFile.Bind(
+                    section: DisplayName,
+                    key: "input",
+                    defaultValue: "grip",
+                    configDescription: new ConfigDescription(
+                        "Which button you press to activate the platform",
+                        new AcceptableValueList<string>("grip", "trigger", "stick", "a/x", "b/y")
+                    )
+                );
+            }
+            catch (Exception e) { Logging.LogException(e); }
+        }
+
+        public override string GetDisplayName()
         {
             if (xrNode == XRNode.LeftHand) return "Platforms (Left)";
             return "Platforms (Right)";

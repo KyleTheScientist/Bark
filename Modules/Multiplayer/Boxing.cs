@@ -1,6 +1,8 @@
 ﻿using Bark.Extensions;
+using Bark.Gestures;
 using Bark.GUI;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLocomotion;
 using System;
 using System.Collections.Generic;
@@ -13,11 +15,13 @@ namespace Bark.Modules.Multiplayer
 
     public class Boxing : BarkModule
     {
-        public float forceMultiplier = 100f;
+        public static readonly string DisplayName = "Boxing";
+        public float forceMultiplier = 50;
         private PunchTracker tracker;
         private Collider punchCollider;
         private List<GameObject> gloves = new List<GameObject>();
         private List<BoxingMarker> markers = new List<BoxingMarker>();
+        private float lastPunch;
 
         public class PunchTracker
         {
@@ -54,29 +58,32 @@ namespace Bark.Modules.Multiplayer
             glove.transform.SetParent(parent, false);
             float x = isLeft ? 1 : -1;
             glove.transform.localScale = new Vector3(x, 1, 1);
-            glove.layer = 4;
+            glove.layer = BarkInteractor.InteractionLayer;
             foreach (Transform child in glove.transform)
-                child.gameObject.layer = 4;
+                child.gameObject.layer = BarkInteractor.InteractionLayer;
             return glove;
         }
 
         void FixedUpdate()
         {
             if (Time.frameCount % 300 == 0) CreateGloves();
-
-            if (!(tracker is null) && Time.frameCount - tracker.punchFrame > 5)
-            {
-                DoPunch();
-            }
-
         }
 
         private void DoPunch()
         {
-            Vector3 force = (tracker.collider.transform.position - tracker.lastPos) * forceMultiplier;
-            if (force.magnitude > 20) force = force.normalized * 20;
+            if (Time.time - lastPunch < 1) return;
+            Vector3 force = (tracker.collider.transform.position - tracker.lastPos);
+            Logging.LogDebug("Raw Force", force.magnitude);
+            if (force.magnitude < .1f * Player.Instance.scale) return;
+
+
+            if (force.magnitude > 1)
+                force.Normalize();
+            force *= forceMultiplier;
+            Logging.LogDebug("Actual Force", force.magnitude);
             Player.Instance.bodyCollider.attachedRigidbody.velocity += force;
-            tracker.punchFrame = Time.frameCount;
+            lastPunch = Time.time;
+            tracker = null;
         }
 
         private void RegisterTracker(Collider collider)
@@ -84,7 +91,7 @@ namespace Bark.Modules.Multiplayer
             tracker = new PunchTracker()
             {
                 collider = collider,
-                lastPos = collider.transform.position + Vector3.zero
+                lastPos = collider.transform.position
             };
         }
 
@@ -94,29 +101,24 @@ namespace Bark.Modules.Multiplayer
             base.OnEnable();
             try
             {
+                ReloadConfiguration();
                 var capsule = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-                capsule.name = "MonkeMenuPunchDetector";
+                capsule.name = "BarkPunchDetector";
                 capsule.transform.SetParent(Player.Instance.bodyCollider.transform, false);
-                capsule.layer = 4;
+                capsule.layer = BarkInteractor.InteractionLayer;
                 capsule.GetComponent<MeshRenderer>().enabled = false;
 
                 punchCollider = capsule.GetComponent<Collider>();
                 punchCollider.isTrigger = true;
-                punchCollider.transform.localScale *= .75f;
+                punchCollider.transform.localScale = new Vector3(.5f, .35f, .5f);
+                punchCollider.transform.localPosition += new Vector3(0, .3f, 0);
 
                 var observer = capsule.AddComponent<CollisionObserver>();
                 observer.OnTriggerEntered += (obj, collider) =>
                 {
                     if (collider.name != "MM Glove" || collider == tracker?.collider) return;
                     RegisterTracker(collider);
-                };
-
-                observer.OnTriggerExited += (obj, collider) =>
-                {
-                    Logging.LogDebug(collider.name);
-                    if (collider.name != "MM Glove") return;
-                    if (collider == tracker.collider)
-                        tracker = null;
+                    Invoke(nameof(DoPunch), 0.1f);
                 };
 
                 CreateGloves();
@@ -140,9 +142,26 @@ namespace Bark.Modules.Multiplayer
             }
         }
 
-        public override string DisplayName()
+        protected override void ReloadConfiguration()
         {
-            return "Boxing";
+            forceMultiplier = (PunchForce.Value * 10f);
+        }
+
+        public static ConfigEntry<int> PunchForce;
+        public static void BindConfigEntries()
+        {
+            Logging.LogDebug("Binding", DisplayName, "to config");
+            PunchForce = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "punch force",
+                defaultValue: 5,
+                description: "How much force will be applied to you when you get punched"
+            );
+        }
+
+        public override string GetDisplayName()
+        {
+            return DisplayName;
         }
 
         public override string Tutorial()

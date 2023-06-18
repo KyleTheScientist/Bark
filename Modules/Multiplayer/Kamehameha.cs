@@ -7,11 +7,14 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using BepInEx.Configuration;
 
 namespace Bark.Modules.Multiplayer
 {
     public class Kamehameha : BarkModule
     {
+        public static readonly string DisplayName = "Kamehameha";
+
         private Transform orb;
         private Rigidbody orbBody;
         private LineRenderer bananaLine;
@@ -32,7 +35,7 @@ namespace Bark.Modules.Multiplayer
                 orbBody = orb.gameObject.AddComponent<Rigidbody>();
                 orbBody.isKinematic = true;
                 orbBody.useGravity = false;
-                orb.gameObject.layer = 4;
+                orb.gameObject.layer = BarkInteractor.InteractionLayer;
                 orb.gameObject.GetComponent<Renderer>().material = bananaLine.material;
                 GestureTracker.Instance.OnKamehameha += OnKamehameha;
 
@@ -142,9 +145,9 @@ namespace Bark.Modules.Multiplayer
             bananaLine?.gameObject?.Obliterate();
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Kamehameha";
+            return DisplayName;
         }
 
         public override string Tutorial()

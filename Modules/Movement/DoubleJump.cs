@@ -1,4 +1,5 @@
 ﻿using Bark.GUI;
+using BepInEx.Configuration;
 using GorillaLocomotion;
 using UnityEngine;
 using UnityEngine.XR;
@@ -7,6 +8,7 @@ namespace Bark.Modules.Movement
 {
     public class DoubleJump : BarkModule
     {
+        public static readonly string DisplayName = "Double Jump";
         public static bool canDoubleJump = true, primaryPressed;
         private Rigidbody _rigidbody;
         private Player _player;
@@ -38,9 +40,9 @@ namespace Bark.Modules.Movement
 
         protected override void Cleanup() { }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Double Jump";
+            return DisplayName;
         }
 
         public override string Tutorial()

@@ -1,4 +1,5 @@
 ﻿using Bark.GUI;
+using BepInEx.Configuration;
 using GorillaLocomotion;
 using UnityEngine;
 
@@ -6,6 +7,7 @@ namespace Bark.Modules.Physics
 {
     public class Freeze : BarkModule
     {
+        public static readonly string DisplayName = "Freeze";
         public static Freeze Instance;
 
         void Awake() { Instance = this; }
@@ -22,9 +24,9 @@ namespace Bark.Modules.Physics
             Player.Instance.bodyCollider.attachedRigidbody.isKinematic = false;
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Freeze";
+            return DisplayName;
         }
 
         public override string Tutorial()

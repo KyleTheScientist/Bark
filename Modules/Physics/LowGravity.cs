@@ -1,10 +1,12 @@
 ﻿using Bark.GUI;
+using BepInEx.Configuration;
 using UnityEngine;
 
 namespace Bark.Modules.Physics
 {
     public class LowGravity : BarkModule
     {
+        public static readonly string DisplayName = "Gravity";
         public static LowGravity Instance;
         Vector3 baseGravity;
         public float gravityScale = .25f;
@@ -20,7 +22,7 @@ namespace Bark.Modules.Physics
         {
             if (!MenuController.Instance.Built) return;
             base.OnEnable();
-            UnityEngine.Physics.gravity = baseGravity * gravityScale;
+            ReloadConfiguration();
             active = true;
         }
 
@@ -31,9 +33,27 @@ namespace Bark.Modules.Physics
             active = false;
         }
 
-        public override string DisplayName()
+        protected override void ReloadConfiguration()
         {
-            return "Low Gravity";
+            gravityScale = GravityMultiplier.Value / 5f;
+            gravityScale = Mathf.Pow(gravityScale, 2f);
+            UnityEngine.Physics.gravity = baseGravity * gravityScale;
+        }
+
+        public static ConfigEntry<int> GravityMultiplier;
+        public static void BindConfigEntries()
+        {
+            GravityMultiplier = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "gravityMultiplier",
+                defaultValue: 2,
+                description: "How strong gravity will be (0=No gravity, 5=Normal gravity, 10=2x Jupiter Gravity)"
+            );
+        }
+
+        public override string GetDisplayName()
+        {
+            return DisplayName;
         }
 
         public override string Tutorial()

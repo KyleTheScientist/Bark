@@ -2,14 +2,15 @@
 using Bark.Gestures;
 using Bark.GUI;
 using Bark.Tools;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
+using BepInEx.Configuration;
+using Oculus.Platform;
 
 namespace Bark.Modules.Movement
 {
     public class Airplane : BarkModule
     {
+        public static readonly string DisplayName = "Airplane";
         float speedScale = 10f, acceleration = .1f;
 
         protected override void Start()
@@ -22,51 +23,27 @@ namespace Bark.Modules.Movement
             if (!enabled) return;
             var tracker = GestureTracker.Instance;
             if (
-                tracker.leftTriggered ||
-                tracker.rightTriggered ||
-                tracker.leftGripped ||
-                tracker.rightGripped) return;
+                tracker.leftTrigger.pressed ||
+                tracker.rightTrigger.pressed ||
+                tracker.leftGrip.pressed ||
+                tracker.rightGrip.pressed) return;
 
             var player = Player.Instance;
             if (player.wasLeftHandTouching || player.wasRightHandTouching) return;
+
+            if (SteerWith.Value == "head")
+                direction = player.headCollider.transform.forward;
 
             var rigidbody = player.bodyCollider.attachedRigidbody;
             Vector3 velocity = direction * player.scale * speedScale;
             rigidbody.velocity = Vector3.Lerp(rigidbody.velocity, velocity, acceleration);
         }
 
-        List<LineRenderer> lines = new List<LineRenderer>();
-        private void DrawRay(Vector3 position, Vector3 direction, Color color, int index)
-        {
-            try
-            {
-                LineRenderer renderer;
-                if (index >= lines.Count)
-                {
-                    renderer = new GameObject($"Debug Line ({index})").AddComponent<LineRenderer>();
-                    renderer.startWidth = .01f;
-                    renderer.endWidth = .01f;
-                    lines.Add(renderer);
-                }
-                else
-                {
-                    renderer = lines[index];
-                }
-
-                renderer.material.color = color;
-                renderer.SetPosition(0, position);
-                renderer.SetPosition(1, position + direction);
-            }
-            catch (Exception e)
-            {
-                Logging.LogException(e);
-            }
-        }
-
         protected override void OnEnable()
         {
             if (!MenuController.Instance.Built) return;
             base.OnEnable();
+            ReloadConfiguration();
             GestureTracker.Instance.OnGlide += OnGlide;
         }
 
@@ -75,9 +52,36 @@ namespace Bark.Modules.Movement
             GestureTracker.Instance.OnGlide -= OnGlide;
         }
 
-        public override string DisplayName()
+        public static ConfigEntry<int> Speed;
+        public static ConfigEntry<string> SteerWith;
+        protected override void ReloadConfiguration()
         {
-            return "Airplane";
+            speedScale = Speed.Value * 2;
+        }
+
+        public static void BindConfigEntries()
+        {
+            Speed = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "speed",
+                defaultValue: 5,
+                description: "How fast you fly"
+            );
+
+            SteerWith = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "steer with",
+                defaultValue: "wrists",
+                configDescription: new ConfigDescription(
+                    "Which part of your body you use to steer",
+                    new AcceptableValueList<string>("wrists", "head")
+                )
+            );
+        }
+
+        public override string GetDisplayName()
+        {
+            return DisplayName;
         }
 
         public override string Tutorial()

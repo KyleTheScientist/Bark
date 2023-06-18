@@ -14,6 +14,9 @@ using Bark.Modules.Teleportation;
 using Bark.Tools;
 using Photon.Pun;
 using Player = GorillaLocomotion.Player;
+using BepInEx.Configuration;
+using UnityEngine.XR;
+using Bark.GUI.ComputerInterface;
 
 namespace Bark.GUI
 {
@@ -30,8 +33,9 @@ namespace Bark.GUI
         public Rigidbody _rigidbody;
         private List<Transform> pages;
         private List<ButtonController> buttons;
-        private List<BarkModule> modules;
+        public List<BarkModule> modules;
         public Text helpText;
+        public static InputTracker SummonInput;
 
         protected override void Awake()
         {
@@ -43,14 +47,7 @@ namespace Bark.GUI
 
                 gameObject.AddComponent<PositionValidator>();
                 var tracker = gameObject.AddComponent<GestureTracker>();
-                tracker.OnMeatBeat += () =>
-                {
-                    if (!Built)
-                        BuildMenu();
-                    else
-                        ResetPosition();
-                };
-
+                Plugin.configFile.SettingChanged += SettingsChanged;
                 modules = new List<BarkModule>()
                 {
                     // Locomotion
@@ -58,7 +55,7 @@ namespace Bark.GUI
                     gameObject.AddComponent<GrapplingHooks>(),
                     gameObject.AddComponent<Platforms>().Left(),
                     gameObject.AddComponent<Platforms>().Right(),
-                    gameObject.AddComponent<Speed>(),
+                    gameObject.AddComponent<SpeedBoost>(),
                     gameObject.AddComponent<Wallrun>(),
 
                     //// Physics
@@ -75,6 +72,7 @@ namespace Bark.GUI
                     //// Multiplayer
                     gameObject.AddComponent<Boxing>(),
                     gameObject.AddComponent<Piggyback>(),
+                    gameObject.AddComponent<Telekinesis>(),
                     gameObject.AddComponent<XRay>(),
                 };
 
@@ -82,9 +80,47 @@ namespace Bark.GUI
                 {
                     modules.Add(gameObject.AddComponent<RatSword>());
                 }
-
+                ReloadConfiguration();
             }
             catch (Exception e) { Logging.LogException(e); }
+        }
+
+        private void ReloadConfiguration()
+        {
+            if (SummonInput != null)
+                SummonInput.OnPressed -= Summon;
+            GestureTracker.Instance.OnMeatBeat -= Summon;
+
+            var hand = GeneralSettingsPage.SummonInputHand.Value == "left"
+                ? XRNode.LeftHand : XRNode.RightHand;
+
+            if (GeneralSettingsPage.SummonInput.Value == "gesture")
+            {
+                GestureTracker.Instance.OnMeatBeat += Summon;
+            }
+            else
+            {
+                SummonInput = GestureTracker.Instance.GetInputTracker(
+                    GeneralSettingsPage.SummonInput.Value, hand
+                );
+                if (SummonInput != null)
+                    SummonInput.OnPressed += Summon;
+            }
+        }
+
+        void SettingsChanged(object sender, SettingChangedEventArgs e)
+        {
+            if (e.ChangedSetting == GeneralSettingsPage.SummonInput ||
+                e.ChangedSetting == GeneralSettingsPage.SummonInputHand)
+                ReloadConfiguration();
+        }
+
+        void Summon()
+        {
+            if (!Built)
+                BuildMenu();
+            else
+                ResetPosition();
         }
 
         void FixedUpdate()
@@ -136,7 +172,7 @@ namespace Bark.GUI
         }
 
         bool includeDebugButtons = false;
-        public void SetupButtons    ()
+        public void SetupButtons()
         {
             var pageTemplate = this.gameObject.transform.Find("Page");
             int buttonsPerPage = pageTemplate.childCount - 2; // Excludes the prev/next page btns
@@ -162,11 +198,11 @@ namespace Bark.GUI
                 {
                     module.enabled = pressed;
                     if (pressed)
-                        helpText.text = module.DisplayName().ToUpper() +
+                        helpText.text = module.GetDisplayName().ToUpper() +
                             "\n\n" + module.Tutorial().ToUpper();
                 };
                 module.button = btnController;
-                btnController.SetText(module.DisplayName().ToUpper());
+                btnController.SetText(module.GetDisplayName().ToUpper());
             }
 
             AddDebugButtons();
@@ -206,7 +242,7 @@ namespace Bark.GUI
             AddDebugButton("Rip Textures", (btn, isPressed) =>
             {
                 TextureRipper.Rip();
-                 GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 0.1f);
+                GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 0.1f);
             });
         }
 
@@ -249,7 +285,7 @@ namespace Bark.GUI
             this.movementType = MovementType.Instantaneous;
             this.retainTransformParent = false;
             this.throwOnDetach = true;
-            this.interactionLayerMask = LayerMask.GetMask("Water");
+            this.interactionLayerMask = BarkInteractor.InteractionLayerMask;
             this.interactionManager = BarkInteractor.manager;
             this.onSelectExited.AddListener((args) =>
             {
@@ -291,6 +327,12 @@ namespace Bark.GUI
             {
                 button.RemoveBlocker(blocker);
             }
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Plugin.configFile.SettingChanged -= SettingsChanged;
         }
     }
 }

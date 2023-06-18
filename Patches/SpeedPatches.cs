@@ -2,6 +2,7 @@
 using Bark.Modules.Movement;
 using Bark.Modules;
 using Bark.Tools;
+using System;
 
 namespace Bark.Patches
 {
@@ -11,11 +12,14 @@ namespace Bark.Patches
     {
         private static void Postfix(GorillaTagManager __instance, ref float[] __result)
         {
+            try
+            {
+                if (!SpeedBoost.active) return;
 
-            if (!Speed.active) return;
-
-            for (int i = 0; i < __result.Length; i++)
-                __result[i] *= Speed.scale;
+                for (int i = 0; i < __result.Length; i++)
+                    __result[i] *= SpeedBoost.scale;
+            }
+            catch (Exception e) { Logging.LogException(e); }
         }
     }
 
@@ -25,10 +29,14 @@ namespace Bark.Patches
     {
         private static void Postfix(GorillaGameManager __instance, ref float[] __result)
         {
-            if (!Speed.active) return;
+            try
+            {
+                if (!SpeedBoost.active) return;
 
-            for (int i = 0; i < __result.Length; i++)
-                __result[i] *= Speed.scale;
+                for (int i = 0; i < __result.Length; i++)
+                    __result[i] *= SpeedBoost.scale;
+            }
+            catch (Exception e) { Logging.LogException(e); }
         }
     }
 
@@ -38,10 +46,14 @@ namespace Bark.Patches
     {
         private static void Postfix(GorillaBattleManager __instance, ref float[] __result)
         {
-            if (!Speed.active) return;
+            try
+            {
+                if (!SpeedBoost.active) return;
 
-            for (int i = 0; i < __result.Length; i++)
-                __result[i] *= Speed.scale;
+                for (int i = 0; i < __result.Length; i++)
+                    __result[i] *= SpeedBoost.scale;
+            }
+            catch (Exception e) { Logging.LogException(e); }
         }
     }
 
@@ -51,10 +63,14 @@ namespace Bark.Patches
     {
         private static void Postfix(GorillaHuntManager __instance, ref float[] __result)
         {
-            if (!Speed.active) return;
+            try
+            {
+                if (!SpeedBoost.active) return;
 
-            for (int i = 0; i < __result.Length; i++)
-                __result[i] *= Speed.scale;
+                for (int i = 0; i < __result.Length; i++)
+                    __result[i] *= SpeedBoost.scale;
+            }
+            catch (Exception e) { Logging.LogException(e); }
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Bark.Extensions;
-using Bark.Modules;
 using Bark.Tools;
 using GorillaLocomotion;
 using System;
@@ -17,6 +16,16 @@ namespace Bark.Gestures
         public static GestureTracker Instance;
 
         public InputDevice leftController, rightController;
+
+        public InputTracker
+            leftGrip, rightGrip,
+            leftTrigger, rightTrigger,
+            leftStick, rightStick,
+            leftPrimary, rightPrimary,
+            leftSecondary, rightSecondary;
+
+        public List<InputTracker> inputs;
+
         public GameObject
             chest,
             leftPointerObj, rightPointerObj,
@@ -30,27 +39,21 @@ namespace Bark.Gestures
 
         public Transform leftPointerTransform, rightPointerTransform, leftThumbTransform, rightThumbTransform;
 
+        public const string localRigPath =
+            "Global/Local VRRig/Local Gorilla Player";
         public const string palmPath =
-            "Global/Local VRRig/Local Gorilla Player/rig/body/shoulder.{0}/upper_arm.{0}/forearm.{0}/hand.{0}/palm.01.{0}";
+            "/rig/body/shoulder.{0}/upper_arm.{0}/forearm.{0}/hand.{0}/palm.01.{0}";
         public const string pointerFingerPath =
             palmPath + "/f_index.01.{0}/f_index.02.{0}/f_index.03.{0}";
         public const string thumbPath =
             palmPath + "/thumb.01.{0}/thumb.02.{0}/thumb.03.{0}";
 
-        public bool leftGripped, rightGripped, leftWasGripped, rightWasGripped;
-        public Action
-            OnLeftGripPressed, OnRightGripPressed,
-            OnLeftGripReleased, OnRightGripReleased;
-
-        public bool leftTriggered, rightTriggered, leftWasTriggered, rightWasTriggered;
-        public Action
-            OnLeftTriggerPressed, OnRightTriggerPressed,
-            OnLeftTriggerReleased, OnRightTriggerReleased;
 
         // Gesture Actions
         public Action OnMeatBeat;
         private Queue<int> meatBeatCollisions = new Queue<int>();
         private float lastBeat;
+        private GameObject lastBeatCollider;
 
         public Action<Vector3> OnGlide;
         public Action OnIlluminati, OnKamehameha;
@@ -62,7 +65,37 @@ namespace Bark.Gestures
             public Vector3 pointerDirection, palmNormal, thumbDirection;
         }
 
-        void Awake() { Instance = this; }
+        void Awake()
+        {
+            Instance = this;
+
+            leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+
+            leftGrip = new InputTracker(CommonUsages.gripButton, leftController);
+            rightGrip = new InputTracker(CommonUsages.gripButton, rightController);
+
+            leftTrigger = new InputTracker(CommonUsages.trigger, leftController);
+            rightTrigger = new InputTracker(CommonUsages.trigger, rightController);
+
+            leftStick = new InputTracker(CommonUsages.primary2DAxisClick, leftController);
+            rightStick = new InputTracker(CommonUsages.primary2DAxisClick, rightController);
+
+            leftPrimary = new InputTracker(CommonUsages.primaryButton, leftController);
+            rightPrimary = new InputTracker(CommonUsages.primaryButton, rightController);
+
+            leftSecondary = new InputTracker(CommonUsages.secondaryButton, leftController);
+            rightSecondary = new InputTracker(CommonUsages.secondaryButton, rightController);
+
+            inputs = new List<InputTracker>()
+            {
+                leftGrip, rightGrip,
+                leftTrigger, rightTrigger,
+                leftStick, rightStick,
+                leftPrimary, rightPrimary,
+                leftSecondary, rightSecondary
+            };
+        }
 
         void Start()
         {
@@ -70,8 +103,6 @@ namespace Bark.Gestures
             try
             {
                 Logging.LogDebug("Start");
-                leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
-                rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
                 BuildColliders();
                 var observer = chest.AddComponent<CollisionObserver>();
                 observer.OnTriggerEntered += OnChestBeat;
@@ -192,50 +223,17 @@ namespace Bark.Gestures
             if (relativePosition.z > 0f) return false;
             return Vector3.Dot(leftHandVectors.pointerDirection, rightHandVectors.pointerDirection) < -.5f;
         }
-
-        void TrackButtonPresses()
-        {
-            leftWasGripped = leftGripped;
-            rightWasGripped = rightGripped;
-
-            leftController.TryGetFeatureValue(CommonUsages.gripButton, out leftGripped);
-            rightController.TryGetFeatureValue(CommonUsages.gripButton, out rightGripped);
-
-            if (!leftWasGripped && leftGripped)
-                OnLeftGripPressed?.Invoke();
-            if (leftWasGripped && !leftGripped)
-                OnLeftGripReleased?.Invoke();
-            if (!rightWasGripped && rightGripped)
-                OnRightGripPressed?.Invoke();
-            if (rightWasGripped && !rightGripped)
-                OnRightGripReleased?.Invoke();
-
-            leftWasTriggered = leftTriggered;
-            rightWasTriggered = rightTriggered;
-            float lTriggerAmount, rTriggerAmount;
-
-            leftController.TryGetFeatureValue(CommonUsages.trigger, out lTriggerAmount);
-            rightController.TryGetFeatureValue(CommonUsages.trigger, out rTriggerAmount);
-
-            leftTriggered = lTriggerAmount > .9f;
-            rightTriggered = rTriggerAmount > .9f;
-            if (!leftWasTriggered && leftTriggered)
-                OnLeftTriggerPressed?.Invoke();
-            if (leftWasTriggered && !leftTriggered)
-            {
-                OnLeftTriggerReleased?.Invoke();
-            }
-            if (!rightWasTriggered && rightTriggered)
-                OnRightTriggerPressed?.Invoke();
-            if (rightWasTriggered && !rightTriggered)
-            {
-                OnRightTriggerReleased?.Invoke();
-            }
-        }
-
         void OnChestBeat(GameObject obj, Collider collider)
         {
+            if (collider.gameObject != leftHand && 
+                collider.gameObject != rightHand) return;
+            
             lastBeat = Time.time;
+            //if (collider.gameObject != lastBeatCollider)
+                //Sounds.Play(81, .1f);
+            lastBeatCollider = collider.gameObject;
+
+
             if (meatBeatCollisions.Count > 3)
                 meatBeatCollisions.Dequeue();
             if (collider.gameObject == leftHand)
@@ -269,28 +267,28 @@ namespace Bark.Gestures
                 radius = 1 / 4f;
             chest.transform.localScale = new Vector3(radius, height, radius);
 
-            var leftPalm = GameObject.Find(string.Format(palmPath, "L")).transform;
+            var leftPalm = GameObject.Find(string.Format(localRigPath + palmPath, "L")).transform;
             leftPalmInteractor = CreateInteractor("Left Palm Interactor", leftPalm, 1 / 16f);
             leftHand = leftPalmInteractor.gameObject;
             leftHand.transform.localRotation = Quaternion.Euler(-90, -90, 0);
 
-            var rightPalm = GameObject.Find(string.Format(palmPath, "R")).transform;
+            var rightPalm = GameObject.Find(string.Format(localRigPath + palmPath, "R")).transform;
             rightPalmInteractor = CreateInteractor("Right Palm Interactor", rightPalm, 1 / 16f);
             rightHand = rightPalmInteractor.gameObject;
             rightHand.transform.localRotation = Quaternion.Euler(-90, 0, 0);
 
-            leftPointerTransform = GameObject.Find(string.Format(pointerFingerPath, "L")).transform;
+            leftPointerTransform = GameObject.Find(string.Format(localRigPath + pointerFingerPath, "L")).transform;
             leftPointerInteractor = CreateInteractor("Left Pointer Interactor", leftPointerTransform, 1 / 32f);
             leftPointerInteractor.xrController = null;
             leftPointerObj = leftPointerInteractor.gameObject;
 
-            rightPointerTransform = GameObject.Find(string.Format(pointerFingerPath, "R")).transform;
+            rightPointerTransform = GameObject.Find(string.Format(localRigPath + pointerFingerPath, "R")).transform;
             rightPointerInteractor = CreateInteractor("Right Pointer Interactor", rightPointerTransform, 1 / 32f);
             rightPointerInteractor.xrController = null;
             rightPointerObj = rightPointerInteractor.gameObject;
 
-            leftThumbTransform = GameObject.Find(string.Format(thumbPath, "L")).transform;
-            rightThumbTransform = GameObject.Find(string.Format(thumbPath, "R")).transform;
+            leftThumbTransform = GameObject.Find(string.Format(localRigPath + thumbPath, "L")).transform;
+            rightThumbTransform = GameObject.Find(string.Format(localRigPath + thumbPath, "R")).transform;
         }
 
         public BarkInteractor CreateInteractor(string name, Transform parent, float scale)
@@ -334,5 +332,76 @@ namespace Bark.Gestures
             hand.SendHapticImpulse(0u, strength, duration);
         }
 
+        public InputTracker GetInputTracker(string name, XRNode node)
+        {
+            switch (name)
+            {
+                case "grip":
+                    return node == XRNode.LeftHand ? leftGrip : rightGrip;
+                case "trigger":
+                    return node == XRNode.LeftHand ? leftTrigger : rightTrigger;
+                case "stick":
+                    return node == XRNode.LeftHand ? leftStick : rightStick;
+                case "a/x":
+                    return node == XRNode.LeftHand ? leftPrimary : rightPrimary;
+                case "b/y":
+                    return node == XRNode.LeftHand ? leftSecondary : rightSecondary;
+                case "a":
+                    return rightPrimary;
+                case "b":
+                    return rightSecondary;
+                case "x":
+                    return leftPrimary;
+                case "y":
+                    return leftSecondary;
+            }
+            return null;
+        }
+
+        void TrackButtonPresses()
+        {
+            foreach (var input in inputs)
+            {
+                input.wasPressed = input.pressed;
+                if (input.type == typeof(bool))
+                {
+                    input.device.TryGetFeatureValue(input.usageBool, out input.pressed);
+                }
+                else
+                {
+                    float amount;
+                    input.device.TryGetFeatureValue(input.usageFloat, out amount);
+                    input.pressed = amount > .5f;
+                }
+
+                if (!input.wasPressed && input.pressed)
+                    input.OnPressed?.Invoke();
+                if (input.wasPressed && !input.pressed)
+                    input.OnReleased?.Invoke();
+            }
+        }
+    }
+
+    public class InputTracker
+    {
+        public bool pressed, wasPressed;
+        public Action OnPressed, OnReleased;
+        public Type type;
+        public InputFeatureUsage<bool> usageBool;
+        public InputFeatureUsage<float> usageFloat;
+        public InputDevice device;
+        public InputTracker(InputFeatureUsage<bool> usage, InputDevice device)
+        {
+            this.usageBool = usage;
+            this.device = device;
+            type = typeof(bool);
+        }
+
+        public InputTracker(InputFeatureUsage<float> usage, InputDevice device)
+        {
+            this.usageFloat = usage;
+            this.device = device;
+            type = typeof(float);
+        }
     }
 }

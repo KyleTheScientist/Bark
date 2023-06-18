@@ -63,8 +63,8 @@ public class ButtonController : XRBaseInteractable
             buttonModel = transform.GetChild(0);
             this.material = buttonModel.GetComponent<Renderer>().material;
             this.interactionManager = BarkInteractor.manager;
-            this.interactionLayerMask = LayerMask.GetMask("Water");
-            this.gameObject.layer = 4;
+            this.interactionLayerMask = BarkInteractor.InteractionLayerMask;
+            this.gameObject.layer = BarkInteractor.InteractionLayer;
             this.text = GetComponentInChildren<Text>();
             this.text.font = GameObject.FindObjectOfType<GorillaLevelScreen>().myText.font;
             this.text.rectTransform.localScale *= 2.75f;

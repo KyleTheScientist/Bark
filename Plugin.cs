@@ -5,6 +5,13 @@ using Utilla;
 using Bark.GUI;
 using Bark.Tools;
 using Bark.Extensions;
+using Bark.GUI.ComputerInterface;
+using Bepinject;
+using BepInEx.Configuration;
+using System.Runtime.InteropServices;
+using System.IO;
+using Bark.Modules;
+using System.Reflection;
 
 namespace Bark
 {
@@ -19,19 +26,20 @@ namespace Bark
         public static AssetBundle assetBundle;
         public static MenuController menuController;
         public static GameObject monkeMenuPrefab;
+        public static ConfigFile configFile;
 
         public void Setup()
         {
             if (menuController || !pluginEnabled || !inRoom) return;
-            Logging.LogDebug("Setting up");
+            Logging.LogDebug("Menu:", menuController, "Plugin Enabled:", pluginEnabled, "InRoom:", inRoom);
 
             try
             {
                 menuController = Instantiate(monkeMenuPrefab).AddComponent<MenuController>();
             }
-            catch (Exception error)
+            catch (Exception e)
             {
-                Logging.LogFatal(error, error.StackTrace);
+                Logging.LogException(e);
             }
         }
 
@@ -42,15 +50,29 @@ namespace Bark
                 Logging.LogDebug("Cleaning up");
                 menuController?.gameObject?.Obliterate();
             }
-            catch (Exception error)
+            catch (Exception e)
             {
-                Logging.LogFatal(error, error.StackTrace);
+                Logging.LogException(e);
             }
         }
 
         void Awake()
         {
-            Logging.Init();
+            try
+            {
+                Logging.Init();
+                Zenjector.Install<BarkCI>().OnProject();
+                configFile = new ConfigFile(Path.Combine(Paths.ConfigPath, PluginInfo.Name + ".cfg"), true);
+                GeneralSettingsPage.BindConfigEntries();
+                Logging.LogDebug("Found", BarkModule.GetBarkModuleTypes().Count, "modules");
+                foreach (Type moduleType in BarkModule.GetBarkModuleTypes())
+                {
+                    MethodInfo bindConfigs = moduleType.GetMethod("BindConfigEntries");
+                    if (bindConfigs is null) continue;
+                    bindConfigs.Invoke(null, null);
+                }
+            }
+            catch (Exception e) { Logging.LogException(e); }
         }
 
         void Start()
@@ -64,7 +86,7 @@ namespace Bark
             }
             catch (Exception e)
             {
-                Logging.LogFatal(e, e.StackTrace);
+                Logging.LogException(e);
             }
         }
 
@@ -81,8 +103,7 @@ namespace Bark
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
+                Logging.LogException(e);
             }
         }
 

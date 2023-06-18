@@ -24,7 +24,7 @@ namespace Bark.Gestures
 
                 Collider[] collisions = Physics.OverlapSphere(
                     Player.Instance.lastHeadPosition,
-                    .15f,
+                    .15f * Player.Instance.scale,
                     Player.Instance.locomotionEnabledLayers
                 );
 

@@ -2,6 +2,7 @@
 using Bark.Gestures;
 using Bark.GUI;
 using Bark.Tools;
+using BepInEx.Configuration;
 using System;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ namespace Bark.Modules.Misc
 {
     public class RatSword : BarkModule
     {
+        public static readonly string DisplayName = "Rat Sword";
         private GameObject sword;
         protected override void OnEnable()
         {
@@ -23,8 +25,8 @@ namespace Bark.Modules.Misc
                 sword.transform.localRotation = Quaternion.Euler(9, 0, 0);
                 sword.transform.localScale /= 2;
                 sword.SetActive(false);
-                GestureTracker.Instance.OnRightGripPressed += () => { sword.SetActive(true); };
-                GestureTracker.Instance.OnRightGripReleased += () => { sword.SetActive(false); };
+                GestureTracker.Instance.rightGrip.OnPressed += () => { sword.SetActive(true); };
+                GestureTracker.Instance.rightGrip.OnReleased += () => { sword.SetActive(false); };
             }
             catch (Exception e) { Logging.LogException(e); }
         }
@@ -34,9 +36,9 @@ namespace Bark.Modules.Misc
             sword?.Obliterate();
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Rat Sword";
+            return DisplayName;
         }
 
         public override string Tutorial()

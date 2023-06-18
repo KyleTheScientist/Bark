@@ -9,18 +9,19 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using BepInEx.Configuration;
 
 namespace Bark.Modules
 {
     public class Teleport : BarkModule
     {
+        public static readonly string DisplayName = "Teleport";
         public static readonly int layerMask = LayerMask.GetMask("Default", "Gorilla Object"); 
 
         private Transform teleportMarker, window;
         private bool isTeleporting;
         private const float teleportWindupTime = 1f;
         private DebugPoly poly;
-        private SphereCollider windowCollider;
 
         protected override void OnEnable()
         {
@@ -31,9 +32,6 @@ namespace Bark.Modules
                 teleportMarker = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Checkpoint Banana")).transform;
                 teleportMarker.gameObject.SetActive(false);
                 window = new GameObject("Teleport Window").transform;
-                windowCollider = window.gameObject.AddComponent<SphereCollider>();
-                windowCollider.isTrigger = true;
-                window.gameObject.layer = NoCollide.layer;
                 poly = window.gameObject.AddComponent<DebugPoly>();
                 GestureTracker.Instance.OnIlluminati += OnIlluminati;
             } catch (Exception e) { Logging.LogException(e); }
@@ -122,9 +120,6 @@ namespace Bark.Modules
             b = poly.transform.InverseTransformPoint(b);
             c = poly.transform.InverseTransformPoint(c);
 
-            window.localRotation = Quaternion.identity;
-            windowCollider.center = (a + b + c) / 3;
-            windowCollider.radius = Vector3.Distance(a, b) / 2;
             poly.vertices = new Vector3[] { a, b, c };
         }
 
@@ -141,9 +136,9 @@ namespace Bark.Modules
             isTeleporting = false;
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Teleport";
+            return DisplayName;
         }
 
         public override string Tutorial()

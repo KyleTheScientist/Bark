@@ -1,10 +1,12 @@
 ﻿using Bark.GUI;
 using Bark.Patches;
+using BepInEx.Configuration;
 
 namespace Bark.Modules.Physics
 {
     public class SlipperyHands : BarkModule
     {
+        public static readonly string DisplayName = "Slippery Hands";
         public static SlipperyHands Instance;
 
         void Awake() { Instance = this; }
@@ -22,9 +24,9 @@ namespace Bark.Modules.Physics
             string s = $"The functionality for this module is in {nameof(SlidePatch)}";
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Slippery Hands";
+            return DisplayName;
         }
 
         public override string Tutorial()

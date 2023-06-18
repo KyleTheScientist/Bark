@@ -4,11 +4,13 @@ using UnityEngine;
 using System.Reflection;
 using Bark.Modules.Physics;
 using Bark.GUI;
+using BepInEx.Configuration;
 
 namespace Bark.Modules.Movement
 {
     public class Wallrun : BarkModule
     {
+        public static readonly string DisplayName = "Wall Run";
         private Vector3 baseGravity;
         private RaycastHit hit;
         void Awake()
@@ -47,9 +49,9 @@ namespace Bark.Modules.Movement
             UnityEngine.Physics.gravity = baseGravity * GravScale();
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Wall Run";
+            return DisplayName;
         }
 
         public override string Tutorial()

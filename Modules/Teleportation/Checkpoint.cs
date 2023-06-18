@@ -9,11 +9,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BepInEx.Configuration;
 
 namespace Bark.Modules.Teleportation
 {
     public class Checkpoint : BarkModule
     {
+        public static readonly string DisplayName = "Checkpoint";
         public static Checkpoint Instance;
 
         private Transform checkpointMarker;
@@ -58,10 +60,10 @@ namespace Bark.Modules.Teleportation
         {
             checkpointMarker.gameObject.SetActive(true);
             float startTime = Time.time;
-            while (GestureTracker.Instance.leftTriggered && !NoCollide.active)
+            while (GestureTracker.Instance.leftTrigger.pressed && !NoCollide.active)
             {
                 float scale = Mathf.Lerp(0, Player.Instance.scale, (Time.time - startTime) / 2f);
-                checkpointMarker.position = Player.Instance.leftHandTransform.position + Vector3.up * .15f * Player.Instance.scale;
+                checkpointMarker.position = Player.Instance.leftControllerTransform.position + Vector3.up * .15f * Player.Instance.scale;
                 checkpointMarker.localScale = Vector3.one * scale;
                 if (Mathf.Abs(scale - Player.Instance.scale) < .01f)
                 {
@@ -94,9 +96,9 @@ namespace Bark.Modules.Teleportation
             bananaLine.gameObject.SetActive(true);
             float startTime = Time.time;
             Vector3 startPos, endPos;
-            while (GestureTracker.Instance.rightTriggered && pointSet)
+            while (GestureTracker.Instance.rightTrigger.pressed && pointSet)
             {
-                startPos = Player.Instance.rightHandTransform.position;
+                startPos = Player.Instance.rightControllerTransform.position;
                 bananaLine.SetPosition(1, startPos);
                 endPos = Vector3.Lerp(startPos, checkpointMarker.transform.position, (Time.time - startTime) / 2f);
                 bananaLine.SetPosition(0, endPos);
@@ -143,8 +145,8 @@ namespace Bark.Modules.Teleportation
                     };
                     markedTriggers.Add(triggerBox);
                 }
-                GestureTracker.Instance.OnLeftTriggerPressed += LeftTriggered;
-                GestureTracker.Instance.OnRightTriggerPressed += RightTriggered;
+                GestureTracker.Instance.leftTrigger.OnPressed += LeftTriggered;
+                GestureTracker.Instance.rightTrigger.OnPressed += RightTriggered;
             }
             catch (Exception e) { Logging.LogException(e); }
         }
@@ -167,13 +169,13 @@ namespace Bark.Modules.Teleportation
             {
                 triggerBox.GetComponent<CollisionObserver>()?.Obliterate();
             }
-            GestureTracker.Instance.OnLeftTriggerPressed -= LeftTriggered;
-            GestureTracker.Instance.OnRightTriggerPressed -= RightTriggered;
+            GestureTracker.Instance.leftTrigger.OnPressed -= LeftTriggered;
+            GestureTracker.Instance.rightTrigger.OnPressed -= RightTriggered;
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Checkpoint";
+            return DisplayName;
         }
 
         public override string Tutorial()

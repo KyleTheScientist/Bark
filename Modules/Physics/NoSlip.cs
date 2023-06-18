@@ -1,5 +1,6 @@
 ﻿using Bark.GUI;
 using Bark.Patches;
+using BepInEx.Configuration;
 using GorillaLocomotion;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ namespace Bark.Modules.Physics
 {
     public class NoSlip: BarkModule
     {
+        public static readonly string DisplayName = "No Slip";
         public static NoSlip Instance;
 
         void Awake() { Instance = this; }
@@ -24,9 +26,9 @@ namespace Bark.Modules.Physics
             string s = $"The functionality for this module is in {nameof(SlidePatch) }";
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "No Slip";
+            return DisplayName;
         }
 
         public override string Tutorial()

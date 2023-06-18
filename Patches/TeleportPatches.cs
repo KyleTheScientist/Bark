@@ -6,6 +6,8 @@ using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
 using Bark.Modules.Physics;
+using System;
+using Bark.Tools;
 
 namespace Bark.Patches
 {
@@ -20,39 +22,41 @@ namespace Bark.Patches
 
         internal static bool Prefix(Player __instance, ref Vector3 ___lastPosition, ref Vector3[] ___velocityHistory, ref Vector3 ___lastHeadPosition, ref Vector3 ___lastLeftHandPosition, ref Vector3 ___lastRightHandPosition, ref Vector3 ___currentVelocity, ref Vector3 ___denormalizedVelocityAverage)
         {
-            if (_isTeleporting)
+            try
             {
-                var playerRigidBody = __instance.GetComponent<Rigidbody>();
-                if (playerRigidBody != null)
+                if (_isTeleporting)
                 {
-                    Vector3 correctedPosition = _teleportPosition - __instance.bodyCollider.transform.position + __instance.transform.position;
 
-                    playerRigidBody.velocity = Vector3.zero;
-                    playerRigidBody.isKinematic = true;
+                    var playerRigidBody = __instance.GetComponent<Rigidbody>();
+                    if (playerRigidBody != null)
+                    {
+                        Vector3 correctedPosition = _teleportPosition - __instance.bodyCollider.transform.position + __instance.transform.position;
 
-                    __instance.transform.position = correctedPosition;
-                    if(_rotate)
-                        __instance.Turn(_teleportRotation - __instance.headCollider.transform.rotation.eulerAngles.y);
+                        playerRigidBody.velocity = Vector3.zero;
 
-                    ___lastPosition = correctedPosition;
-                    ___velocityHistory = new Vector3[__instance.velocityHistorySize];
+                        __instance.transform.position = correctedPosition;
+                        if (_rotate)
+                            __instance.Turn(_teleportRotation - __instance.headCollider.transform.rotation.eulerAngles.y);
 
-                    ___lastHeadPosition = __instance.headCollider.transform.position;
-                    var leftHandMethod = typeof(Player).GetMethod("CurrentLeftHandPosition",
-                        BindingFlags.NonPublic | BindingFlags.Instance);
-                    ___lastLeftHandPosition = (Vector3)leftHandMethod.Invoke(__instance, new object[] { });
+                        ___lastPosition = correctedPosition;
+                        ___velocityHistory = new Vector3[__instance.velocityHistorySize];
 
-                    var rightHandMethod = typeof(Player).GetMethod("CurrentRightHandPosition",
-                        BindingFlags.NonPublic | BindingFlags.Instance);
-                    ___lastRightHandPosition = (Vector3)rightHandMethod.Invoke(__instance, new object[] { });
-                    ___currentVelocity = Vector3.zero;
-                    ___denormalizedVelocityAverage = Vector3.zero;
-                    playerRigidBody.isKinematic = false;
+                        ___lastHeadPosition = __instance.headCollider.transform.position;
+                        var leftHandMethod = typeof(Player).GetMethod("GetCurrentLeftHandPosition",
+                            BindingFlags.NonPublic | BindingFlags.Instance);
+                        ___lastLeftHandPosition = (Vector3)leftHandMethod.Invoke(__instance, new object[] { });
+
+                        var rightHandMethod = typeof(Player).GetMethod("GetCurrentRightHandPosition",
+                            BindingFlags.NonPublic | BindingFlags.Instance);
+                        ___lastRightHandPosition = (Vector3)rightHandMethod.Invoke(__instance, new object[] { });
+                        ___currentVelocity = Vector3.zero;
+                        ___denormalizedVelocityAverage = Vector3.zero;
+                    }
+                    _isTeleporting = false;
+                    return true;
                 }
-                _isTeleporting = false;
-                return true;
             }
-
+            catch (Exception e) { Logging.LogException(e); }
             return true;
         }
 

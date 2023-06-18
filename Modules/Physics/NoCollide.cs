@@ -7,11 +7,13 @@ using GorillaLocomotion;
 using UnityEngine;
 using Bark.Modules.Multiplayer;
 using Bark.Modules.Movement;
+using BepInEx.Configuration;
 
 namespace Bark.Modules.Physics
 {
     public class NoCollide : BarkModule
     {
+        public static readonly string DisplayName = "No Collide";
         public static NoCollide Instance;
 
         private LayerMask baseMask;
@@ -88,9 +90,9 @@ namespace Bark.Modules.Physics
             Logging.LogDebug("Enabling triggers");
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "No Collide";
+            return DisplayName;
         }
 
         public override string Tutorial()

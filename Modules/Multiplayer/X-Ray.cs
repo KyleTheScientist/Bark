@@ -6,38 +6,10 @@ using UnityEngine;
 
 namespace Bark.Modules.Multiplayer
 {
-    public class XRayMarker : MonoBehaviour
-    {
-        Material baseMaterial, material;
-        VRRig rig;
-        void Start()
-        {
-            rig = GetComponent<VRRig>();
-            material = Instantiate(Plugin.assetBundle.LoadAsset<Material>("X-Ray Material"));
-            Update();
-        }
-
-        public void Update()
-        {
-            if (!rig.mainSkin.material.name.Contains("X-Ray"))
-            {
-                baseMaterial = rig.mainSkin.material;
-                material.color = baseMaterial.color;
-                material.mainTexture = baseMaterial.mainTexture;
-                material.SetTexture("_MainTex", baseMaterial.mainTexture);
-                rig.mainSkin.material = material;
-            }
-        }
-
-        void OnDestroy()
-        {
-            rig.mainSkin.material = baseMaterial;
-            Logging.LogDebug($"Reset material to {baseMaterial.name}");
-        }
-    }
 
     public class XRay : BarkModule
     {
+        public static readonly string DisplayName = "X-Ray";
         List<XRayMarker> markers;
         void ApplyMaterial()
         {
@@ -71,15 +43,44 @@ namespace Bark.Modules.Multiplayer
                 marker?.Obliterate();
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "X-Ray";
+            return DisplayName;
         }
-
         public override string Tutorial()
         {
             return "Effect: Allows you to see other players through walls.";
         }
 
+    }
+
+    public class XRayMarker : MonoBehaviour
+    {
+        Material baseMaterial, material;
+        VRRig rig;
+        void Start()
+        {
+            rig = GetComponent<VRRig>();
+            material = Instantiate(Plugin.assetBundle.LoadAsset<Material>("X-Ray Material"));
+            Update();
+        }
+
+        public void Update()
+        {
+            if (!rig.mainSkin.material.name.Contains("X-Ray"))
+            {
+                baseMaterial = rig.mainSkin.material;
+                material.color = baseMaterial.color;
+                material.mainTexture = baseMaterial.mainTexture;
+                material.SetTexture("_MainTex", baseMaterial.mainTexture);
+                rig.mainSkin.material = material;
+            }
+        }
+
+        void OnDestroy()
+        {
+            rig.mainSkin.material = baseMaterial;
+            Logging.LogDebug($"Reset material to {baseMaterial.name}");
+        }
     }
 }

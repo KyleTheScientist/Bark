@@ -8,6 +8,9 @@ namespace Bark.Gestures
     public class BarkInteractor : XRDirectInteractor
     {
         public static XRInteractionManager manager;
+        public static string InteractionLayerName = "TransparentFX";
+        public static int InteractionLayer = LayerMask.NameToLayer(InteractionLayerName);
+        public static int InteractionLayerMask = LayerMask.GetMask(InteractionLayerName);
 
         protected override void Awake()
         {
@@ -17,7 +20,7 @@ namespace Bark.Gestures
                 if (!manager)
                     manager = new GameObject("InteractionManager").AddComponent<XRInteractionManager>();
                 this.gameObject.AddComponent<SphereCollider>().isTrigger = true; ;
-                this.gameObject.layer = LayerMask.NameToLayer("Water");
+                this.gameObject.layer = InteractionLayer;
                 this.interactionManager = manager;
                 this.enableInteractions = true;
                 this.xrController = GetController(this.name.Contains("Left"));

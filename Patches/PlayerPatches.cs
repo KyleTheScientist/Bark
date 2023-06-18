@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using Bark.Modules;
 using GorillaLocomotion;
 using System;
 using Bark.Tools;
@@ -28,10 +27,14 @@ namespace Bark.Patches
     {
         private static void Postfix(Player __instance, ref float __result)
         {
-            if(SlipperyHands.Instance)
+            try
+            {
+                if (SlipperyHands.Instance)
                     __result = SlipperyHands.Instance.enabled ? 1 : __result;
-            if(NoSlip.Instance)
-                __result = NoSlip.Instance.enabled ? 0 : __result;
+                if (NoSlip.Instance)
+                    __result = NoSlip.Instance.enabled ? 0 : __result;
+            }
+            catch (Exception e) { Logging.LogException(e); }
         }
     }
 }

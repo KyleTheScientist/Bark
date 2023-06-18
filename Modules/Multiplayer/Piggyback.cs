@@ -9,6 +9,7 @@ namespace Bark.Modules.Multiplayer
 {
     public class Piggyback : BarkModule
     {
+        public static readonly string DisplayName = "Piggyback";
         public static bool mounted;
         private Transform mount;
         private VRRig mountedRig;
@@ -193,26 +194,26 @@ namespace Bark.Modules.Multiplayer
         {
             if (!MenuController.Instance.Built) return;
             base.OnEnable();
-            GestureTracker.Instance.OnLeftGripPressed += LatchLeft;
-            GestureTracker.Instance.OnLeftGripReleased += UnlatchLeft;
-            GestureTracker.Instance.OnRightGripPressed += LatchRight;
-            GestureTracker.Instance.OnRightGripReleased += UnlatchRight;
+            GestureTracker.Instance.leftGrip.OnPressed += LatchLeft;
+            GestureTracker.Instance.leftGrip.OnReleased += UnlatchLeft;
+            GestureTracker.Instance.rightGrip.OnPressed += LatchRight;
+            GestureTracker.Instance.rightGrip.OnReleased += UnlatchRight;
         }
 
         protected override void Cleanup()
         {
             if (mounted)
                 Unmount();
-            GestureTracker.Instance.OnLeftGripPressed -= LatchLeft;
-            GestureTracker.Instance.OnLeftGripReleased -= UnlatchLeft;
-            GestureTracker.Instance.OnRightGripPressed -= LatchRight;
-            GestureTracker.Instance.OnRightGripReleased -= UnlatchRight;
+            GestureTracker.Instance.leftGrip.OnPressed -= LatchLeft;
+            GestureTracker.Instance.leftGrip.OnReleased -= UnlatchLeft;
+            GestureTracker.Instance.rightGrip.OnPressed -= LatchRight;
+            GestureTracker.Instance.rightGrip.OnReleased -= UnlatchRight;
 
         }
 
-        public override string DisplayName()
+        public override string GetDisplayName()
         {
-            return "Piggyback";
+            return DisplayName;
         }
 
         public override string Tutorial()

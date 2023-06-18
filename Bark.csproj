@@ -291,6 +291,15 @@
     <Reference Include="Utilla">
       <HintPath>$(PluginsPath)\Utilla\Utilla.dll</HintPath>
     </Reference>
+    <Reference Include="ComputerInterface">
+      <HintPath>$(PluginsPath)\ComputerInterface\ComputerInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="Bepinject">
+      <HintPath>$(PluginsPath)\Bepinject-Auros\Bepinject.dll</HintPath>
+    </Reference>
+    <Reference Include="Zenject">
+      <HintPath>$(PluginsPath)\Extenject\Zenject.dll</HintPath>
+    </Reference>
     <Reference Include="websocket-sharp">
       <HintPath>$(GameAssemblyPath)\websocket-sharp.dll</HintPath>
     </Reference>

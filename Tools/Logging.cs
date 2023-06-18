@@ -6,7 +6,7 @@ namespace Bark.Tools
 {
     public static class Logging
     {
-        public static ManualLogSource logger;
+        private static ManualLogSource logger;
         public static void Init()
         {
             logger = Logger.CreateLogSource("Bark");
@@ -38,8 +38,8 @@ namespace Bark.Tools
 
         public static void LogDebug(params object[] content)
         {
-            //var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            //logger.LogInfo($"*** Debug *** ({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
+            var methodInfo = new StackTrace().GetFrame(1).GetMethod();
+            logger.LogDebug($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join("  ", content));
         }
     }
 }
