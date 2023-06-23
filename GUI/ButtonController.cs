@@ -67,7 +67,6 @@ public class ButtonController : XRBaseInteractable
             this.interactionLayerMask = BarkInteractor.InteractionLayerMask;
             this.gameObject.layer = BarkInteractor.InteractionLayer;
             this.text = GetComponentInChildren<Text>();
-            //this.text.font = Plugin.assetBundle.LoadAsset<Font>("Utopium-Regular");
             this.text.fontSize = 26;
             var observer = this.gameObject.AddComponent<CollisionObserver>();
             observer.OnTriggerEntered += Press;

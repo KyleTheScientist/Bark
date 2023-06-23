@@ -4,8 +4,6 @@ using Bark.Patches;
 using Bark.Modules.Physics;
 using GorillaLocomotion;
 using UnityEngine;
-using HarmonyLib;
-using Photon.Pun;
 using Bark.Extensions;
 using Bark.Tools;
 using System;

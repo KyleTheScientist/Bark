@@ -60,7 +60,6 @@ namespace Bark.GUI
                     gameObject.AddComponent<Wallrun>(),
 
                     //// Physics
-                    //gameObject.AddComponent<SlowMotion>(),
                     gameObject.AddComponent<LowGravity>(),
                     gameObject.AddComponent<NoCollide>(),
                     gameObject.AddComponent<NoSlip>(),
