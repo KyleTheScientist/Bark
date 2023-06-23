@@ -32,22 +32,24 @@ namespace Bark.Modules.Multiplayer
 
         void CreateGloves()
         {
-            try
+
+            foreach (var rig in GorillaParent.instance.vrrigs)
             {
-                foreach (var rig in GorillaParent.instance.vrrigs)
+                try
                 {
-                    if (rig.photonView.Owner.IsLocal ||
+                    if (rig.PhotonView().Owner.IsLocal ||
                         rig.gameObject.GetComponent<BoxingMarker>()) continue;
 
                     markers.Add(rig.gameObject.AddComponent<BoxingMarker>());
                     gloves.Add(CreateGlove(rig.leftHandTransform));
                     gloves.Add(CreateGlove(rig.rightHandTransform, false));
                 }
+                catch (Exception e)
+                {
+                    Logging.LogException(e);
+                }
             }
-            catch (Exception e)
-            {
-                Logging.LogException(e);
-            }
+
         }
 
         private GameObject CreateGlove(Transform parent, bool isLeft = true)

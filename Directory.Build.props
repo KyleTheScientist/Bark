@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project>
 	<PropertyGroup>
-		<GamePath>D:\Program Files\Oculus\Software\Software\another-axiom-gorilla-tag</GamePath>
-		<GameAssemblyPath>$(GamePath)\Gorilla Tag_Data\Managed</GameAssemblyPath>
-		<BepInExAssemblyPath>$(GamePath)\BepInEx\core</BepInExAssemblyPath>
-		<PluginsPath>$(GamePath)\BepInEx\plugins</PluginsPath>
+		<OculusPath>D:\Program Files\Oculus\Software\Software\another-axiom-gorilla-tag</OculusPath>
+		<OculusPluginsPath>$(OculusPath)\BepInEx\plugins</OculusPluginsPath>
+
+    <SteamPath>D:\SteamLibrary\steamapps\common\Gorilla Tag\BepInEx\plugins</SteamPath>
+    <SteamPluginsPath>$(SteamPath)\BepInEx\plugins</SteamPluginsPath>
+    
+		<GameAssemblyPath>$(OculusPath)\Gorilla Tag_Data\Managed</GameAssemblyPath>
+		<BepInExAssemblyPath>$(OculusPath)\BepInEx\core</BepInExAssemblyPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(CI)'=='TRUE'">
 		<GameAssemblyPath>.\Libs</GameAssemblyPath>
 		<BepInExAssemblyPath>.\Libs</BepInExAssemblyPath>
-		<PluginsPath>.\Libs</PluginsPath>
+		<OculusPluginsPath>.\Libs</OculusPluginsPath>
+    <SteamPluginsPath>.\Libs</SteamPluginsPath>
 		<WarningLevel>0</WarningLevel>
 	</PropertyGroup>
 </Project>

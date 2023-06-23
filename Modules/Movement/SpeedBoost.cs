@@ -57,7 +57,8 @@ namespace Bark.Modules
         protected override void ReloadConfiguration()
         {
             scale = 1 + (Speed.Value / 10f);
-            Player.Instance.velocityLimit = baseVelocityLimit * scale;
+            if(this.enabled)
+                Player.Instance.velocityLimit = baseVelocityLimit * scale;
         }
 
         public static ConfigEntry<int> Speed;

@@ -1,5 +1,20 @@
 # CHANGELOG.md
 
+## 1.3.1 (2023-Jun-23) - The Bubble Update
+Features
+- Added the **Bubble** module which creates a big bubble around you that you can float in and push around.
+
+Fixes
+- Fixed the multiplayer mods (Telekinesis, Boxing, etc.) which broke in the new update.
+
+Changes
+- Added some textures to the Grappling Hooks 
+
+Removed
+- Removed **Freeze**. This mod had an issue that could cause you to get reported/banned (also no one liked it).
+**Bubble** is meant to be its more interesting replacement.
+
+
 ## 1.3.0 (2023-Jun-18) - The Computer Interface Update
 Features
 - Added the **Telekinesis** module which allows players to pick you and throw you

@@ -9,12 +9,12 @@
 
 ### Movement
 * `Airplane` - This allows the player to fly around. **Spread your arms out like and airplane** to activate and use your wrists to steer!
+* `Bubble` - Freezes your velocity at zero so you can remain in one spot in the air
 * `Grappling Hooks` - **Grab one of the grapple guns** off of your hip holster with **either grip button and then press the trigger to fire**
 * `Platforms (Left/Right)` - **Press the grip button** on your controller to create a floating platform in the air that you can stand on. There's a toggle for each hand so that you can disable one if it clashes with another mod's inputs.
 * `Speed` - Significantly increases the player's movement speed
 * `Wall Run` - Allows you to seamlessly transition between running on floors, walls, and ceilings!
 ### Physics
-* `Freeze` - Freezes your velocity at zero so you can remain in one spot in the air
 * `Low Gravity` - Decreases the strength of gravity
 * `No Collide` - Allows the player to fall through solid objects. Enabling this automatically enables platforms so you don't fall to your death!
 * `No Slip` - Disables sliding on slippery surfaces, like ice.
@@ -35,7 +35,12 @@ These modules can be useful for exploring the game world, experimenting with gam
 When you join a modded lobby, simply beat on your chest like a gorilla in an alternating fashion with both hands 4 times (LRLR or RLRL). This will summon the interface in front of you. To hide the interface, simply grab it and throw it away.
 
 ## Installation
-To use *Bark*, you will need to have [Monke Mod Manager](https://github.com/DeadlyKitten/MonkeModManager/releases) installed. Make sure to check Utilla. Once you have installed the mod loader, simply drop the `Bark.dll` file into your plugins folder.
+To use *Bark*, you will need to have [Monke Mod Manager](https://github.com/DeadlyKitten/MonkeModManager/releases) installed. 
+Make sure to check off:
+* Bepinject & Extenject
+* Computer Interface
+* Utilla
+Once you have installed the mod loader, simply drop the `Bark.dll` file into your plugins folder.
 
 ![Installation GIF](https://github.com/KyleTheScientist/Bark/blob/master/Marketing/HowToInstall.gif)
 

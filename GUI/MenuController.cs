@@ -52,14 +52,15 @@ namespace Bark.GUI
                 {
                     // Locomotion
                     gameObject.AddComponent<Airplane>(),
-                    gameObject.AddComponent<GrapplingHooks>(),
+                    gameObject.AddComponent<Bubble>(),
                     gameObject.AddComponent<Platforms>().Left(),
                     gameObject.AddComponent<Platforms>().Right(),
+                    gameObject.AddComponent<GrapplingHooks>(),
                     gameObject.AddComponent<SpeedBoost>(),
                     gameObject.AddComponent<Wallrun>(),
 
                     //// Physics
-                    gameObject.AddComponent<Freeze>(),
+                    //gameObject.AddComponent<SlowMotion>(),
                     gameObject.AddComponent<LowGravity>(),
                     gameObject.AddComponent<NoCollide>(),
                     gameObject.AddComponent<NoSlip>(),

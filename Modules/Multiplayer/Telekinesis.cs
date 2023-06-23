@@ -85,19 +85,20 @@ namespace Bark.Modules.Multiplayer
 
         void DistributeMidichlorians()
         {
-            try
+
+            foreach (var rig in GorillaParent.instance.vrrigs)
             {
-                foreach (var rig in GorillaParent.instance.vrrigs)
+                try
                 {
-                    if (rig.photonView.Owner.IsLocal ||
+                    if (rig.PhotonView().Owner.IsLocal ||
                         rig.gameObject.GetComponent<TKMarker>()) continue;
 
                     markers.Add(rig.gameObject.AddComponent<TKMarker>());
                 }
-            }
-            catch (Exception e)
-            {
-                Logging.LogException(e);
+                catch (Exception e)
+                {
+                    Logging.LogException(e);
+                }
             }
         }
 
@@ -177,7 +178,7 @@ namespace Bark.Modules.Multiplayer
                     controllingHand = hand;
                     if (!hand) return false;
                     controllingBody = hand?.GetComponent<Rigidbody>();
-                    if(!controllingBody) return false;
+                    if (!controllingBody) return false;
                     RaycastHit hit;
                     Ray ray = new Ray(hand.position, hand.up);
                     var collider = Instance.tkCollider;

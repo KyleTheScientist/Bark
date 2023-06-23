@@ -36,17 +36,24 @@ namespace Bark.Modules.Movement
 
         void Setup()
         {
-            if (!bananaGunPrefab)
-                bananaGunPrefab = Plugin.assetBundle.LoadAsset<GameObject>("Banana Gun");
+            try
+            {
+                if (!bananaGunPrefab)
+                    bananaGunPrefab = Plugin.assetBundle.LoadAsset<GameObject>("Banana Gun");
 
-            holsterL = new GameObject($"Holster (Left)").transform;
-            bananaGunL = Instantiate(bananaGunPrefab);
-            SetupBananaGun(ref holsterL, ref bananaGunL, true);
+                holsterL = new GameObject($"Holster (Left)").transform;
+                bananaGunL = Instantiate(bananaGunPrefab);
+                SetupBananaGun(ref holsterL, ref bananaGunL, true);
 
-            holsterR = new GameObject($"Holster (Right)").transform;
-            bananaGunR = Instantiate(bananaGunPrefab);
-            SetupBananaGun(ref holsterR, ref bananaGunR, false);
-            ReloadConfiguration();
+                holsterR = new GameObject($"Holster (Right)").transform;
+                bananaGunR = Instantiate(bananaGunPrefab);
+                SetupBananaGun(ref holsterR, ref bananaGunR, false);
+                ReloadConfiguration();
+            }
+            catch (Exception e)
+            {
+                Logging.LogException(e);
+            }
         }
 
         void SetupBananaGun(ref Transform holster, ref GameObject bananaGun, bool isLeft)
@@ -180,8 +187,8 @@ namespace Bark.Modules.Movement
         Vector3 hitPosition,
             baseModelOffsetClosed,
             baseModelOffsetOpen,
-            modelOffsetLeft = new Vector3(.025f, 0, .025f),
-            modelOffsetRight = new Vector3(-.025f, 0, .025f);
+            modelOffsetLeft = new Vector3(.055f, 0, .025f),
+            modelOffsetRight = new Vector3(-.055f, 0, .025f);
         private XRBaseInteractor interactor;
 
 
@@ -221,12 +228,14 @@ namespace Bark.Modules.Movement
         bool activated;
         protected override void OnActivate(XRBaseInteractor interactor)
         {
+            Logging.LogDebug("Activated");
             base.OnActivate(interactor);
             activated = true;
         }
 
         protected override void OnDeactivate(XRBaseInteractor interactor)
         {
+            Logging.LogDebug("Deactivated");
             base.OnDeactivate(interactor);
             activated = false;
             Close();
@@ -263,7 +272,7 @@ namespace Bark.Modules.Movement
                     break;
                 case RopeType.STATIC:
                     joint.maxDistance = distanceFromPoint;
-                    joint.minDistance = distanceFromPoint ;
+                    joint.minDistance = distanceFromPoint;
                     joint.spring = pullForce * 2;
                     joint.damper = 100f;
                     joint.massScale = 4.5f;
@@ -369,6 +378,7 @@ namespace Bark.Modules.Movement
 
         void Open()
         {
+            Logging.LogDebug("Opened");
             openModel?.SetActive(true);
             closedModel?.SetActive(false);
             GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(96, false, 0.05f);
@@ -376,8 +386,10 @@ namespace Bark.Modules.Movement
 
         void Close()
         {
+            Logging.LogDebug("Closed");
             openModel?.SetActive(false);
             closedModel?.SetActive(true);
+            activated = false;
             isGrappling = false;
             joint?.Obliterate();
         }

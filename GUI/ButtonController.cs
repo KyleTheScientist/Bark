@@ -58,6 +58,7 @@ public class ButtonController : XRBaseInteractable
     {
 
         base.Awake();
+        string progress = "";
         try
         {
             buttonModel = transform.GetChild(0);
@@ -66,13 +67,13 @@ public class ButtonController : XRBaseInteractable
             this.interactionLayerMask = BarkInteractor.InteractionLayerMask;
             this.gameObject.layer = BarkInteractor.InteractionLayer;
             this.text = GetComponentInChildren<Text>();
-            this.text.font = GameObject.FindObjectOfType<GorillaLevelScreen>().myText.font;
-            this.text.rectTransform.localScale *= 2.75f;
+            //this.text.font = Plugin.assetBundle.LoadAsset<Font>("Utopium-Regular");
+            this.text.fontSize = 26;
             var observer = this.gameObject.AddComponent<CollisionObserver>();
             observer.OnTriggerEntered += Press;
             observer.OnTriggerExited += Unpress;
         }
-        catch (Exception e) { Logging.LogException(e); }
+        catch (Exception e) { Logging.LogException(e); Logging.LogDebug("Reached", progress); }
     }
     protected void Press(GameObject self, Collider collider)
     {

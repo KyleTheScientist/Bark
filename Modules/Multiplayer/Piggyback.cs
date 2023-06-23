@@ -4,6 +4,11 @@ using Bark.Patches;
 using Bark.Modules.Physics;
 using GorillaLocomotion;
 using UnityEngine;
+using HarmonyLib;
+using Photon.Pun;
+using Bark.Extensions;
+using Bark.Tools;
+using System;
 
 namespace Bark.Modules.Multiplayer
 {
@@ -72,6 +77,7 @@ namespace Bark.Modules.Multiplayer
             public VRRig rig;
             public float distance;
         }
+
         public RigScanResult ClosestRig(Transform hand)
         {
             VRRig closestRig = null;
@@ -79,18 +85,25 @@ namespace Bark.Modules.Multiplayer
             float closestDistance = Mathf.Infinity;
             foreach (var rig in GorillaParent.instance.vrrigs)
             {
-                if (rig.photonView.Owner.IsLocal)
+                try
                 {
-                    continue;
-                }
-                var rigTransform = rig.transform.FindChildRecursive("head");
-                float distanceToTarget = Vector3.Distance(hand.position, rigTransform.position);
+                    if (rig.PhotonView().Owner.IsLocal)
+                    {
+                        continue;
+                    }
+                    var rigTransform = rig.transform.FindChildRecursive("head");
+                    float distanceToTarget = Vector3.Distance(hand.position, rigTransform.position);
 
-                if (distanceToTarget < closestDistance)
+                    if (distanceToTarget < closestDistance)
+                    {
+                        closestDistance = distanceToTarget;
+                        closestTransform = rigTransform;
+                        closestRig = rig;
+                    }
+                }
+                catch (Exception e)
                 {
-                    closestDistance = distanceToTarget;
-                    closestTransform = rigTransform;
-                    closestRig = rig;
+                    Logging.LogException(e);
                 }
             }
             return new RigScanResult()

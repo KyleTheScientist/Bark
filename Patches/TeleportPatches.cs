@@ -64,7 +64,6 @@ namespace Bark.Patches
         {
             if (_isTeleporting)
                 return;
-            Freeze.Instance.enabled = false;
             _teleportPosition = destinationPosition;
             _teleportRotation = destinationRotation;
             _isTeleporting = true;
@@ -76,7 +75,6 @@ namespace Bark.Patches
             if (_isTeleporting)
                 return;
 
-            Freeze.Instance.enabled = false;
             _teleportPosition = destinationPosition;
             _isTeleporting = true;
             _rotate = false;

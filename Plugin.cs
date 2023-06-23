@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using Bark.Modules;
 using System.Reflection;
+using ModestTree;
 
 namespace Bark
 {
@@ -63,6 +64,7 @@ namespace Bark
                 Logging.Init();
                 Zenjector.Install<BarkCI>().OnProject();
                 configFile = new ConfigFile(Path.Combine(Paths.ConfigPath, PluginInfo.Name + ".cfg"), true);
+
                 GeneralSettingsPage.BindConfigEntries();
                 Logging.LogDebug("Found", BarkModule.GetBarkModuleTypes().Count, "modules");
                 foreach (Type moduleType in BarkModule.GetBarkModuleTypes())
@@ -82,6 +84,7 @@ namespace Bark
                 Logging.LogDebug("Start");
                 Utilla.Events.GameInitialized += OnGameInitialized;
                 assetBundle = AssetUtils.LoadAssetBundle("Bark/Resources/barkbundle");
+                Logging.LogDebug(assetBundle.GetAllAssetNames().Join("\n"));
                 monkeMenuPrefab = assetBundle.LoadAsset<GameObject>("Bark Menu");
             }
             catch (Exception e)
