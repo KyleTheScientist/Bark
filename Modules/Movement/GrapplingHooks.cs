@@ -25,7 +25,7 @@ namespace Bark.Modules.Movement
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 
@@ -52,7 +52,7 @@ namespace Bark.Modules.Movement
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 
@@ -75,7 +75,7 @@ namespace Bark.Modules.Movement
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
         protected override void Cleanup()
@@ -94,7 +94,7 @@ namespace Bark.Modules.Movement
                 bananaGunL?.gameObject?.Obliterate();
                 bananaGunR?.gameObject?.Obliterate();
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         protected override void OnEnable()
@@ -116,7 +116,7 @@ namespace Bark.Modules.Movement
                 gun.ropeType = RopeType.Value == "elastic" ? BananaGun.RopeType.ELASTIC : BananaGun.RopeType.STATIC;
                 gun.steerForce = Steering.Value / 2f;
                 gun.maxLength = MaxLength.Value * 5;
-                Logging.LogDebug(
+                Logging.Debug(
                     "gun.pullForce:", gun.pullForce,
                     "gun.ropeType:", gun.ropeType,
                     "gun.steerForce:", gun.steerForce,
@@ -228,14 +228,14 @@ namespace Bark.Modules.Movement
         bool activated;
         protected override void OnActivate(XRBaseInteractor interactor)
         {
-            Logging.LogDebug("Activated");
+            Logging.Debug("Activated");
             base.OnActivate(interactor);
             activated = true;
         }
 
         protected override void OnDeactivate(XRBaseInteractor interactor)
         {
-            Logging.LogDebug("Deactivated");
+            Logging.Debug("Deactivated");
             base.OnDeactivate(interactor);
             activated = false;
             Close();
@@ -245,7 +245,7 @@ namespace Bark.Modules.Movement
         {
             RaycastHit hit;
             Ray ray = new Ray(rope.transform.position, transform.forward);
-            UnityEngine.Physics.SphereCast(ray, .5f, out hit, maxLength, Teleport.layerMask);
+            UnityEngine.Physics.SphereCast(ray, .5f * Player.Instance.scale, out hit, maxLength, Teleport.layerMask);
             if (!hit.transform) return;
 
             isGrappling = true;
@@ -305,7 +305,7 @@ namespace Bark.Modules.Movement
             {
                 RaycastHit hit;
                 Ray ray = new Ray(rope.transform.position, transform.forward);
-                UnityEngine.Physics.SphereCast(ray, .5f, out hit, maxLength, Teleport.layerMask);
+                UnityEngine.Physics.SphereCast(ray, .5f * Player.Instance.scale, out hit, maxLength, Teleport.layerMask);
                 if (!hit.transform)
                 {
                     laser.enabled = false;
@@ -378,7 +378,7 @@ namespace Bark.Modules.Movement
 
         void Open()
         {
-            Logging.LogDebug("Opened");
+            Logging.Debug("Opened");
             openModel?.SetActive(true);
             closedModel?.SetActive(false);
             GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(96, false, 0.05f);
@@ -386,7 +386,7 @@ namespace Bark.Modules.Movement
 
         void Close()
         {
-            Logging.LogDebug("Closed");
+            Logging.Debug("Closed");
             openModel?.SetActive(false);
             closedModel?.SetActive(true);
             activated = false;

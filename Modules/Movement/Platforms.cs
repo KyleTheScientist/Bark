@@ -8,6 +8,7 @@ using Bark.Gestures;
 using Bark.GUI;
 using Bark.Modules.Physics;
 using BepInEx.Configuration;
+
 namespace Bark.Modules.Movement
 {
     public class Platforms : BarkModule
@@ -54,7 +55,7 @@ namespace Bark.Modules.Movement
                 platform.gameObject.SetActive(false);
                 ReloadConfiguration();
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         bool gripped;
@@ -158,7 +159,7 @@ namespace Bark.Modules.Movement
                     )
                 );
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         public override string GetDisplayName()

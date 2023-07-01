@@ -27,7 +27,6 @@ namespace Bark.Modules.Multiplayer
             {
                 ReloadConfiguration();
                 var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Logging.LogDebug("Made a sphere");
                 sphere.name = "BarkTKDetector";
                 sphere.transform.SetParent(Player.Instance.bodyCollider.transform, false);
                 sphere.layer = BarkInteractor.InteractionLayer;
@@ -40,7 +39,7 @@ namespace Bark.Modules.Multiplayer
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
         Joint joint;
@@ -97,7 +96,7 @@ namespace Bark.Modules.Multiplayer
                 }
                 catch (Exception e)
                 {
-                    Logging.LogException(e);
+                    Logging.Exception(e);
                 }
             }
         }
@@ -185,7 +184,7 @@ namespace Bark.Modules.Multiplayer
                     UnityEngine.Physics.SphereCast(ray, .2f * Player.Instance.scale, out hit, collider.gameObject.layer);
                     return hit.collider == collider;
                 }
-                catch (Exception e) { Logging.LogException(e); }
+                catch (Exception e) { Logging.Exception(e); }
                 return false;
             }
 

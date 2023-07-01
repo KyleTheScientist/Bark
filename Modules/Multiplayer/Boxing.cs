@@ -46,7 +46,7 @@ namespace Bark.Modules.Multiplayer
                 }
                 catch (Exception e)
                 {
-                    Logging.LogException(e);
+                    Logging.Exception(e);
                 }
             }
 
@@ -75,14 +75,14 @@ namespace Bark.Modules.Multiplayer
         {
             if (Time.time - lastPunch < 1) return;
             Vector3 force = (tracker.collider.transform.position - tracker.lastPos);
-            Logging.LogDebug("Raw Force", force.magnitude);
+            Logging.Debug("Raw Force", force.magnitude);
             if (force.magnitude < .1f * Player.Instance.scale) return;
 
 
             if (force.magnitude > 1)
                 force.Normalize();
             force *= forceMultiplier;
-            Logging.LogDebug("Actual Force", force.magnitude);
+            Logging.Debug("Actual Force", force.magnitude);
             Player.Instance.bodyCollider.attachedRigidbody.velocity += force;
             lastPunch = Time.time;
             tracker = null;
@@ -127,7 +127,7 @@ namespace Bark.Modules.Multiplayer
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 
@@ -152,7 +152,7 @@ namespace Bark.Modules.Multiplayer
         public static ConfigEntry<int> PunchForce;
         public static void BindConfigEntries()
         {
-            Logging.LogDebug("Binding", DisplayName, "to config");
+            Logging.Debug("Binding", DisplayName, "to config");
             PunchForce = Plugin.configFile.Bind(
                 section: DisplayName,
                 key: "punch force",

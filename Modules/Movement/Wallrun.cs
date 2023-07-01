@@ -35,7 +35,7 @@ namespace Bark.Modules.Movement
             }
             else
             {
-                if (Vector3.Distance(player.bodyCollider.transform.position, hit.point) > 2)
+                if (Vector3.Distance(player.bodyCollider.transform.position, hit.point) > 2 * Player.Instance.scale)
                     Cleanup();
             }
         }

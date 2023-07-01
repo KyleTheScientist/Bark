@@ -20,7 +20,7 @@ namespace Bark.Tools
             {
                 step = "Locating renderers";
                 Renderer[] renderers = GameObject.FindObjectsOfType<Renderer>();
-                Logging.LogDebug("Found", renderers.Length, "renderers");
+                Logging.Debug("Found", renderers.Length, "renderers");
                 step = "Looping through renderers";
                 List<Texture> knownTextures = new List<Texture>();
                 foreach (Renderer renderer in renderers)
@@ -46,18 +46,18 @@ namespace Bark.Tools
                                 string filename = Path.Combine(folderName, renderer.gameObject.name + "--" + materialName + ".png");
                                 step = "Writing bytes";
                                 if (filename.Contains("plastickey")) continue;
-                                Logging.LogDebug(filename, bytes);
+                                Logging.Debug(filename, bytes);
                                 File.WriteAllBytes(filename, bytes);
                             }
                         }
                         catch (Exception e)
                         {
-                            Logging.LogException(e);
+                            Logging.Exception(e);
                         }
                     }
                 }
             }
-            catch (Exception e) { Logging.LogWarning("Failed at step", step); Logging.LogException(e); }
+            catch (Exception e) { Logging.LogWarning("Failed at step", step); Logging.Exception(e); }
         }
     }
 }

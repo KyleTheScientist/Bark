@@ -2,7 +2,6 @@
 using Bark.Gestures;
 using Bark.GUI;
 using Bark.Tools;
-using BepInEx.Configuration;
 using System;
 using UnityEngine;
 
@@ -28,7 +27,7 @@ namespace Bark.Modules.Misc
                 GestureTracker.Instance.rightGrip.OnPressed += () => { sword.SetActive(true); };
                 GestureTracker.Instance.rightGrip.OnReleased += () => { sword.SetActive(false); };
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         protected override void Cleanup()

@@ -1,5 +1,4 @@
 ﻿using Bark.GUI;
-using BepInEx.Configuration;
 using GorillaLocomotion;
 using UnityEngine;
 using UnityEngine.XR;

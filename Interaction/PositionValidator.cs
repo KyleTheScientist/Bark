@@ -54,7 +54,7 @@ namespace Bark.Gestures
                 }
 
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 }

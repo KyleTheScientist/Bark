@@ -17,7 +17,7 @@ namespace Bark.Patches
             {
                 OnLateUpdate?.Invoke(__instance);
             }
-            catch(Exception e) { Logging.LogException(e); }
+            catch(Exception e) { Logging.Exception(e); }
         }
     }
 
@@ -34,7 +34,7 @@ namespace Bark.Patches
                 if (NoSlip.Instance)
                     __result = NoSlip.Instance.enabled ? 0 : __result;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 }

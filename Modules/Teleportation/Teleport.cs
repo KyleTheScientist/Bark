@@ -20,10 +20,9 @@ namespace Bark.Modules
 
         private Transform teleportMarker, window;
         private bool isTeleporting;
-        private const float teleportWindupTime = 1f;
         private DebugPoly poly;
 
-        protected override void OnEnable()
+            protected override void OnEnable()
         {
             if (!MenuController.Instance.Built) return;
             base.OnEnable();
@@ -34,7 +33,7 @@ namespace Bark.Modules
                 window = new GameObject("Teleport Window").transform;
                 poly = window.gameObject.AddComponent<DebugPoly>();
                 GestureTracker.Instance.OnIlluminati += OnIlluminati;
-            } catch (Exception e) { Logging.LogException(e); }
+            } catch (Exception e) { Logging.Exception(e); }
         }
 
         private void OnIlluminati()
@@ -62,8 +61,11 @@ namespace Bark.Modules
             {
                 RenderTriangle();
                 window.transform.position = (leftHand.position + rightHand.position) / 2;
-                if(Vector3.Distance(window.transform.position, player.headCollider.transform.position) > .2f)
+                if(Vector3.Distance(window.transform.position, 
+                    player.headCollider.transform.position) > .2f * Player.Instance.scale)
                 {
+                    teleportMarker.position = Vector3.up * 100000;
+                    startTime = Time.time;
                     yield return new WaitForEndOfFrame();
                     continue;
                 }
@@ -78,7 +80,7 @@ namespace Bark.Modules
                 if (!hit.transform)
                 {
                     startTime = Time.time;
-                    teleportMarker.position = Vector3.zero;
+                    teleportMarker.position = Vector3.up * 100000;
                     if (playedSound)
                     {
                         GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(98, false, .1f);
@@ -93,10 +95,11 @@ namespace Bark.Modules
                     playedSound = true;
                 }
 
-                float scale = Mathf.Lerp(0, player.scale, (Time.time - startTime) / teleportWindupTime);
+                float chargeScale = MathExtensions.Map(ChargeTime.Value, 0, 10, .25f, 1.5f);
+                float t = Mathf.Lerp(0, 1, (Time.time - startTime) / chargeScale);
                 teleportMarker.position = hit.point - forward * player.scale;
-                teleportMarker.localScale = Vector3.one * scale;
-                if (Mathf.Abs(scale - player.scale) < .01f)
+                teleportMarker.localScale = Vector3.one * Player.Instance.scale * t;
+                if (t >= 1)
                 {
                     TeleportPatch.TeleportPlayer(teleportMarker.position, player.bodyCollider.transform.eulerAngles.y);
                     break;
@@ -134,6 +137,17 @@ namespace Bark.Modules
             teleportMarker?.gameObject?.Obliterate();
             window?.gameObject?.Obliterate();
             isTeleporting = false;
+        }
+
+        public static ConfigEntry<int> ChargeTime;
+        public static void BindConfigEntries()
+        {
+            ChargeTime = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "charge time",
+                defaultValue: 5,
+                description: "How long it takes to charge the teleport"
+            );
         }
 
         public override string GetDisplayName()

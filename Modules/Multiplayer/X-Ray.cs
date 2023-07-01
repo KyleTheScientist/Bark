@@ -28,11 +28,11 @@ namespace Bark.Modules.Multiplayer
                 }
                 catch (Exception e)
                 {
-                    Logging.LogException(e);
-                    Logging.LogDebug("rig is null:", rig is null);
-                    Logging.LogDebug("rig?.PhotonView() is null:", rig?.PhotonView() is null);
-                    Logging.LogDebug("rig?.PhotonView()?.Owner is null:", rig?.PhotonView()?.Owner is null);
-                    Logging.LogDebug("rig?.gameObject is null:", rig?.gameObject is null);
+                    Logging.Exception(e);
+                    Logging.Debug("rig is null:", rig is null);
+                    Logging.Debug("rig?.PhotonView() is null:", rig?.PhotonView() is null);
+                    Logging.Debug("rig?.PhotonView()?.Owner is null:", rig?.PhotonView()?.Owner is null);
+                    Logging.Debug("rig?.gameObject is null:", rig?.gameObject is null);
                 }
             }
         }
@@ -51,6 +51,7 @@ namespace Bark.Modules.Multiplayer
 
         protected override void Cleanup()
         {
+            if (!MenuController.Instance.Built) return;
             foreach (var marker in markers)
                 marker?.Obliterate();
         }
@@ -92,7 +93,7 @@ namespace Bark.Modules.Multiplayer
         void OnDestroy()
         {
             rig.mainSkin.material = baseMaterial;
-            Logging.LogDebug($"Reset material to {baseMaterial.name}");
+            Logging.Debug($"Reset material to {baseMaterial.name}");
         }
     }
 }

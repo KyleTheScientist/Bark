@@ -25,7 +25,7 @@ namespace Bark.Gestures
                 this.enableInteractions = true;
                 this.xrController = GetController(this.name.Contains("Left"));
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
         public XRController GetController(bool isLeft)
         {

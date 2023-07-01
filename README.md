@@ -13,7 +13,8 @@
 * `Grappling Hooks` - **Grab one of the grapple guns** off of your hip holster with **either grip button and then press the trigger to fire**
 * `Platforms (Left/Right)` - **Press the grip button** on your controller to create a floating platform in the air that you can stand on. There's a toggle for each hand so that you can disable one if it clashes with another mod's inputs.
 * `Speed` - Significantly increases the player's movement speed
-* `Wall Run` - Allows you to seamlessly transition between running on floors, walls, and ceilings!
+* `Wall Run` - Allows you to seamlessly transition between running on floors, walls, and ceilings! Push off to revert to normal movement.
+* `Zipline` - **Press the grip button** to spawn a zipline launcher. **Press and release the trigger** to fire a zipline.
 ### Physics
 * `Low Gravity` - Decreases the strength of gravity
 * `No Collide` - Allows the player to fall through solid objects. Enabling this automatically enables platforms so you don't fall to your death!

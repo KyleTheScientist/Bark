@@ -12,7 +12,7 @@ namespace Bark.Tools
             logger = Logger.CreateLogSource("Bark");
         }
 
-        public static void LogException(Exception e)
+        public static void Exception(Exception e)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
             logger.LogWarning($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", e.Message, e.StackTrace));
@@ -36,7 +36,7 @@ namespace Bark.Tools
             logger.LogInfo($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
         }
 
-        public static void LogDebug(params object[] content)
+        public static void Debug(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
             logger.LogDebug($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join("  ", content));

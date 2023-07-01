@@ -16,7 +16,6 @@ using Photon.Pun;
 using Player = GorillaLocomotion.Player;
 using BepInEx.Configuration;
 using UnityEngine.XR;
-using Bark.GUI.ComputerInterface;
 
 namespace Bark.GUI
 {
@@ -35,14 +34,16 @@ namespace Bark.GUI
         private List<ButtonController> buttons;
         public List<BarkModule> modules;
         public Text helpText;
-        public static InputTracker SummonInput;
-
+        public static InputTracker SummonTracker;
+        public static ConfigEntry<string> SummonInput;
+        public static ConfigEntry<string> SummonInputHand;
+        
         protected override void Awake()
         {
             Instance = this;
             try
             {
-                Logging.LogDebug("Awake");
+                Logging.Debug("Awake");
                 base.Awake();
 
                 gameObject.AddComponent<PositionValidator>();
@@ -53,11 +54,12 @@ namespace Bark.GUI
                     // Locomotion
                     gameObject.AddComponent<Airplane>(),
                     gameObject.AddComponent<Bubble>(),
+                    gameObject.AddComponent<GrapplingHooks>(),
                     gameObject.AddComponent<Platforms>().Left(),
                     gameObject.AddComponent<Platforms>().Right(),
-                    gameObject.AddComponent<GrapplingHooks>(),
                     gameObject.AddComponent<SpeedBoost>(),
                     gameObject.AddComponent<Wallrun>(),
+                    gameObject.AddComponent<Zipline>(),
 
                     //// Physics
                     gameObject.AddComponent<LowGravity>(),
@@ -67,6 +69,7 @@ namespace Bark.GUI
 
                     //// Teleportation
                     gameObject.AddComponent<Checkpoint>(),
+                    //gameObject.AddComponent<Portal>(),
                     gameObject.AddComponent<Teleport>(),
                 
                     //// Multiplayer
@@ -82,36 +85,36 @@ namespace Bark.GUI
                 }
                 ReloadConfiguration();
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         private void ReloadConfiguration()
         {
-            if (SummonInput != null)
-                SummonInput.OnPressed -= Summon;
+            if (SummonTracker != null)
+                SummonTracker.OnPressed -= Summon;
             GestureTracker.Instance.OnMeatBeat -= Summon;
 
-            var hand = GeneralSettingsPage.SummonInputHand.Value == "left"
+            var hand = SummonInputHand.Value == "left"
                 ? XRNode.LeftHand : XRNode.RightHand;
 
-            if (GeneralSettingsPage.SummonInput.Value == "gesture")
+            if (SummonInput.Value == "gesture")
             {
                 GestureTracker.Instance.OnMeatBeat += Summon;
             }
             else
             {
-                SummonInput = GestureTracker.Instance.GetInputTracker(
-                    GeneralSettingsPage.SummonInput.Value, hand
+                SummonTracker = GestureTracker.Instance.GetInputTracker(
+                    SummonInput.Value, hand
                 );
-                if (SummonInput != null)
-                    SummonInput.OnPressed += Summon;
+                if (SummonTracker != null)
+                    SummonTracker.OnPressed += Summon;
             }
         }
 
         void SettingsChanged(object sender, SettingChangedEventArgs e)
         {
-            if (e.ChangedSetting == GeneralSettingsPage.SummonInput ||
-                e.ChangedSetting == GeneralSettingsPage.SummonInputHand)
+            if (e.ChangedSetting == SummonInput ||
+                e.ChangedSetting == SummonInputHand)
                 ReloadConfiguration();
         }
 
@@ -144,7 +147,7 @@ namespace Bark.GUI
 
         void BuildMenu()
         {
-            Logging.LogDebug("Building menu...");
+            Logging.Debug("Building menu...");
             try
             {
                 helpText = this.gameObject.transform.Find("Help Canvas").GetComponentInChildren<Text>();
@@ -165,7 +168,7 @@ namespace Bark.GUI
                 ResetPosition();
 
 
-                Logging.LogDebug("Build successful.");
+                Logging.Debug("Build successful.");
             }
             catch (Exception ex) { Logging.LogWarning(ex.Message); Logging.LogWarning(ex.StackTrace); return; }
             Built = true;
@@ -333,6 +336,33 @@ namespace Bark.GUI
         {
             base.OnDestroy();
             Plugin.configFile.SettingChanged -= SettingsChanged;
+        }
+
+        public static void BindConfigEntries()
+        {
+            try
+            {
+                ConfigDescription inputDesc = new ConfigDescription(
+                    "Which button you press to open the menu",
+                    new AcceptableValueList<string>("gesture", "stick", "a/x", "b/y")
+                );
+                SummonInput = Plugin.configFile.Bind("General",
+                    "open menu",
+                    "gesture",
+                    inputDesc
+                );
+
+                ConfigDescription handDesc = new ConfigDescription(
+                    "Which hand can open the menu",
+                    new AcceptableValueList<string>("left", "right")
+                );
+                SummonInputHand = Plugin.configFile.Bind("General",
+                    "open hand",
+                    "right",
+                    handDesc
+                );
+            }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 }

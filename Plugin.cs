@@ -5,14 +5,10 @@ using Utilla;
 using Bark.GUI;
 using Bark.Tools;
 using Bark.Extensions;
-using Bark.GUI.ComputerInterface;
-using Bepinject;
 using BepInEx.Configuration;
-using System.Runtime.InteropServices;
 using System.IO;
 using Bark.Modules;
 using System.Reflection;
-using ModestTree;
 
 namespace Bark
 {
@@ -31,8 +27,9 @@ namespace Bark
 
         public void Setup()
         {
+            Logging.Debug("Attempting to set up");
             if (menuController || !pluginEnabled || !inRoom) return;
-            Logging.LogDebug("Menu:", menuController, "Plugin Enabled:", pluginEnabled, "InRoom:", inRoom);
+            Logging.Debug("Menu:", menuController, "Plugin Enabled:", pluginEnabled, "InRoom:", inRoom);
 
             try
             {
@@ -40,7 +37,7 @@ namespace Bark
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 
@@ -48,12 +45,12 @@ namespace Bark
         {
             try
             {
-                Logging.LogDebug("Cleaning up");
+                Logging.Debug("Cleaning up");
                 menuController?.gameObject?.Obliterate();
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 
@@ -62,11 +59,10 @@ namespace Bark
             try
             {
                 Logging.Init();
-                Zenjector.Install<BarkCI>().OnProject();
+                CI.Init();
                 configFile = new ConfigFile(Path.Combine(Paths.ConfigPath, PluginInfo.Name + ".cfg"), true);
-
-                GeneralSettingsPage.BindConfigEntries();
-                Logging.LogDebug("Found", BarkModule.GetBarkModuleTypes().Count, "modules");
+                MenuController.BindConfigEntries();
+                Logging.Debug("Found", BarkModule.GetBarkModuleTypes().Count, "modules");
                 foreach (Type moduleType in BarkModule.GetBarkModuleTypes())
                 {
                     MethodInfo bindConfigs = moduleType.GetMethod("BindConfigEntries");
@@ -74,22 +70,21 @@ namespace Bark
                     bindConfigs.Invoke(null, null);
                 }
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
-        void Start()
+    void Start()
         {
             try
             {
-                Logging.LogDebug("Start");
+                Logging.Debug("Start");
                 Utilla.Events.GameInitialized += OnGameInitialized;
                 assetBundle = AssetUtils.LoadAssetBundle("Bark/Resources/barkbundle");
-                Logging.LogDebug(assetBundle.GetAllAssetNames().Join("\n"));
                 monkeMenuPrefab = assetBundle.LoadAsset<GameObject>("Bark Menu");
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 
@@ -98,7 +93,7 @@ namespace Bark
         {
             try
             {
-                Logging.LogDebug("OnEnable");
+                Logging.Debug("OnEnable");
                 this.pluginEnabled = true;
                 HarmonyPatches.ApplyHarmonyPatches();
                 if (initialized)
@@ -106,7 +101,7 @@ namespace Bark
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 
@@ -114,21 +109,27 @@ namespace Bark
         {
             try
             {
-                Logging.LogDebug("OnDisable");
+                Logging.Debug("OnDisable");
                 this.pluginEnabled = false;
                 HarmonyPatches.RemoveHarmonyPatches();
                 Cleanup();
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
+        }
+
+        void OnGameInitialized(object sender, EventArgs e)
+        {
+            Logging.Debug("OnGameInitialized");
+            initialized = true;
         }
 
         [ModdedGamemodeJoin]
         void RoomJoined(string gamemode)
         {
-            Logging.LogDebug("RoomJoined");
+            Logging.Debug("RoomJoined");
             inRoom = true;
             Setup();
         }
@@ -136,15 +137,9 @@ namespace Bark
         [ModdedGamemodeLeave]
         void RoomLeft(string gamemode)
         {
-            Logging.LogDebug("RoomLeft");
+            Logging.Debug("RoomLeft");
             inRoom = false;
             Cleanup();
-        }
-
-        void OnGameInitialized(object sender, EventArgs e)
-        {
-            Logging.LogDebug("OnGameInitialized");
-            initialized = true;
         }
     }
 }

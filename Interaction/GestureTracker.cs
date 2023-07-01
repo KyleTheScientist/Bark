@@ -102,7 +102,7 @@ namespace Bark.Gestures
 
             try
             {
-                Logging.LogDebug("Start");
+                Logging.Debug("Start");
                 BuildColliders();
                 var observer = chest.AddComponent<CollisionObserver>();
                 observer.OnTriggerEntered += OnChestBeat;
@@ -254,7 +254,7 @@ namespace Bark.Gestures
 
         void BuildColliders()
         {
-            Logging.LogDebug("BuildColliders");
+            Logging.Debug("BuildColliders");
 
             var player = Player.Instance;
             chest = new GameObject("Body Gesture Collider");
@@ -317,7 +317,7 @@ namespace Bark.Gestures
 
         public void OnDestroy()
         {
-            Logging.LogDebug("Gesture Tracker Destroy");
+            Logging.Debug("Gesture Tracker Destroy");
             leftHand?.Obliterate();
             rightHand?.Obliterate();
             leftPointerObj?.Obliterate();
@@ -342,6 +342,10 @@ namespace Bark.Gestures
                     return node == XRNode.LeftHand ? leftTrigger : rightTrigger;
                 case "stick":
                     return node == XRNode.LeftHand ? leftStick : rightStick;
+                case "primary":
+                    return node == XRNode.LeftHand ? leftPrimary : rightPrimary;
+                case "secondary":
+                    return node == XRNode.LeftHand ? leftSecondary : rightSecondary;
                 case "a/x":
                     return node == XRNode.LeftHand ? leftPrimary : rightPrimary;
                 case "b/y":

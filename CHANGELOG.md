@@ -1,5 +1,32 @@
 # CHANGELOG.md
 
+## 1.3.2 (2023-July-1) - The Zipline Update (AKA The STOP BREAKING MY MODS LEMMING update)
+Features
+- Added the **Zipline** which gives the player a cannon that fires ziplines. Press [Grip] to spawn the cannon and [Trigger] to fire.
+- Added new config options: 
+	- Zipline
+		- `Max Ziplines` - How many ziplines can exist on screen at once
+		- `Launcher Hand` - Which hand the launcher spawns in
+		- `Gravity Multiplier` - How fast you accelerate downwards while riding on the zipline
+	- Bubble
+		-  `Bubble Size` - The size of the bubble's hitbox
+		-  `Bubble Speed` - The speed that the bubble gains when you punch it
+	- Checkpoint
+		-  `Charge Time` - How long it takes to set and return to the checkpoint
+	- Teleport
+		-  `Charge Time` - How long it takes to charge the teleport
+
+Changes
+- Going forward there will be 2 releases for Bark; One with and one without the Computer Interface dependency. This way players
+can still use the mod even if CI is broken.
+
+Fixes
+- Fixed for the Summer Update
+- Buttons now vibrate the correct controller
+- Grappling Hooks now target more reliably when the player shrinks
+- Bubble now scales with the player when they shrink
+- Bubble now scales with the player when they are small
+
 ## 1.3.1 (2023-Jun-23) - The Bubble Update
 Features
 - Added the **Bubble** module which creates a big bubble around you that you can float in and push around.

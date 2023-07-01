@@ -32,7 +32,7 @@ namespace Bark.Tools
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 

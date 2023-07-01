@@ -39,7 +39,7 @@ namespace Bark.Modules.Teleportation
             }
             catch (Exception e)
             {
-                Logging.LogException(e);
+                Logging.Exception(e);
             }
         }
 
@@ -62,7 +62,9 @@ namespace Bark.Modules.Teleportation
             float startTime = Time.time;
             while (GestureTracker.Instance.leftTrigger.pressed && !NoCollide.active)
             {
-                float scale = Mathf.Lerp(0, Player.Instance.scale, (Time.time - startTime) / 2f);
+
+                float chargeScale = MathExtensions.Map(ChargeTime.Value, 0, 10, 0f, 1f);
+                float scale = Mathf.Lerp(0, Player.Instance.scale, (Time.time - startTime) / chargeScale);
                 checkpointMarker.position = Player.Instance.leftControllerTransform.position + Vector3.up * .15f * Player.Instance.scale;
                 checkpointMarker.localScale = Vector3.one * scale;
                 if (Mathf.Abs(scale - Player.Instance.scale) < .01f)
@@ -100,7 +102,8 @@ namespace Bark.Modules.Teleportation
             {
                 startPos = Player.Instance.rightControllerTransform.position;
                 bananaLine.SetPosition(1, startPos);
-                endPos = Vector3.Lerp(startPos, checkpointMarker.transform.position, (Time.time - startTime) / 2f);
+                float chargeScale = MathExtensions.Map(ChargeTime.Value, 0, 10, 0f, 1f);
+                endPos = Vector3.Lerp(startPos, checkpointMarker.transform.position, (Time.time - startTime) / chargeScale);
                 bananaLine.SetPosition(0, endPos);
                 bananaLine.startWidth = bananaLine.endWidth = Player.Instance.scale * .1f;
                 bananaLine.material.mainTextureScale = new Vector2(Player.Instance.scale, 1);
@@ -131,24 +134,24 @@ namespace Bark.Modules.Teleportation
                 checkpointMarker.gameObject.SetActive(pointSet);
                 bananaLine = Instantiate(bananaLinePrefab).GetComponent<LineRenderer>();
                 markedTriggers = new List<GorillaTriggerBox>();
-                foreach (var triggerBox in FindObjectsOfType<GorillaTriggerBox>())
-                {
-                    if (triggerBox?.gameObject?.GetComponent<CollisionObserver>()) continue;
-                    var observer = triggerBox.gameObject.AddComponent<CollisionObserver>();
-                    // Sometimes you just can't add a collision observer for some reason. If this happens, give up.
-                    if (!triggerBox?.gameObject?.GetComponent<CollisionObserver>()) continue;
+                //foreach (var triggerBox in FindObjectsOfType<GorillaTriggerBox>())
+                //{
+                //    if (triggerBox?.gameObject?.GetComponent<CollisionObserver>()) continue;
+                //    var observer = triggerBox.gameObject.AddComponent<CollisionObserver>();
+                //    // Sometimes you just can't add a collision observer for some reason. If this happens, give up.
+                //    if (!triggerBox?.gameObject?.GetComponent<CollisionObserver>()) continue;
 
-                    observer.OnTriggerStayed += (box, collider) =>
-                    {
-                        if (collider == Player.Instance.bodyCollider)
-                            ClearCheckpoint();
-                    };
-                    markedTriggers.Add(triggerBox);
-                }
+                //    observer.OnTriggerStayed += (box, collider) =>
+                //    {
+                //        if (collider == Player.Instance.bodyCollider)
+                //            ClearCheckpoint();
+                //    };
+                //    markedTriggers.Add(triggerBox);
+                //}
                 GestureTracker.Instance.leftTrigger.OnPressed += LeftTriggered;
                 GestureTracker.Instance.rightTrigger.OnPressed += RightTriggered;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
 
@@ -163,7 +166,8 @@ namespace Bark.Modules.Teleportation
 
         protected override void Cleanup()
         {
-            bananaLine?.gameObject.Obliterate();
+            if (!MenuController.Instance.Built) return;
+            bananaLine?.gameObject.Obliterate(); 
             checkpointMarker?.gameObject.Obliterate();
             foreach (var triggerBox in markedTriggers)
             {
@@ -171,6 +175,17 @@ namespace Bark.Modules.Teleportation
             }
             GestureTracker.Instance.leftTrigger.OnPressed -= LeftTriggered;
             GestureTracker.Instance.rightTrigger.OnPressed -= RightTriggered;
+        }
+
+        public static ConfigEntry<int> ChargeTime;
+        public static void BindConfigEntries()
+        {
+            ChargeTime = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "charge time",
+                defaultValue: 5,
+                description: "How long it takes to charge the teleport"
+            );
         }
 
         public override string GetDisplayName()

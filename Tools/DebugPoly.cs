@@ -29,7 +29,7 @@ namespace Bark.Tools
                 MeshFilter filter = polygon.AddComponent<MeshFilter>();
                 filter.mesh = mesh;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         void FixedUpdate()
@@ -52,7 +52,7 @@ namespace Bark.Tools
                 };
                 mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 2000);
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
         
 

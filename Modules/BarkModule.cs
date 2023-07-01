@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using Bark.Tools;
+using BepInEx.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,22 +53,33 @@ namespace Bark.Modules
 
         public static List<Type> GetBarkModuleTypes()
         {
-
-            var types = Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(BarkModule).IsAssignableFrom(t)).ToList();
-            types.Sort((x, y) =>
+            try
             {
-                FieldInfo xField = x.GetField("DisplayName", BindingFlags.Public | BindingFlags.Static);
-                FieldInfo yField = y.GetField("DisplayName", BindingFlags.Public | BindingFlags.Static);
+                var types = Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(BarkModule).IsAssignableFrom(t)).ToList();
+                types.Sort((x, y) =>
+                {
+                    FieldInfo xField = x.GetField("DisplayName", BindingFlags.Public | BindingFlags.Static);
+                    FieldInfo yField = y.GetField("DisplayName", BindingFlags.Public | BindingFlags.Static);
 
-                if (xField == null || yField == null)
-                    return 0;
+                    if (xField == null || yField == null)
+                        return 0;
 
-                string xValue = (string)xField.GetValue(null);
-                string yValue = (string)yField.GetValue(null);
+                    string xValue = (string)xField.GetValue(null);
+                    string yValue = (string)yField.GetValue(null);
 
-                return string.Compare(xValue, yValue);
-            });
-            return types;
+                    return string.Compare(xValue, yValue);
+                });
+                return types;
+            } catch (ReflectionTypeLoadException ex)
+            {
+                Logging.Exception(ex);
+                Logging.LogWarning("Inner exceptions:");
+                foreach (Exception inner in ex.LoaderExceptions)
+                {
+                    Logging.Exception(inner);
+                }
+            }
+            return null;
         }
 
     }

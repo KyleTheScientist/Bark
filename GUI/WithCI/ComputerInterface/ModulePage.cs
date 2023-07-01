@@ -1,0 +1,53 @@
+﻿using Bark.Modules;
+using Bark.Tools;
+using BepInEx.Configuration;
+using ComputerInterface;
+using ComputerInterface.ViewLib;
+using ModestTree;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+
+namespace Bark.GUI.ComputerInterface
+{
+    public class ModulePage : ComputerView
+    {
+        private StringBuilder content;
+        BarkCIList list;
+        private string title;
+
+        public override void OnShow(object[] args)
+        {
+            try
+            {
+                base.OnShow(args);
+                title = (string)args[0];
+                list = new BarkCIList();                
+                foreach (var definition in Plugin.configFile.Keys)
+                {
+                    if (definition.Section == title)
+                    {
+                        list.lines.Add(BarkCI.ConvertToLine(Plugin.configFile[definition]));
+                    }
+                }
+                content = BarkCI.Header(title);
+                list.Render(content);
+                Text = content.ToString();
+            }
+            catch (Exception e) { Logging.Exception(e); }
+        }
+
+        public override void OnKeyPressed(EKeyboardKey key)
+        {
+            content = BarkCI.Header(title);
+            if (key == EKeyboardKey.Back)
+                ShowView(typeof(MainPage));
+            else
+                list.OnKeyPressed(key);
+            list.Render(content);
+            Text = content.ToString();
+        }
+    }
+}

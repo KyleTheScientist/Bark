@@ -37,7 +37,7 @@ namespace Bark.Modules.Physics
             {
                 if (!MenuController.Instance.Built) return;
                 base.OnEnable();
-                Logging.LogDebug("Disabling triggers");
+                Logging.Debug("Disabling triggers");
                 activationLocation = Player.Instance.bodyCollider.transform.position;
                 activationAngle = Player.Instance.bodyCollider.transform.eulerAngles.y;
                 if (!Piggyback.mounted)
@@ -51,7 +51,7 @@ namespace Bark.Modules.Physics
                     }
                     catch
                     {
-                        Logging.LogDebug("Failed to enable platforms for noclip.");
+                        Logging.Debug("Failed to enable platforms for noclip.");
                     }
                 }
 
@@ -66,7 +66,7 @@ namespace Bark.Modules.Physics
                 Player.Instance.headCollider.isTrigger = true;
                 active = true;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         protected override void Cleanup() 
@@ -76,7 +76,7 @@ namespace Bark.Modules.Physics
 
         IEnumerator CleanupRoutine()
         {
-            Logging.LogDebug("Cleaning up noclip");
+            Logging.Debug("Cleaning up noclip");
 
             if (!active) yield break;
             Player.Instance.locomotionEnabledLayers = baseMask;
@@ -87,7 +87,7 @@ namespace Bark.Modules.Physics
             yield return new WaitForFixedUpdate();
             yield return new WaitForFixedUpdate();
             TriggerBoxPatches.triggersEnabled = true;
-            Logging.LogDebug("Enabling triggers");
+            Logging.Debug("Enabling triggers");
         }
 
         public override string GetDisplayName()

@@ -22,7 +22,7 @@ namespace Bark.Patches
                 for (int i = 0; i < __result.Length; i++)
                     __result[i] *= SpeedBoost.scale;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 
@@ -39,7 +39,7 @@ namespace Bark.Patches
                 for (int i = 0; i < __result.Length; i++)
                     __result[i] *= SpeedBoost.scale;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 
@@ -56,7 +56,7 @@ namespace Bark.Patches
                 for (int i = 0; i < __result.Length; i++)
                     __result[i] *= SpeedBoost.scale;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 
@@ -73,7 +73,7 @@ namespace Bark.Patches
                 for (int i = 0; i < __result.Length; i++)
                     __result[i] *= SpeedBoost.scale;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 
@@ -88,7 +88,7 @@ namespace Bark.Patches
                 if (!SpeedBoost.active) return;
                 swimmingVelocityChange *= SpeedBoost.scale;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 }

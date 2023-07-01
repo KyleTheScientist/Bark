@@ -16,9 +16,9 @@ namespace Bark.Patches
             try
             {
                 var stack = new StackTrace();
-                //Logging.LogDebug(stack);
+                 Logging.Debug(stack);
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 
@@ -32,9 +32,9 @@ namespace Bark.Patches
             try
             {
                 var stack = new StackTrace();
-                //Logging.LogDebug(stack);
+                 Logging.Debug(stack);
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 
@@ -48,9 +48,9 @@ namespace Bark.Patches
             try
             {
                 var stack = new StackTrace();
-                //Logging.LogDebug(context, stack);
+                Logging.Debug(context, stack);
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 
@@ -64,9 +64,9 @@ namespace Bark.Patches
             try
             {
                 var stack = new StackTrace();
-                //Logging.LogDebug(stack);
+                 Logging.Debug(stack);
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
     }
 }

@@ -101,7 +101,7 @@ namespace Bark.Modules.Multiplayer
                 }
                 catch (Exception e)
                 {
-                    Logging.LogException(e);
+                    Logging.Exception(e);
                 }
             }
             return new RigScanResult()

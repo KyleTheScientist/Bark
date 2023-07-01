@@ -23,7 +23,6 @@ public class ButtonController : XRBaseInteractable
     };
 
     private float buttonPushDistance = 0.03f; // Distance the button travels when pushed
-    private Vector3 buttonRestPosition; // Initial position of the button
     public Action<ButtonController, bool> OnPressed;
     private float cooldown = .1f, lastPressed = 0;
     public Canvas canvas;
@@ -72,7 +71,7 @@ public class ButtonController : XRBaseInteractable
             observer.OnTriggerEntered += Press;
             observer.OnTriggerExited += Unpress;
         }
-        catch (Exception e) { Logging.LogException(e); Logging.LogDebug("Reached", progress); }
+        catch (Exception e) { Logging.Exception(e); Logging.Debug("Reached", progress); }
     }
     protected void Press(GameObject self, Collider collider)
     {
@@ -83,20 +82,25 @@ public class ButtonController : XRBaseInteractable
                 Plugin.menuController.helpText.text = blockerText[blockers[0]];
                 return;
             }
-            if (!Interactable || !collider.name.Contains("Pointer")) return;
+            if (!Interactable || 
+                (collider.gameObject != GestureTracker.Instance.leftPointerInteractor.gameObject &&
+                collider.gameObject != GestureTracker.Instance.rightPointerInteractor.gameObject)
+            ) return;
+
             if (Time.time - lastPressed < cooldown) return;
 
             lastPressed = Time.time;
             IsPressed = !IsPressed;
             OnPressed?.Invoke(this, IsPressed);
-            GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(67, false, 0.05f);
-            var hand = collider.name.Contains("Left") ? GestureTracker.Instance.leftController : GestureTracker.Instance.rightController;
-            hand.SendHapticImpulse(0u, 0.1f, 0.1f);
+            bool isLeft = collider.name.ToLower().Contains("left");
+            GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(67, isLeft, 0.05f);
+            var hand = isLeft ? GestureTracker.Instance.leftController : GestureTracker.Instance.rightController;
+            GestureTracker.Instance.HapticPulse(isLeft);
             Plugin.menuController.AddBlockerToAllButtons(Blocker.BUTTON_PRESSED);
             Invoke(nameof(RemoveCooldownBlocker), .1f);
             buttonModel.localPosition = Vector3.up * -buttonPushDistance;
         }
-        catch (Exception e) { Logging.LogException(e); }
+        catch (Exception e) { Logging.Exception(e); }
     }
 
     protected void Unpress(GameObject self, Collider collider)
@@ -128,7 +132,7 @@ public class ButtonController : XRBaseInteractable
             Interactable = false;
             blockers.Add(blocker);
         }
-        catch (Exception e) { Logging.LogException(e); }
+        catch (Exception e) { Logging.Exception(e); }
     }
 
     public void RemoveBlocker(Blocker blocker)
@@ -141,6 +145,6 @@ public class ButtonController : XRBaseInteractable
                 Interactable = blockers.Count == 0;
             }
         }
-        catch (Exception e) { Logging.LogException(e); }
+        catch (Exception e) { Logging.Exception(e); }
     }
 }

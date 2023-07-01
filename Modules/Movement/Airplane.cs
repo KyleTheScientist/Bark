@@ -1,10 +1,8 @@
 ﻿using GorillaLocomotion;
 using Bark.Gestures;
 using Bark.GUI;
-using Bark.Tools;
 using UnityEngine;
 using BepInEx.Configuration;
-using Oculus.Platform;
 
 namespace Bark.Modules.Movement
 {
@@ -49,6 +47,7 @@ namespace Bark.Modules.Movement
 
         protected override void Cleanup()
         {
+            if (!MenuController.Instance.Built) return;
             GestureTracker.Instance.OnGlide -= OnGlide;
         }
 

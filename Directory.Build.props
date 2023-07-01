@@ -17,4 +17,8 @@
     <SteamPluginsPath>.\Libs</SteamPluginsPath>
 		<WarningLevel>0</WarningLevel>
 	</PropertyGroup>
+
+  <PropertyGroup>  
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\WithoutCI\**</DefaultItemExcludes>
+  </PropertyGroup>
 </Project>

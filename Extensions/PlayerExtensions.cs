@@ -1,5 +1,4 @@
-﻿using Bark.Tools;
-using GorillaLocomotion;
+﻿using GorillaLocomotion;
 using HarmonyLib;
 using Photon.Pun;
 using UnityEngine;
@@ -20,6 +19,7 @@ namespace Bark.Extensions
 
         public static PhotonView PhotonView(this VRRig rig)
         {
+            //return rig.photonView;
             return Traverse.Create(rig).Field("photonView").GetValue<PhotonView>();
         }
     }

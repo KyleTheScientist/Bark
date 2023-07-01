@@ -29,10 +29,10 @@ namespace Bark.Modules
             }
             catch (Exception e)
             {
-                Logging.LogDebug("GorillaGameManager.instance is null:", GorillaGameManager.instance is null);
-                Logging.LogDebug("GorillaGameManager.instance.GameMode() is null:", GorillaGameManager.instance?.GameMode() is null);
-                Logging.LogDebug(progress);
-                Logging.LogException(e);
+                Logging.Debug("GorillaGameManager.instance is null:", GorillaGameManager.instance is null);
+                Logging.Debug("GorillaGameManager.instance.GameMode() is null:", GorillaGameManager.instance?.GameMode() is null);
+                Logging.Debug(progress);
+                Logging.Exception(e);
             }
         }
 

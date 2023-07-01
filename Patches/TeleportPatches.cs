@@ -19,6 +19,7 @@ namespace Bark.Patches
             _rotate = false;
         private static Vector3 _teleportPosition;
         private static float _teleportRotation;
+        private static bool _killVelocity;
 
         internal static bool Prefix(Player __instance, ref Vector3 ___lastPosition, ref Vector3[] ___velocityHistory, ref Vector3 ___lastHeadPosition, ref Vector3 ___lastLeftHandPosition, ref Vector3 ___lastRightHandPosition, ref Vector3 ___currentVelocity, ref Vector3 ___denormalizedVelocityAverage)
         {
@@ -32,7 +33,8 @@ namespace Bark.Patches
                     {
                         Vector3 correctedPosition = _teleportPosition - __instance.bodyCollider.transform.position + __instance.transform.position;
 
-                        playerRigidBody.velocity = Vector3.zero;
+                        if(_killVelocity)
+                            playerRigidBody.velocity = Vector3.zero;
 
                         __instance.transform.position = correctedPosition;
                         if (_rotate)
@@ -56,25 +58,27 @@ namespace Bark.Patches
                     return true;
                 }
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
             return true;
         }
 
-        internal static void TeleportPlayer(Vector3 destinationPosition, float destinationRotation)
+        internal static void TeleportPlayer(Vector3 destinationPosition, float destinationRotation, bool killVelocity = true)
         {
             if (_isTeleporting)
                 return;
+            _killVelocity = killVelocity;
             _teleportPosition = destinationPosition;
             _teleportRotation = destinationRotation;
             _isTeleporting = true;
             _rotate = true;
         }
 
-        internal static void TeleportPlayer(Vector3 destinationPosition)
+        internal static void TeleportPlayer(Vector3 destinationPosition, bool killVelocity = true)
         {
             if (_isTeleporting)
                 return;
 
+            _killVelocity = killVelocity;
             _teleportPosition = destinationPosition;
             _isTeleporting = true;
             _rotate = false;

@@ -2,13 +2,10 @@
 using Bark.Tools;
 using System;
 using UnityEngine;
-using UnityEngine.XR;
 using Bark.Extensions;
 using Bark.Gestures;
 using Bark.GUI;
-using Bark.Modules.Physics;
 using BepInEx.Configuration;
-using System.Runtime.CompilerServices;
 
 namespace Bark.Modules.Movement
 {
@@ -19,8 +16,8 @@ namespace Bark.Modules.Movement
         public GameObject bubble;
         public GameObject colliderObject;
         public Vector3 targetPosition;
-        public Vector3 bubbleOffset = new Vector3(0, .2f, 0);
-        
+        public Vector3 bubbleOffset = new Vector3(0, .15f, 0);
+
 
         void Awake()
         {
@@ -33,9 +30,10 @@ namespace Bark.Modules.Movement
         Rigidbody rb;
         void FixedUpdate()
         {
-            if(!rb )
+            if (!rb)
                 rb = Player.Instance.bodyCollider.attachedRigidbody;
-            rb.AddForce(-UnityEngine.Physics.gravity * rb.mass);
+            rb.AddForce(-UnityEngine.Physics.gravity * rb.mass * Player.Instance.scale);
+            bubble.transform.localScale = Vector3.one * Player.Instance.scale * .75f;
         }
 
         bool leftWasTouching, rightWasTouching;
@@ -43,7 +41,7 @@ namespace Bark.Modules.Movement
         float cooldown = .1f;
         void LateUpdate()
         {
-            bubble.transform.position = Player.Instance.headCollider.transform.position - bubbleOffset;
+            bubble.transform.position = Player.Instance.headCollider.transform.position - bubbleOffset * Player.Instance.scale;
             Vector3 leftPos = GestureTracker.Instance.leftHand.transform.position,
                 rightPos = GestureTracker.Instance.rightHand.transform.position;
 
@@ -61,7 +59,7 @@ namespace Bark.Modules.Movement
                 leftWasTouching = false;
             }
 
-            if(Touching(rightPos))
+            if (Touching(rightPos))
             {
                 if (!rightWasTouching && Time.time - lastTouchRight > cooldown)
                 {
@@ -76,12 +74,14 @@ namespace Bark.Modules.Movement
             }
         }
 
+        float margin = .1f;
+        float colliderScale = 1;
         bool Touching(Vector3 position)
         {
-            float radius = bubble.transform.localScale.x;
-            float margin = .1f;
+            float radius = Player.Instance.scale * colliderScale;
             float d = Vector3.Distance(position, bubble.transform.position);
-            return d > radius - margin && d < radius + margin;
+            float m = margin * Player.Instance.scale;
+            return d > radius - m && d < radius + m;
         }
 
         void OnTouch(Vector3 position, bool left)
@@ -89,7 +89,7 @@ namespace Bark.Modules.Movement
             Sounds.Play(110);
             position -= bubble.transform.position;
             GestureTracker.Instance.HapticPulse(left);
-            Player.Instance.AddForce(position.normalized);
+            Player.Instance.AddForce(position.normalized * Player.Instance.scale * BubbleSpeed.Value / 5);
         }
 
 
@@ -100,6 +100,7 @@ namespace Bark.Modules.Movement
             base.OnEnable();
             try
             {
+                ReloadConfiguration();
                 bubble = Instantiate(bubblePrefab);
                 bubble.AddComponent<GorillaSurfaceOverride>().overrideIndex = 110;
                 bubble.GetComponent<Collider>().enabled = false;
@@ -107,7 +108,7 @@ namespace Bark.Modules.Movement
                 baseDrag = rb.drag;
                 rb.drag = 1;
             }
-            catch (Exception e) { Logging.LogException(e); }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         protected override void Cleanup()
@@ -115,11 +116,30 @@ namespace Bark.Modules.Movement
             if (bubble)
                 Sounds.Play(84, 2);
             bubble?.Obliterate();
-            if(rb)
+            if (rb)
                 rb.drag = baseDrag;
         }
         protected override void ReloadConfiguration()
         {
+            colliderScale = MathExtensions.Map(BubbleSize.Value, 0, 10, .45f, .65f);
+        }
+
+        public static ConfigEntry<int> BubbleSize;
+        public static ConfigEntry<int> BubbleSpeed;
+        public static void BindConfigEntries()
+        {
+            BubbleSize = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "bubble size",
+                defaultValue: 5,
+                description: "How far you have to reach to hit the bubble"
+            );
+            BubbleSpeed = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "bubble speed",
+                defaultValue: 5,
+                description: "How fast the bubble moves when you push it"
+            );
         }
 
         public override string GetDisplayName()
@@ -129,7 +149,7 @@ namespace Bark.Modules.Movement
 
         public override string Tutorial()
         {
-            return "Creates a bubble around you so you can float. "+
+            return "Creates a bubble around you so you can float. " +
                 "Punch the sides to move around";
         }
     }
