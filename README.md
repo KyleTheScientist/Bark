@@ -37,11 +37,10 @@ When you join a modded lobby, simply beat on your chest like a gorilla in an alt
 
 ## Installation
 To use *Bark*, you will need to have [Monke Mod Manager](https://github.com/DeadlyKitten/MonkeModManager/releases) installed. 
-Make sure to check off:
-* Bepinject & Extenject
-* Computer Interface
-* Utilla
-Once you have installed the mod loader, simply drop the `Bark.dll` file into your plugins folder.
+Make sure to check off Utilla.
+Once you have installed the mod loader, simply drop the `Bark-X.X.X.dll` file into your plugins folder.
+
+If you have Computer Interface installed, download and install `Bark-X.X.X.CI.dll` instead.
 
 ![Installation GIF](https://github.com/KyleTheScientist/Bark/blob/master/Marketing/HowToInstall.gif)
 
