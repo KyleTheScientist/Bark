@@ -1,5 +1,11 @@
 # CHANGELOG.md
 
+## 1.3.3 (2023-August-6) - The Caves Revamp Patch
+
+Fixes
+- Fixed mod so it works with this update
+- Configs are now shared between the CI and non-ci versions of the mod (you will have to redo your settings one last time, in the future updates will not break configs)
+
 ## 1.3.2 (2023-July-1) - The Zipline Update (AKA The STOP BREAKING MY MODS LEMMING update)
 Features
 - Added the **Zipline** which gives the player a cannon that fires ziplines. Press [Grip] to spawn the cannon and [Trigger] to fire.

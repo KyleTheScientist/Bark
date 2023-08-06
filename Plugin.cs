@@ -60,7 +60,7 @@ namespace Bark
             {
                 Logging.Init();
                 CI.Init();
-                configFile = new ConfigFile(Path.Combine(Paths.ConfigPath, PluginInfo.Name + ".cfg"), true);
+                configFile = new ConfigFile(Path.Combine(Paths.ConfigPath, "Bark.cfg"), true);
                 MenuController.BindConfigEntries();
                 Logging.Debug("Found", BarkModule.GetBarkModuleTypes().Count, "modules");
                 foreach (Type moduleType in BarkModule.GetBarkModuleTypes())
