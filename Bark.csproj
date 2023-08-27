@@ -289,16 +289,16 @@
       <HintPath>$(GameAssemblyPath)\UnityEngine.XRModule.dll</HintPath>
     </Reference>
     <Reference Include="Utilla">
-      <HintPath>$(OculusPluginsPath)\Utilla\Utilla.dll</HintPath>
+      <HintPath>$(SteamPluginsPath)\Utilla\Utilla.dll</HintPath>
     </Reference>
     <Reference Include="ComputerInterface">
-      <HintPath>$(OculusPluginsPath)\ComputerInterface\ComputerInterface.dll</HintPath>
+      <HintPath>$(SteamPluginsPath)\ComputerInterface\ComputerInterface (1).dll</HintPath>
     </Reference>
     <Reference Include="Bepinject">
-      <HintPath>$(OculusPluginsPath)\Bepinject-Auros\Bepinject.dll</HintPath>
+      <HintPath>$(SteamPluginsPath)\Bepinject-Auros\Bepinject.dll</HintPath>
     </Reference>
     <Reference Include="Zenject">
-      <HintPath>$(OculusPluginsPath)\Extenject\Zenject.dll</HintPath>
+      <HintPath>$(SteamPluginsPath)\Extenject\Zenject.dll</HintPath>
     </Reference>
     <Reference Include="websocket-sharp">
       <HintPath>$(GameAssemblyPath)\websocket-sharp.dll</HintPath>

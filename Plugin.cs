@@ -27,7 +27,7 @@ namespace Bark
 
         public void Setup()
         {
-            Logging.Debug("Attempting to set up");
+            Logging.Debug("Attempting to set up new shite");
             if (menuController || !pluginEnabled || !inRoom) return;
             Logging.Debug("Menu:", menuController, "Plugin Enabled:", pluginEnabled, "InRoom:", inRoom);
 

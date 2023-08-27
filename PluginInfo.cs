@@ -5,8 +5,8 @@
     /// </summary>
     internal class PluginInfo
     {
-        public const string GUID = "com.kylethescientist.gorillatag.bark";
-        public const string Name = "Bark (CI)";
-        public const string Version = "1.3.3"; 
+        public const string GUID = "com.lholmquist.gorillatag.bark";
+        public const string Name = "Hammy Bark Menu";
+        public const string Version = "1.0.0"; 
     }
 }

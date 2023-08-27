@@ -69,6 +69,9 @@ namespace Bark.Modules
 
                     return string.Compare(xValue, yValue);
                 });
+
+                Debug.Log("Just got done sorting, types count:" + types.Count());
+
                 return types;
             } catch (ReflectionTypeLoadException ex)
             {
