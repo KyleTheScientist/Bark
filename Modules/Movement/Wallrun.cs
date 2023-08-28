@@ -16,7 +16,6 @@ namespace Bark.Modules.Movement
         public static readonly string DisplayName = "Wall Run";
         private Vector3 baseGravity;
         private RaycastHit hit;
-        private bool isGripping;
 
         void Awake()
         {
@@ -67,7 +66,7 @@ namespace Bark.Modules.Movement
         public float GravScale()
         {
             // Debug.Log("Calling GravScale for Wall run");
-            return LowGravity.Instance.active ? LowGravity.Instance.gravityScale : 1;
+            return 1;
         }
 
         protected override void Cleanup()

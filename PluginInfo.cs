@@ -6,7 +6,7 @@
     internal class PluginInfo
     {
         public const string GUID = "com.lholmquist.gorillatag.bark";
-        public const string Name = "Hammy Bark Menu";
+        public const string Name = "Hammy's wall run mod";
         public const string Version = "1.0.0"; 
     }
 }

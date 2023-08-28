@@ -43,7 +43,7 @@ namespace Bark.GUI
             Instance = this;
             try
             {
-                Logging.Debug("Awake");
+                Logging.LogInfo("Menu Controller Awake");
                 base.Awake();
 
                 gameObject.AddComponent<PositionValidator>();
@@ -52,37 +52,37 @@ namespace Bark.GUI
                 modules = new List<BarkModule>()
                 {
                     // Locomotion
-                    gameObject.AddComponent<Airplane>(),
-                    gameObject.AddComponent<Bubble>(),
-                    gameObject.AddComponent<GrapplingHooks>(),
+                    /*gameObject.AddComponent<Airplane>(),
+                    gameObject.AddComponent<Bubble>(),*/
+                   /* gameObject.AddComponent<GrapplingHooks>(),
                     gameObject.AddComponent<Platforms>().Left(),
                     gameObject.AddComponent<Platforms>().Right(),
-                    gameObject.AddComponent<SpeedBoost>(),
+                    gameObject.AddComponent<SpeedBoost>(),*/
                     gameObject.AddComponent<Wallrun>(),
-                    gameObject.AddComponent<Zipline>(),
+                    /*gameObject.AddComponent<Zipline>(),*/
 
                     //// Physics
-                    gameObject.AddComponent<LowGravity>(),
-                    gameObject.AddComponent<NoCollide>(),
-                    gameObject.AddComponent<NoSlip>(),
-                    gameObject.AddComponent<SlipperyHands>(),
+                    /*gameObject.AddComponent<LowGravity>(),*/ // has to be here
+                    /*gameObject.AddComponent<NoCollide>(),*/
+                    /*gameObject.AddComponent<NoSlip>(),
+                    gameObject.AddComponent<SlipperyHands>(),*/
 
                     //// Teleportation
-                    gameObject.AddComponent<Checkpoint>(),
+/*                    gameObject.AddComponent<Checkpoint>(),
                     //gameObject.AddComponent<Portal>(),
-                    gameObject.AddComponent<Teleport>(),
+                    gameObject.AddComponent<Teleport>(),*/
                 
                     //// Multiplayer
-                    gameObject.AddComponent<Boxing>(),
+/*                    gameObject.AddComponent<Boxing>(),
                     gameObject.AddComponent<Piggyback>(),
                     gameObject.AddComponent<Telekinesis>(),
-                    gameObject.AddComponent<XRay>(),
+                    gameObject.AddComponent<XRay>(),*/
                 };
 
-                if (PhotonNetwork.LocalPlayer.NickName.ToUpper() == "THERATTIDEVR")
+                /*if (PhotonNetwork.LocalPlayer.NickName.ToUpper() == "THERATTIDEVR")
                 {
                     modules.Add(gameObject.AddComponent<RatSword>());
-                }
+                }*/
                 ReloadConfiguration();
             }
             catch (Exception e) { Logging.Exception(e); }
@@ -147,7 +147,7 @@ namespace Bark.GUI
 
         void BuildMenu()
         {
-            Logging.Debug("Building menu...");
+            Logging.LogInfo("Building menu...");
             try
             {
                 helpText = this.gameObject.transform.Find("Help Canvas").GetComponentInChildren<Text>();
@@ -168,7 +168,7 @@ namespace Bark.GUI
                 ResetPosition();
 
 
-                Logging.Debug("Build successful.");
+                Logging.LogInfo("Build successful.");
             }
             catch (Exception ex) { Logging.LogWarning(ex.Message); Logging.LogWarning(ex.StackTrace); return; }
             Built = true;
