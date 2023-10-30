@@ -31,7 +31,7 @@ namespace Bark.Modules.Movement
 
         void Awake()
         {
-            Logging.Debug("Zipline Awake");
+
             settings = ScriptableObject.CreateInstance<GorillaZiplineSettings>();
             settings.gravityMulti = 0;
             settings.maxFriction = 0;
@@ -71,26 +71,24 @@ namespace Bark.Modules.Movement
             catch (Exception e) { Logging.Exception(e); }
         }
 
-        void ShowLauncher()
+        void ShowLauncher(InputTracker _)
         {
-            foreach (var system in smokeSystems)
-                system.gameObject.SetActive(false);
-            launcher.SetActive(true);
-            audioFire.enabled = false;
+            launcher.GetComponent<MeshRenderer>().enabled = true;
+            ResetHooks();
         }
 
         void HideLauncher()
         {
-            launcher.SetActive(false);
-            foreach (var system in smokeSystems)
-                system.gameObject.SetActive(false);
-            audioFire.enabled = false;
+            launcher.GetComponent<MeshRenderer>().enabled = false;;
+            gunStartHook.SetActive(false);
+            gunEndHook.SetActive(false);
+            //foreach (var system in smokeSystems)
+            //    system.gameObject.SetActive(false);
         }
 
-        void Fire()
+        void Fire(InputTracker _)
         {
             if(!launcher.activeSelf) return;
-            audioFire.enabled = true;
             audioFire.Play();
             
             GestureTracker.Instance.HapticPulse(hand == XRNode.LeftHand, 1, .25f);
@@ -106,6 +104,7 @@ namespace Bark.Modules.Movement
             nextZipline = MathExtensions.Wrap(nextZipline + 1, 0, ziplines.Length - 1);
             gunStartHook.SetActive(false);
             gunEndHook.SetActive(false);
+            HideLauncher();
         }
 
 
@@ -266,11 +265,12 @@ namespace Bark.Modules.Movement
         {
             if (!MenuController.Instance.Built) return;
             UnsubscribeFromEvents();
-            foreach (var zipline in ziplines)
-                zipline?.Obliterate();
             launcher?.Obliterate();
             gunStartHook?.gameObject?.Obliterate();
             gunEndHook?.gameObject?.Obliterate();
+            if (ziplines is null) return;
+            foreach (var zipline in ziplines)
+                zipline?.Obliterate();
         }
 
         public static ConfigEntry<int> MaxZiplines;
@@ -291,9 +291,7 @@ namespace Bark.Modules.Movement
             InputTracker grip = GestureTracker.Instance.GetInputTracker("grip", hand);
             InputTracker trigger = GestureTracker.Instance.GetInputTracker("trigger", hand);
 
-            grip.OnPressed += ShowLauncher;
-            grip.OnReleased += HideLauncher;
-            trigger.OnPressed += ResetHooks;
+            trigger.OnPressed += ShowLauncher;
             trigger.OnReleased += Fire;
         }
 
@@ -301,7 +299,7 @@ namespace Bark.Modules.Movement
         {
             if (newLength < 0)
             {
-                Logging.LogWarning("Cannot resize array to a negative length.");
+                Logging.Warning("Cannot resize array to a negative length.");
                 return;
             }
 
@@ -335,11 +333,10 @@ namespace Bark.Modules.Movement
 
         void UnsubscribeFromEvents()
         {
+            if (!GestureTracker.Instance) return;
             InputTracker grip = GestureTracker.Instance.GetInputTracker("grip", hand);
             InputTracker trigger = GestureTracker.Instance.GetInputTracker("trigger", hand);
-            grip.OnPressed -= ShowLauncher;
-            grip.OnReleased -= HideLauncher;
-            trigger.OnPressed -= ResetHooks;
+            trigger.OnPressed -= ShowLauncher;
             trigger.OnReleased -= Fire;
         }
 
@@ -378,7 +375,7 @@ namespace Bark.Modules.Movement
         public override string Tutorial()
         {
             string h = LauncherHand.Value.Substring(0, 1).ToUpper() + LauncherHand.Value.Substring(1);
-            return $"Hold [{h} Grip] to summon the zipline cannon. Press and release [{h} Trigger] to fire a zipline.";
+            return $"Hold [{h} Trigger] to summon the zipline cannon. Release [{h} Trigger] to fire a zipline.";
         }
     }
 }

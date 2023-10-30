@@ -2,7 +2,6 @@
 using Bark.Extensions;
 using Bark.Gestures;
 using Bark.GUI;
-using Bark.Modules.Physics;
 using Bark.Patches;
 using Bark.Tools;
 using System;
@@ -16,13 +15,13 @@ namespace Bark.Modules
     public class Teleport : BarkModule
     {
         public static readonly string DisplayName = "Teleport";
-        public static readonly int layerMask = LayerMask.GetMask("Default", "Gorilla Object"); 
+        public static readonly int layerMask = LayerMask.GetMask("Default", "Gorilla Object");
 
         private Transform teleportMarker, window;
         private bool isTeleporting;
         private DebugPoly poly;
 
-            protected override void OnEnable()
+        protected override void OnEnable()
         {
             if (!MenuController.Instance.Built) return;
             base.OnEnable();
@@ -33,7 +32,9 @@ namespace Bark.Modules
                 window = new GameObject("Teleport Window").transform;
                 poly = window.gameObject.AddComponent<DebugPoly>();
                 GestureTracker.Instance.OnIlluminati += OnIlluminati;
-            } catch (Exception e) { Logging.Exception(e); }
+                Application.onBeforeRender += RenderTriangle;
+            }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         private void OnIlluminati()
@@ -59,10 +60,8 @@ namespace Bark.Modules
             Player player = Player.Instance;
             while (GestureTracker.Instance.isIlluminatiing)
             {
-                RenderTriangle();
                 window.transform.position = (leftHand.position + rightHand.position) / 2;
-                if(Vector3.Distance(window.transform.position, 
-                    player.headCollider.transform.position) > .2f * Player.Instance.scale)
+                if (!TriangleInRange())
                 {
                     teleportMarker.position = Vector3.up * 100000;
                     startTime = Time.time;
@@ -111,8 +110,18 @@ namespace Bark.Modules
             poly.renderer.enabled = false;
         }
 
+
+        bool TriangleInRange()
+        {
+            return Vector3.Distance(
+                window.transform.position,
+                Player.Instance.headCollider.transform.position
+            ) <= .2f * Player.Instance.scale;
+        }
+
         void RenderTriangle()
         {
+            if (!GestureTracker.Instance.isIlluminatiing) return;
             poly.renderer.enabled = true;
             var gt = GestureTracker.Instance;
             Vector3 a = gt.leftThumbTransform.position - gt.leftThumbTransform.up * .03f + gt.leftThumbTransform.right * -.02f;
@@ -133,10 +142,13 @@ namespace Bark.Modules
 
         protected override void Cleanup()
         {
-            GestureTracker.Instance.OnIlluminati -= OnIlluminati;
+            if (!MenuController.Instance.Built) return;
+            Application.onBeforeRender -= RenderTriangle;
             teleportMarker?.gameObject?.Obliterate();
             window?.gameObject?.Obliterate();
             isTeleporting = false;
+            if (GestureTracker.Instance is null) return;
+            GestureTracker.Instance.OnIlluminati -= OnIlluminati;
         }
 
         public static ConfigEntry<int> ChargeTime;

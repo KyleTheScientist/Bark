@@ -9,6 +9,10 @@ using BepInEx.Configuration;
 using System.IO;
 using Bark.Modules;
 using System.Reflection;
+using Bark.Gestures;
+using Bark.Networking;
+using GorillaLocomotion;
+using UnityEngine.UI;
 
 namespace Bark
 {
@@ -24,15 +28,17 @@ namespace Bark
         public static MenuController menuController;
         public static GameObject monkeMenuPrefab;
         public static ConfigFile configFile;
+        GestureTracker gt;
+        NetworkPropertyHandler nph;
 
         public void Setup()
         {
-            Logging.Debug("Attempting to set up");
             if (menuController || !pluginEnabled || !inRoom) return;
             Logging.Debug("Menu:", menuController, "Plugin Enabled:", pluginEnabled, "InRoom:", inRoom);
-
             try
             {
+                gt = this.gameObject.GetOrAddComponent<GestureTracker>();
+                nph = this.gameObject.GetOrAddComponent<NetworkPropertyHandler>();
                 menuController = Instantiate(monkeMenuPrefab).AddComponent<MenuController>();
             }
             catch (Exception e)
@@ -47,6 +53,8 @@ namespace Bark
             {
                 Logging.Debug("Cleaning up");
                 menuController?.gameObject?.Obliterate();
+                gt?.Obliterate();
+                nph?.Obliterate();
             }
             catch (Exception e)
             {
@@ -88,6 +96,58 @@ namespace Bark
             }
         }
 
+        //void FixedUpdate()
+        //{
+
+        //    if (ControllerInputPoller.instance.rightControllerPrimaryButton)
+        //    {
+        //        var rigidbody = Player.Instance.bodyCollider.attachedRigidbody;
+        //        Vector3 velocity = Player.Instance.headCollider.transform.forward * 10;
+        //        rigidbody.velocity = Vector3.Lerp(rigidbody.velocity, velocity, .05f);
+        //    }
+        //}
+
+        public static Text debugText;
+        void CreateDebugGUI()
+        {
+            try
+            {
+                if (Player.Instance)
+                {
+                    var canvas = Player.Instance.headCollider.transform.GetComponentInChildren<Canvas>();
+                    if (!canvas)
+                    {
+                        canvas = new GameObject("~~~Bark Debug Canvas").AddComponent<Canvas>();
+                        canvas.renderMode = RenderMode.WorldSpace;
+                        canvas.transform.SetParent(Player.Instance.headCollider.transform);
+                        canvas.transform.localPosition = Vector3.forward * 1;
+                        canvas.transform.localRotation = Quaternion.identity;
+                        canvas.transform.localScale = Vector3.one;
+                        canvas.gameObject.AddComponent<CanvasScaler>();
+                        canvas.gameObject.AddComponent<GraphicRaycaster>();
+                        canvas.GetComponent<RectTransform>().localScale = Vector3.one * .1f;
+                        var text = new GameObject("~~~Text").AddComponent<Text>();
+                        text.transform.SetParent(canvas.transform);
+                        text.transform.localPosition = Vector3.zero;
+                        text.transform.localRotation = Quaternion.identity;
+                        text.transform.localScale = Vector3.one;
+                        //text.text = "Hello World";
+                        text.fontSize = 24;
+                        text.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+                        text.alignment = TextAnchor.MiddleCenter;
+                        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                        text.verticalOverflow = VerticalWrapMode.Overflow;
+                        text.color = Color.white;
+                        text.GetComponent<RectTransform>().localScale = Vector3.one * .02f;
+                        debugText = text;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Exception(e);
+            }
+        }
 
         void OnEnable()
         {
@@ -124,6 +184,7 @@ namespace Bark
         {
             Logging.Debug("OnGameInitialized");
             initialized = true;
+            //CreateDebugGUI();
         }
 
         [ModdedGamemodeJoin]

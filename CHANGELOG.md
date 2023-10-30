@@ -1,5 +1,29 @@
 # CHANGELOG.md
 
+## 1.4.0 (2023-October-30) - The Potions Update
+
+Features
+- Added the **Potions** module which allows players to change their player size by drinking potions.
+- Added the **Rockets** module which allows you to spawn rockets that you can fly around with.
+- Added new config options: 
+	- Potions
+		- `Show Networked Size` - Whether or not to show other players' sizes
+	- Rockets
+		- `Power` - How fast the rockets accelerate you
+	
+
+Changes
+- Bubble is now networked, so other players can see your bubble- New bubble material- X-ray material is now significantly improved
+- Boxing now plays a sound when you get punched
+- Reworked the entire internal grab interaction system because Unity can eat a d***
+- Zipline is now bound to trigger by default so it can be used with rockets
+
+Fixes
+- Grappling hooks no longer freak out when you move your hand while grappling
+- Speed boost now always works in casual
+- Teleporting should be less difficult while moving now
+
+
 ## 1.3.3 (2023-August-6) - The Caves Revamp Patch
 
 Fixes

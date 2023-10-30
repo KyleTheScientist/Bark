@@ -3,6 +3,8 @@ using GorillaLocomotion;
 using System;
 using Bark.Tools;
 using Bark.Modules.Physics;
+using UnityEngine;
+using Bark.Gestures;
 
 namespace Bark.Patches
 {
@@ -16,6 +18,8 @@ namespace Bark.Patches
             try
             {
                 OnLateUpdate?.Invoke(__instance);
+                if (Potions.active) 
+                    Camera.main.farClipPlane = 500;
             }
             catch(Exception e) { Logging.Exception(e); }
         }
@@ -37,4 +41,30 @@ namespace Bark.Patches
             catch (Exception e) { Logging.Exception(e); }
         }
     }
+
+    [HarmonyPatch(typeof(VRRig))]
+    [HarmonyPatch("LateUpdate", MethodType.Normal)]
+    public class VRRigLateUpdatePatch
+    {
+        private static void Postfix(VRRig __instance, ref AudioSource ___voiceAudio)
+        {
+            if(!Plugin.inRoom || !___voiceAudio) return;
+            try
+            {
+                ___voiceAudio.pitch = Mathf.Clamp(___voiceAudio.pitch, .8f, 1.2f);
+            }
+            catch (Exception e) { Logging.Exception(e); }
+        }
+    }
+
+    //[HarmonyPatch(typeof(ControllerInputPoller))]
+    //[HarmonyPatch("Update", MethodType.Normal)]
+    //public class ControllerUpdatePatch
+    //{
+    //    private static void Prefix(ControllerInputPoller __instance)
+    //    {
+    //        Debug.Log("Lol");
+    //        GestureTracker.Instance.UpdateValues();
+    //    }
+    //}
 }

@@ -6,7 +6,7 @@
     internal class PluginInfo
     {
         public const string GUID = "com.kylethescientist.gorillatag.bark";
-        public const string Name = "Bark (CI)";
-        public const string Version = "1.3.3"; 
+        public const string Name = "Bark";
+        public const string Version = "1.4.0.8"; 
     }
 }

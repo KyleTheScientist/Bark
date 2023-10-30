@@ -48,6 +48,7 @@ namespace Bark.Modules.Movement
         protected override void Cleanup()
         {
             if (!MenuController.Instance.Built) return;
+            if (!GestureTracker.Instance) return;
             GestureTracker.Instance.OnGlide -= OnGlide;
         }
 
@@ -86,8 +87,8 @@ namespace Bark.Modules.Movement
         public override string Tutorial()
         {
             return "- To fly, do a T-pose (spread your arms out like wings on a plane). \n" +
-                "- To fly up, rotate your palms so they face forward. \n" +
-                "- To fly down, rotate your palms so they face backward.";
+                "- To fly up, point your thumbs up. \n" +
+                "- To fly down, point your thumbs down.";
         }
 
     }

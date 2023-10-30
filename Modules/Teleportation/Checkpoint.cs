@@ -9,6 +9,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 using BepInEx.Configuration;
 
 namespace Bark.Modules.Teleportation
@@ -43,15 +44,12 @@ namespace Bark.Modules.Teleportation
             }
         }
 
-        void LeftTriggered()
+        void Triggered(InputTracker input)
         {
-            if (enabled && !NoCollide.active)
+            if (!enabled) return;
+            if (input.node == XRNode.LeftHand)
                 StartCoroutine(GrowBananas());
-        }
-
-        void RightTriggered()
-        {
-            if (enabled && pointSet)
+            else if (pointSet)
                 StartCoroutine(GoBananas());
         }
 
@@ -148,8 +146,8 @@ namespace Bark.Modules.Teleportation
                 //    };
                 //    markedTriggers.Add(triggerBox);
                 //}
-                GestureTracker.Instance.leftTrigger.OnPressed += LeftTriggered;
-                GestureTracker.Instance.rightTrigger.OnPressed += RightTriggered;
+                GestureTracker.Instance.leftTrigger.OnPressed += Triggered;
+                GestureTracker.Instance.rightTrigger.OnPressed += Triggered;
             }
             catch (Exception e) { Logging.Exception(e); }
         }
@@ -167,14 +165,19 @@ namespace Bark.Modules.Teleportation
         protected override void Cleanup()
         {
             if (!MenuController.Instance.Built) return;
-            bananaLine?.gameObject.Obliterate(); 
+            bananaLine?.gameObject.Obliterate();
             checkpointMarker?.gameObject.Obliterate();
+            
+            if (GestureTracker.Instance)
+            {
+                GestureTracker.Instance.leftTrigger.OnPressed -= Triggered;
+                GestureTracker.Instance.rightTrigger.OnPressed -= Triggered;
+            }
+            if (markedTriggers is null) return;
             foreach (var triggerBox in markedTriggers)
             {
                 triggerBox.GetComponent<CollisionObserver>()?.Obliterate();
             }
-            GestureTracker.Instance.leftTrigger.OnPressed -= LeftTriggered;
-            GestureTracker.Instance.rightTrigger.OnPressed -= RightTriggered;
         }
 
         public static ConfigEntry<int> ChargeTime;

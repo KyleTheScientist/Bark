@@ -1,8 +1,12 @@
 ﻿using Bark.Extensions;
+using Bark.GUI;
 using Bark.Tools;
+using ExitGames.Client.Photon.StructWrapping;
 using GorillaLocomotion;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using Valve.VR;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.XR;
@@ -10,7 +14,6 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 namespace Bark.Gestures
 {
-    //TODO - Add a timeout on meat beat actions so you can't slowly accumulate them and accidentally trigger the menu
     public class GestureTracker : MonoBehaviour
     {
         public static GestureTracker Instance;
@@ -22,7 +25,10 @@ namespace Bark.Gestures
             leftTrigger, rightTrigger,
             leftStick, rightStick,
             leftPrimary, rightPrimary,
-            leftSecondary, rightSecondary;
+            leftSecondary, rightSecondary,
+            leftVelocity, rightVelocity,
+            leftAngularVelocity, rightAngularVelocity,
+            leftRotation, rightRotation;
 
         public List<InputTracker> inputs;
 
@@ -53,12 +59,10 @@ namespace Bark.Gestures
         public Action OnMeatBeat;
         private Queue<int> meatBeatCollisions = new Queue<int>();
         private float lastBeat;
-        private GameObject lastBeatCollider;
 
         public Action<Vector3> OnGlide;
         public Action OnIlluminati, OnKamehameha;
         public bool isIlluminatiing = false, isChargingKamehameha;
-
 
         public struct BodyVectors
         {
@@ -67,55 +71,45 @@ namespace Bark.Gestures
 
         void Awake()
         {
+            Logging.Debug("Awake");
             Instance = this;
-
             leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
             rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            var poller = Traverse.Create(ControllerInputPoller.instance);
+            var pollerExt = Traverse.Create(new ControllerInputPollerExt());
 
-            leftGrip = new InputTracker(CommonUsages.gripButton, leftController);
-            rightGrip = new InputTracker(CommonUsages.gripButton, rightController);
+            leftGrip = new InputTracker<float>(poller.Field("leftControllerGripFloat"), XRNode.LeftHand);
+            rightGrip = new InputTracker<float>(poller.Field("rightControllerGripFloat"), XRNode.RightHand);
 
-            leftTrigger = new InputTracker(CommonUsages.trigger, leftController);
-            rightTrigger = new InputTracker(CommonUsages.trigger, rightController);
+            leftTrigger = new InputTracker<float>(poller.Field("leftControllerIndexFloat"), XRNode.LeftHand);
+            rightTrigger = new InputTracker<float>(poller.Field("rightControllerIndexFloat"), XRNode.RightHand);
 
-            leftStick = new InputTracker(CommonUsages.primary2DAxisClick, leftController);
-            rightStick = new InputTracker(CommonUsages.primary2DAxisClick, rightController);
+            leftPrimary = new InputTracker<bool>(poller.Field("leftControllerPrimaryButton"), XRNode.LeftHand);
+            rightPrimary = new InputTracker<bool>(poller.Field("rightControllerPrimaryButton"), XRNode.RightHand);
 
-            leftPrimary = new InputTracker(CommonUsages.primaryButton, leftController);
-            rightPrimary = new InputTracker(CommonUsages.primaryButton, rightController);
+            leftSecondary = new InputTracker<bool>(poller.Field("leftControllerSecondaryButton"), XRNode.LeftHand);
+            rightSecondary = new InputTracker<bool>(poller.Field("rightControllerSecondaryButton"), XRNode.RightHand);
 
-            leftSecondary = new InputTracker(CommonUsages.secondaryButton, leftController);
-            rightSecondary = new InputTracker(CommonUsages.secondaryButton, rightController);
+            leftStick = new InputTracker<bool>(pollerExt.Field("leftControllerStickButton"), XRNode.LeftHand);
+            rightStick = new InputTracker<bool>(pollerExt.Field("rightControllerStickButton"), XRNode.RightHand);
 
             inputs = new List<InputTracker>()
             {
                 leftGrip, rightGrip,
                 leftTrigger, rightTrigger,
-                leftStick, rightStick,
                 leftPrimary, rightPrimary,
-                leftSecondary, rightSecondary
+                leftSecondary, rightSecondary,
+                leftStick, rightStick,
             };
+            BuildColliders();
+            var observer = chest.AddComponent<CollisionObserver>();
+            observer.OnTriggerEntered += OnChestBeat;
         }
 
-        void Start()
-        {
-
-            try
-            {
-                Logging.Debug("Start");
-                BuildColliders();
-                var observer = chest.AddComponent<CollisionObserver>();
-                observer.OnTriggerEntered += OnChestBeat;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
-            }
-        }
-
+        public float camOffset = -45f;
         void FixedUpdate()
         {
+
             // If it's been more than one second since you last beat your chest, 
             if (Time.time - lastBeat > 1f)
                 meatBeatCollisions.Clear();
@@ -123,11 +117,18 @@ namespace Bark.Gestures
 
         void Update()
         {
-            TrackButtonPresses();
+            ControllerInputPollerExt.Instance.Update();
+            UpdateValues();
             TrackBodyVectors();
             TrackGlideGesture();
             isIlluminatiing = TrackIlluminatiGesture();
             //isChargingKamehameha = TrackKamehamehaGesture();
+        }
+
+        public void UpdateValues()
+        {
+            foreach (var input in inputs)
+                input.UpdateValues();
         }
 
         void TrackBodyVectors()
@@ -225,14 +226,10 @@ namespace Bark.Gestures
         }
         void OnChestBeat(GameObject obj, Collider collider)
         {
-            if (collider.gameObject != leftHand && 
+            if (collider.gameObject != leftHand &&
                 collider.gameObject != rightHand) return;
-            
-            lastBeat = Time.time;
-            //if (collider.gameObject != lastBeatCollider)
-                //Sounds.Play(81, .1f);
-            lastBeatCollider = collider.gameObject;
 
+            lastBeat = Time.time;
 
             if (meatBeatCollisions.Count > 3)
                 meatBeatCollisions.Dequeue();
@@ -277,14 +274,13 @@ namespace Bark.Gestures
             rightHand = rightPalmInteractor.gameObject;
             rightHand.transform.localRotation = Quaternion.Euler(-90, 0, 0);
 
+
             leftPointerTransform = GameObject.Find(string.Format(localRigPath + pointerFingerPath, "L")).transform;
             leftPointerInteractor = CreateInteractor("Left Pointer Interactor", leftPointerTransform, 1 / 32f);
-            leftPointerInteractor.xrController = null;
             leftPointerObj = leftPointerInteractor.gameObject;
 
             rightPointerTransform = GameObject.Find(string.Format(localRigPath + pointerFingerPath, "R")).transform;
             rightPointerInteractor = CreateInteractor("Right Pointer Interactor", rightPointerTransform, 1 / 32f);
-            rightPointerInteractor.xrController = null;
             rightPointerObj = rightPointerInteractor.gameObject;
 
             leftThumbTransform = GameObject.Find(string.Format(localRigPath + thumbPath, "L")).transform;
@@ -361,51 +357,74 @@ namespace Bark.Gestures
             }
             return null;
         }
+    }
 
-        void TrackButtonPresses()
+    public abstract class InputTracker
+    {
+        public bool pressed, wasPressed;
+        public Vector3 vector3Value;
+        public Quaternion quaternionValue;
+        public XRNode node;
+        public string name;
+        public Traverse traverse;
+        public Action<InputTracker> OnPressed, OnReleased;
+
+        public abstract void UpdateValues();
+    }
+
+    public class InputTracker<T> : InputTracker
+    {
+        public InputTracker(Traverse traverse, XRNode node)
         {
-            foreach (var input in inputs)
-            {
-                input.wasPressed = input.pressed;
-                if (input.type == typeof(bool))
-                {
-                    input.device.TryGetFeatureValue(input.usageBool, out input.pressed);
-                }
-                else
-                {
-                    float amount;
-                    input.device.TryGetFeatureValue(input.usageFloat, out amount);
-                    input.pressed = amount > .5f;
-                }
+            this.traverse = traverse;
+            this.node = node;
+        }
 
-                if (!input.wasPressed && input.pressed)
-                    input.OnPressed?.Invoke();
-                if (input.wasPressed && !input.pressed)
-                    input.OnReleased?.Invoke();
-            }
+        public T Get()
+        {
+            return traverse.GetValue<T>();
+        }
+        public override void UpdateValues()
+        {
+            wasPressed = pressed;
+            if (typeof(T) == typeof(bool))
+                pressed = traverse.GetValue<bool>();
+            else if (typeof(T) == typeof(float))
+                pressed = traverse.GetValue<float>() > .5f;
+
+            if (!wasPressed && pressed)
+                OnPressed?.Invoke(this);
+            if (wasPressed && !pressed)
+                OnReleased?.Invoke(this);
         }
     }
 
-    public class InputTracker
+    public class ControllerInputPollerExt
     {
-        public bool pressed, wasPressed;
-        public Action OnPressed, OnReleased;
-        public Type type;
-        public InputFeatureUsage<bool> usageBool;
-        public InputFeatureUsage<float> usageFloat;
-        public InputDevice device;
-        public InputTracker(InputFeatureUsage<bool> usage, InputDevice device)
-        {
-            this.usageBool = usage;
-            this.device = device;
-            type = typeof(bool);
-        }
+        public bool rightControllerStickButton, leftControllerStickButton;
+        public static ControllerInputPollerExt Instance;
+        bool steam;
 
-        public InputTracker(InputFeatureUsage<float> usage, InputDevice device)
+        public ControllerInputPollerExt()
         {
-            this.usageFloat = usage;
-            this.device = device;
-            type = typeof(float);
+            Instance = this;
+            var platform = (string)Traverse.Create(GorillaNetworking.PlayFabAuthenticator.instance).Field("platform").GetValue();
+            steam = platform.ToLower().Contains("steam");
+        }
+        public void Update()
+        {
+            if (steam)
+            {
+                leftControllerStickButton = SteamVR_Actions.gorillaTag_LeftJoystickClick.state;
+                rightControllerStickButton = SteamVR_Actions.gorillaTag_LeftJoystickClick.state;
+            }
+            else
+            {
+                var left = GestureTracker.Instance.leftController;
+                var right = GestureTracker.Instance.rightController;
+                left.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out leftControllerStickButton);
+                right.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out rightControllerStickButton);
+            }
         }
     }
 }

@@ -18,9 +18,9 @@ namespace Bark.Modules
             try
             {
                 progress = "Getting Gamemode\n";
-                var gameMode = GorillaGameManager.instance.GameMode();
+                var gameMode = GorillaGameManager.instance?.GameMode();
                 progress = "Checking status\n";
-                if (active && (gameMode == "NONE" || gameMode == "CASUAL"))
+                if (active && (gameMode is null || gameMode == "NONE" || gameMode == "CASUAL"))
                 {
                     progress = "Setting multiplier\n";
                     Player.Instance.jumpMultiplier = 1.3f * scale;

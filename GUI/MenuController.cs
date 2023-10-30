@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit;
 using Bark.Gestures;
 using Bark.Modules;
 using Bark.Modules.Misc;
@@ -12,6 +11,8 @@ using Bark.Modules.Physics;
 using Bark.Modules.Multiplayer;
 using Bark.Modules.Teleportation;
 using Bark.Tools;
+using Bark.Interaction;
+using Bark.Extensions;
 using Photon.Pun;
 using Player = GorillaLocomotion.Player;
 using BepInEx.Configuration;
@@ -19,16 +20,13 @@ using UnityEngine.XR;
 
 namespace Bark.GUI
 {
-    public class MenuController : XRGrabInteractable
+    public class MenuController : BarkGrabbable
     {
         public static MenuController Instance;
         public bool Built { get; private set; }
         public Vector3
             initialMenuOffset = new Vector3(0, .035f, .65f),
-            btnDimensions = new Vector3(.3f, .05f, .05f),
-            menuDimensions,
-            attachPointOffset,
-            buttonOffset;
+            btnDimensions = new Vector3(.3f, .05f, .05f);
         public Rigidbody _rigidbody;
         private List<Transform> pages;
         private List<ButtonController> buttons;
@@ -37,7 +35,7 @@ namespace Bark.GUI
         public static InputTracker SummonTracker;
         public static ConfigEntry<string> SummonInput;
         public static ConfigEntry<string> SummonInputHand;
-        
+
         protected override void Awake()
         {
             Instance = this;
@@ -45,19 +43,20 @@ namespace Bark.GUI
             {
                 Logging.Debug("Awake");
                 base.Awake();
-
+                this.throwOnDetach = true;
                 gameObject.AddComponent<PositionValidator>();
-                var tracker = gameObject.AddComponent<GestureTracker>();
                 Plugin.configFile.SettingChanged += SettingsChanged;
                 modules = new List<BarkModule>()
                 {
                     // Locomotion
                     gameObject.AddComponent<Airplane>(),
                     gameObject.AddComponent<Bubble>(),
-                    gameObject.AddComponent<GrapplingHooks>(),
                     gameObject.AddComponent<Platforms>().Left(),
                     gameObject.AddComponent<Platforms>().Right(),
+                    gameObject.AddComponent<GrapplingHooks>(),
+                    gameObject.AddComponent<Rockets>(),
                     gameObject.AddComponent<SpeedBoost>(),
+                    //gameObject.AddComponent<Swim>(),
                     gameObject.AddComponent<Wallrun>(),
                     gameObject.AddComponent<Zipline>(),
 
@@ -65,11 +64,13 @@ namespace Bark.GUI
                     gameObject.AddComponent<LowGravity>(),
                     gameObject.AddComponent<NoCollide>(),
                     gameObject.AddComponent<NoSlip>(),
+                    gameObject.AddComponent<Potions>(),
                     gameObject.AddComponent<SlipperyHands>(),
 
                     //// Teleportation
                     gameObject.AddComponent<Checkpoint>(),
                     //gameObject.AddComponent<Portal>(),
+                    //gameObject.AddComponent<Pearl>(),
                     gameObject.AddComponent<Teleport>(),
                 
                     //// Multiplayer
@@ -79,10 +80,6 @@ namespace Bark.GUI
                     gameObject.AddComponent<XRay>(),
                 };
 
-                if (PhotonNetwork.LocalPlayer.NickName.ToUpper() == "THERATTIDEVR")
-                {
-                    modules.Add(gameObject.AddComponent<RatSword>());
-                }
                 ReloadConfiguration();
             }
             catch (Exception e) { Logging.Exception(e); }
@@ -118,6 +115,8 @@ namespace Bark.GUI
                 ReloadConfiguration();
         }
 
+        void Summon(InputTracker _) { Summon(); }
+
         void Summon()
         {
             if (!Built)
@@ -128,8 +127,12 @@ namespace Bark.GUI
 
         void FixedUpdate()
         {
-            if (transform.parent)
-                this.transform.localScale = Vector3.one;
+            // The potions tutorial needs to be updated frequently to keep the current size
+            // up-to-date, even when the mod is disabled
+            if (BarkModule.LastEnabled && BarkModule.LastEnabled == Potions.Instance)
+            {
+                helpText.text = Potions.Instance.Tutorial();
+            }
         }
 
         void ResetPosition()
@@ -139,6 +142,7 @@ namespace Bark.GUI
             transform.SetParent(Player.Instance.bodyCollider.transform);
             transform.localPosition = initialMenuOffset;
             transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
             foreach (var button in buttons)
             {
                 button.RemoveBlocker(ButtonController.Blocker.MENU_FALLING);
@@ -156,25 +160,22 @@ namespace Bark.GUI
                     $"{PluginInfo.Name} {PluginInfo.Version}";
 
                 var collider = this.gameObject.AddComponent<BoxCollider>();
+                collider.isTrigger = true;
                 _rigidbody = gameObject.GetComponent<Rigidbody>();
                 _rigidbody.isKinematic = true;
-                menuDimensions = collider.bounds.extents;
-                buttonOffset = this.gameObject.transform.localPosition + (collider.bounds.min.z * Vector3.forward);
 
-                collider.isTrigger = true;
-                this.colliders.Add(collider);
                 SetupInteraction();
                 SetupButtons();
+                transform.SetParent(Player.Instance.bodyCollider.transform);
                 ResetPosition();
-
-
                 Logging.Debug("Build successful.");
             }
-            catch (Exception ex) { Logging.LogWarning(ex.Message); Logging.LogWarning(ex.StackTrace); return; }
+            catch (Exception ex) { Logging.Warning(ex.Message); Logging.Warning(ex.StackTrace); return; }
             Built = true;
         }
 
         bool includeDebugButtons = false;
+        public static bool debugger = false;
         public void SetupButtons()
         {
             var pageTemplate = this.gameObject.transform.Find("Page");
@@ -242,10 +243,38 @@ namespace Bark.GUI
 
         private void AddDebugButtons()
         {
-            AddDebugButton("Rip Textures", (btn, isPressed) =>
+            AddDebugButton("Debug Log", (btn, isPressed) =>
             {
-                TextureRipper.Rip();
-                GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(68, false, 0.1f);
+                debugger = isPressed;
+                Logging.Debug("Debugger", debugger ? "active" : "inactive");
+                Plugin.debugText.text = "";
+            });
+
+            AddDebugButton("Close game", (btn, isPressed) =>
+            {
+                debugger = isPressed;
+                if (btn.text.text == "You sure?")
+                {
+                    Application.Quit();
+                }
+                else
+                {
+                    btn.text.text = "You sure?";
+                }
+            });
+
+            AddDebugButton("Show Colliders", (btn, isPressed) =>
+            {
+                if (isPressed)
+                {
+                    foreach (var c in FindObjectsOfType<Collider>())
+                        c.gameObject.AddComponent<ColliderRenderer>();
+                }
+                else
+                {
+                    foreach (var c in FindObjectsOfType<ColliderRenderer>())
+                        c.Obliterate();
+                }
             });
         }
 
@@ -284,22 +313,15 @@ namespace Bark.GUI
 
         public void SetupInteraction()
         {
-            this.gravityOnDetach = true;
-            this.movementType = MovementType.Instantaneous;
-            this.retainTransformParent = false;
             this.throwOnDetach = true;
-            this.interactionLayerMask = BarkInteractor.InteractionLayerMask;
-            this.interactionManager = BarkInteractor.manager;
-            this.onSelectExited.AddListener((args) =>
+            this.OnSelectExit += (_, __) =>
             {
-                GetComponent<Rigidbody>().isKinematic = false;
                 AddBlockerToAllButtons(ButtonController.Blocker.MENU_FALLING);
-            });
-            this.onSelectEntered.AddListener((args) =>
+            };
+            this.OnSelectEnter += (_, __) =>
             {
-                GetComponent<Rigidbody>().isKinematic = true;
                 RemoveBlockerFromAllButtons(ButtonController.Blocker.MENU_FALLING);
-            });
+            };
 
         }
 

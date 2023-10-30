@@ -57,7 +57,7 @@ namespace Bark.Tools
                     }
                 }
             }
-            catch (Exception e) { Logging.LogWarning("Failed at step", step); Logging.Exception(e); }
+            catch (Exception e) { Logging.Warning("Failed at step", step); Logging.Exception(e); }
         }
     }
 }

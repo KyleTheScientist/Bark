@@ -1,6 +1,8 @@
-﻿using GorillaLocomotion;
+﻿using Bark.Modules;
+using GorillaLocomotion;
 using HarmonyLib;
 using Photon.Pun;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Bark.Extensions
@@ -21,6 +23,55 @@ namespace Bark.Extensions
         {
             //return rig.photonView;
             return Traverse.Create(rig).Field("photonView").GetValue<PhotonView>();
+        }
+
+        public static T GetProperty<T>(this VRRig rig, string key)
+        {
+            if(rig?.PhotonView()?.Owner is Photon.Realtime.Player player)
+                return (T)player?.CustomProperties[key];
+            return default(T);
+        }
+
+        public static bool HasProperty(this VRRig rig, string key)
+        {
+            if(rig?.PhotonView()?.Owner is Photon.Realtime.Player player)
+                return player.HasProperty(key);
+            return false;
+        }
+
+        public static bool ModuleEnabled(this VRRig rig, string mod)
+        {
+            if(rig?.PhotonView()?.Owner is Photon.Realtime.Player player)
+                return player.ModuleEnabled(mod);
+            return false;
+        }
+
+        public static T GetProperty<T>(this Photon.Realtime.Player player, string key)
+        {
+            return (T)player?.CustomProperties[key];
+        }
+
+        public static bool HasProperty(this Photon.Realtime.Player player, string key)
+        {
+            return !(player?.CustomProperties[key] is null);
+        }
+
+        public static bool ModuleEnabled(this Photon.Realtime.Player player, string mod)
+        {
+            if (!player.HasProperty(BarkModule.enabledModulesKey)) return false;
+            Dictionary<string, bool> enabledMods = player.GetProperty<Dictionary<string, bool>>(BarkModule.enabledModulesKey);
+            if (enabledMods is null || !enabledMods.ContainsKey(mod)) return false;
+            return enabledMods[mod];
+        }
+
+        public static VRRig Rig(this Photon.Realtime.Player player)
+        {
+            foreach (var rig in GameObject.FindObjectsOfType<VRRig>())
+            {
+                if (rig?.PhotonView()?.Owner == player)
+                    return rig;
+            }
+            return null;
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Bark;
 using Bark.Tools;
 
-public class ButtonController : XRBaseInteractable
+public class ButtonController : MonoBehaviour
 {
     public enum Blocker
     {
@@ -53,17 +53,14 @@ public class ButtonController : XRBaseInteractable
         }
     }
 
-    protected override void Awake()
+    protected void Awake()
     {
 
-        base.Awake();
         string progress = "";
         try
         {
             buttonModel = transform.GetChild(0);
             this.material = buttonModel.GetComponent<Renderer>().material;
-            this.interactionManager = BarkInteractor.manager;
-            this.interactionLayerMask = BarkInteractor.InteractionLayerMask;
             this.gameObject.layer = BarkInteractor.InteractionLayer;
             this.text = GetComponentInChildren<Text>();
             this.text.fontSize = 26;
@@ -112,11 +109,6 @@ public class ButtonController : XRBaseInteractable
     void RemoveCooldownBlocker()
     {
         Plugin.menuController.RemoveBlockerFromAllButtons(Blocker.BUTTON_PRESSED);
-    }
-
-    protected override void OnHoverExited(XRBaseInteractor interactor)
-    {
-        base.OnSelectExited(interactor);
     }
 
     public void SetText(string text)
