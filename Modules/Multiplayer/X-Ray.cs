@@ -52,6 +52,7 @@ namespace Bark.Modules.Multiplayer
         protected override void Cleanup()
         {
             if (!MenuController.Instance.Built) return;
+            if (markers is null) return;
             foreach (var marker in markers)
                 marker?.Obliterate();
         }
@@ -69,31 +70,62 @@ namespace Bark.Modules.Multiplayer
 
     public class XRayMarker : MonoBehaviour
     {
-        Material baseMaterial, material;
+        Material 
+            baseSkin, baseFace, baseChest, 
+            skinMaterial, faceMaterial, chestMaterial;
         VRRig rig;
+        Renderer face, chest;
+
         void Start()
         {
-            rig = GetComponent<VRRig>();
-            material = Instantiate(Plugin.assetBundle.LoadAsset<Material>("X-Ray Material"));
-            Update();
+            try
+            {
+                rig = GetComponent<VRRig>();
+                var xray = Plugin.assetBundle.LoadAsset<Material>("X-Ray Material");
+                skinMaterial = Instantiate(xray);
+                skinMaterial.renderQueue = 5000;
+                faceMaterial = Instantiate(xray);
+                faceMaterial.renderQueue = 5000;
+                chestMaterial = Instantiate(xray);
+                chestMaterial.renderQueue = 5000;
+                Update();
+            }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         public void Update()
         {
             if (!rig.mainSkin.material.name.Contains("X-Ray"))
             {
-                baseMaterial = rig.mainSkin.material;
-                material.color = baseMaterial.color;
-                material.mainTexture = baseMaterial.mainTexture;
-                material.SetTexture("_MainTex", baseMaterial.mainTexture);
-                rig.mainSkin.material = material;
+                baseSkin = ReplaceMaterial(rig.mainSkin, skinMaterial);
+                chest = rig.transform.Find("rig/body/gorillachest").GetComponent<Renderer>();
+                baseChest = ReplaceMaterial(chest, chestMaterial);
+                face = rig.transform.Find("rig/body/head/gorillaface").GetComponent<Renderer>();
+                baseFace = ReplaceMaterial(face, faceMaterial);
             }
+        }
+
+        //method that replaces a material with a new one and copies the mainTexture and color
+        Material ReplaceMaterial(Renderer renderer, Material newMaterial)
+        {
+            
+            var oldMaterial = renderer.material;
+            newMaterial.color = oldMaterial.color;
+            Logging.Debug("Texture name:", oldMaterial.mainTexture?.name);
+            newMaterial.mainTexture = oldMaterial.mainTexture;
+            newMaterial.mainTextureScale = oldMaterial.mainTextureScale;
+            newMaterial.mainTextureOffset = oldMaterial.mainTextureOffset;
+            newMaterial.SetTexture("_BaseMap", oldMaterial.mainTexture);
+            renderer.material = newMaterial;
+            return oldMaterial;
         }
 
         void OnDestroy()
         {
-            rig.mainSkin.material = baseMaterial;
-            Logging.Debug($"Reset material to {baseMaterial.name}");
+            rig.mainSkin.material = baseSkin;
+            face.material = baseFace;
+            chest.material = baseChest;
+            Logging.Debug($"Reset material to {baseSkin.name}");
         }
     }
 }

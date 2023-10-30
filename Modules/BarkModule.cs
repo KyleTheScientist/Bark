@@ -1,4 +1,5 @@
-﻿using Bark.Tools;
+﻿using Bark.Networking;
+using Bark.Tools;
 using BepInEx.Configuration;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,10 @@ namespace Bark.Modules
     public abstract class BarkModule : MonoBehaviour
     {
         public List<ConfigEntryBase> ConfigEntries;
+        public static BarkModule LastEnabled;
+        public static Dictionary<string, bool> enabledModules = new Dictionary<string, bool>();
+        public static string enabledModulesKey = "BarkEnabledModules";
+
         protected virtual void ReloadConfiguration() { }
 
         public abstract string GetDisplayName();
@@ -34,9 +39,11 @@ namespace Bark.Modules
 
         protected virtual void OnEnable()
         {
+            LastEnabled = this;
             Plugin.configFile.SettingChanged += SettingsChanged;
             if (this.button)
                 this.button.IsPressed = true;
+            SetStatus(true);
         }
 
         protected virtual void OnDisable()
@@ -45,7 +52,19 @@ namespace Bark.Modules
             if (this.button)
                 this.button.IsPressed = false;
             this.Cleanup();
+            SetStatus(false);
         }
+
+        public void SetStatus(bool enabled)
+        {
+            string name = GetDisplayName();
+            if (enabledModules.ContainsKey(name))
+                enabledModules[name] = enabled;
+            else
+                enabledModules.Add(name, enabled);
+            NetworkPropertyHandler.Instance?.ChangeProperty(enabledModulesKey, enabledModules);
+        }
+
         protected virtual void OnDestroy()
         {
             this.Cleanup();
@@ -73,7 +92,7 @@ namespace Bark.Modules
             } catch (ReflectionTypeLoadException ex)
             {
                 Logging.Exception(ex);
-                Logging.LogWarning("Inner exceptions:");
+                Logging.Warning("Inner exceptions:");
                 foreach (Exception inner in ex.LoaderExceptions)
                 {
                     Logging.Exception(inner);

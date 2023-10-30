@@ -5,6 +5,12 @@ namespace Bark.Extensions
 {
     public static class GameObjectExtensions
     {
+
+        public static T GetOrAddComponent<T>(this GameObject obj) where T : Component
+        {
+            T component = obj.GetComponent<T>();
+            return component ? component : obj.AddComponent<T>();
+        }
         public static void Log(this GameObject self)
         {
 

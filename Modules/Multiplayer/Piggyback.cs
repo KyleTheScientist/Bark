@@ -4,6 +4,7 @@ using Bark.Patches;
 using Bark.Modules.Physics;
 using GorillaLocomotion;
 using UnityEngine;
+using UnityEngine.XR;
 using Bark.Extensions;
 using Bark.Tools;
 using System;
@@ -179,25 +180,19 @@ namespace Bark.Modules.Multiplayer
             return false;
         }
 
-        void LatchLeft()
+        void Latch(InputTracker input)
         {
-            latchedWithLeft = TryMount();
+            if (input.node == XRNode.LeftHand)
+                latchedWithLeft = TryMount();
+            else
+                latchedWithLeft = !TryMount();
         }
 
-        void LatchRight()
+        void Unlatch(InputTracker input)
         {
-            latchedWithLeft = !TryMount();
-        }
-
-        void UnlatchLeft()
-        {
-            if (enabled && mounted && latchedWithLeft)
-                Unmount();
-        }
-
-        void UnlatchRight()
-        {
-            if (enabled && mounted && !latchedWithLeft)
+            if (!enabled || !mounted) return;
+            if (input.node == XRNode.LeftHand && latchedWithLeft ||
+                input.node == XRNode.RightHand && !latchedWithLeft)
                 Unmount();
         }
 
@@ -205,20 +200,22 @@ namespace Bark.Modules.Multiplayer
         {
             if (!MenuController.Instance.Built) return;
             base.OnEnable();
-            GestureTracker.Instance.leftGrip.OnPressed += LatchLeft;
-            GestureTracker.Instance.leftGrip.OnReleased += UnlatchLeft;
-            GestureTracker.Instance.rightGrip.OnPressed += LatchRight;
-            GestureTracker.Instance.rightGrip.OnReleased += UnlatchRight;
+            GestureTracker.Instance.leftGrip.OnPressed += Latch;
+            GestureTracker.Instance.leftGrip.OnReleased += Unlatch;
+            GestureTracker.Instance.rightGrip.OnPressed += Latch;
+            GestureTracker.Instance.rightGrip.OnReleased += Unlatch;
         }
 
         protected override void Cleanup()
         {
+            if (!MenuController.Instance.Built) return;
             if (mounted)
                 Unmount();
-            GestureTracker.Instance.leftGrip.OnPressed -= LatchLeft;
-            GestureTracker.Instance.leftGrip.OnReleased -= UnlatchLeft;
-            GestureTracker.Instance.rightGrip.OnPressed -= LatchRight;
-            GestureTracker.Instance.rightGrip.OnReleased -= UnlatchRight;
+            if (GestureTracker.Instance is null) return;
+            GestureTracker.Instance.leftGrip.OnPressed -= Latch;
+            GestureTracker.Instance.leftGrip.OnReleased -= Unlatch;
+            GestureTracker.Instance.rightGrip.OnPressed -= Latch;
+            GestureTracker.Instance.rightGrip.OnReleased -= Unlatch;
 
         }
 

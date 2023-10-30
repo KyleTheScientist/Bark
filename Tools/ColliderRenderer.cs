@@ -7,45 +7,61 @@ public class ColliderRenderer : MonoBehaviour
 {
     private Dictionary<Transform, BoxCollider> boxColliders;
     private Dictionary<Transform, SphereCollider> sphereColliders;
-    public float refreshRate = 1;
-    Transform sphere;
+    private Dictionary<Transform, MeshCollider> meshColliders;
+    public float refreshRate = 10;
+    Transform obj;
+    int refreshOffset;
 
     void Start()
     {
+        refreshOffset = Random.Range(0, 60 * (int)refreshRate);
         boxColliders = new Dictionary<Transform, BoxCollider>();
         foreach (BoxCollider collider in GetComponents<BoxCollider>())
         {
-            sphere = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-            sphere.GetComponent<BoxCollider>().Obliterate();
+            obj = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+            obj.GetComponent<BoxCollider>().Obliterate();
             Material material = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Cloud").GetComponent<Renderer>().material);
             var color = Random.ColorHSV();
             color.a = .25f;
             material.color = color;
             material.SetColor("_EmissionColor", color);
-            sphere.GetComponent<MeshRenderer>().material = material;
-            sphere.SetParent(collider.transform);
-            boxColliders.Add(sphere, collider);
+            obj.GetComponent<MeshRenderer>().material = material;
+            obj.SetParent(collider.transform);
+            boxColliders.Add(obj, collider);
         }
         sphereColliders = new Dictionary<Transform, SphereCollider>();
         foreach (SphereCollider collider in GetComponents<SphereCollider>())
         {
-            sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
-            sphere.GetComponent<SphereCollider>().Obliterate();
+            obj = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
+            obj.GetComponent<SphereCollider>().Obliterate();
             Material material = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Cloud").GetComponent<Renderer>().material);
             var color = Random.ColorHSV();
             color.a = .25f;
             material.color = color;
             material.SetColor("_EmissionColor", color);
-            sphere.GetComponent<MeshRenderer>().material = material;
-            sphere.SetParent(collider.transform);
-            sphereColliders.Add(sphere, collider);
+            obj.GetComponent<MeshRenderer>().material = material;
+            obj.SetParent(collider.transform);
+            sphereColliders.Add(obj, collider);
+        }
+
+        foreach (MeshCollider collider in GetComponents<MeshCollider>())
+        {
+            obj = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+            obj.GetComponent<BoxCollider>().Obliterate();
+            Material material = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Cloud").GetComponent<Renderer>().material);
+            var color = Random.ColorHSV();
+            color.a = .25f;
+            material.color = color;
+            material.SetColor("_EmissionColor", color);
+            obj.GetComponent<MeshRenderer>().material = material;
+            obj.SetParent(collider.transform);
+            meshColliders.Add(obj, collider);
         }
         Recalculate();
     }
-
     void FixedUpdate()
     {
-        if (Time.frameCount % (60 * refreshRate) == 0)
+        if ((refreshOffset + Time.frameCount) % (60 * refreshRate) == 0)
         {
             Recalculate();
         }
@@ -65,6 +81,18 @@ public class ColliderRenderer : MonoBehaviour
                 collider.size.z
             );
         }
+        foreach (var entry in meshColliders)
+        {
+            Transform cube = entry.Key;
+            MeshCollider collider = entry.Value;
+            if (!collider) continue;
+            cube.localPosition = collider.bounds.center;
+            cube.localScale = new Vector3(
+                collider.bounds.extents.x,
+                collider.bounds.extents.y,
+                collider.bounds.extents.z
+            );
+        }
         foreach (var entry in sphereColliders)
         {
             Transform sphere = entry.Key;
@@ -77,5 +105,10 @@ public class ColliderRenderer : MonoBehaviour
                 collider.radius * 2
             );
         }
+    }
+
+    void OnDestroy()
+    {
+        obj?.Obliterate();
     }
 }

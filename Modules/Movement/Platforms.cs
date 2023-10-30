@@ -59,7 +59,7 @@ namespace Bark.Modules.Movement
         }
 
         bool gripped;
-        public void OnGrip()
+        public void OnGrip(InputTracker _)
         {
             if (enabled)
             {
@@ -79,7 +79,7 @@ namespace Bark.Modules.Movement
             }
         }
 
-        public void OnRelease()
+        public void OnRelease(InputTracker _)
         {
             gripped = false;
             platform?.SetActive(false);

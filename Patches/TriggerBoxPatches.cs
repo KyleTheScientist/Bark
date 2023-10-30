@@ -54,5 +54,14 @@ namespace Bark.Patches
             }
         }
 
+        [HarmonyPatch(typeof(GorillaSetZoneTrigger))]
+        [HarmonyPatch("OnBoxTriggered", MethodType.Normal)]
+        internal class ZoneTriggerPatches
+        {
+            private static bool Prefix(GorillaSetZoneTrigger __instance)
+            {
+                return triggersEnabled;
+            }
+        }
     }
 }

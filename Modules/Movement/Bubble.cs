@@ -6,9 +6,28 @@ using Bark.Extensions;
 using Bark.Gestures;
 using Bark.GUI;
 using BepInEx.Configuration;
+using Bark.Networking;
+using NetworkPlayer = Photon.Realtime.Player;
 
 namespace Bark.Modules.Movement
 {
+
+    public class BubbleMarker : MonoBehaviour
+    {
+        GameObject bubble;
+        void Start()
+        {
+            bubble = Instantiate(Bubble.bubblePrefab);
+            bubble.transform.SetParent(transform, false);
+            bubble.transform.localPosition = new Vector3(0, -.1f, 0);
+            bubble.gameObject.layer = BarkInteractor.InteractionLayer;
+        }
+
+        void OnDestroy()
+        {
+            Destroy(bubble);
+        }
+    }
     public class Bubble : BarkModule
     {
         public static readonly string DisplayName = "Bubble";
@@ -16,7 +35,7 @@ namespace Bark.Modules.Movement
         public GameObject bubble;
         public GameObject colliderObject;
         public Vector3 targetPosition;
-        public Vector3 bubbleOffset = new Vector3(0, .15f, 0);
+        public static Vector3 bubbleOffset = new Vector3(0, .15f, 0);
 
 
         void Awake()
@@ -25,6 +44,16 @@ namespace Bark.Modules.Movement
             {
                 bubblePrefab = Plugin.assetBundle.LoadAsset<GameObject>("Bubble");
             }
+            NetworkPropertyHandler.Instance.OnPlayerModStatusChanged += OnPlayerModStatusChanged;
+        }
+
+        void OnPlayerModStatusChanged(NetworkPlayer player, string mod, bool enabled)
+        {
+            if (mod != DisplayName) return;
+            if (enabled)
+                player.Rig().gameObject.GetOrAddComponent<BubbleMarker>();
+            else
+                Destroy(player.Rig().gameObject.GetComponent<BubbleMarker>());
         }
 
         Rigidbody rb;
@@ -41,7 +70,9 @@ namespace Bark.Modules.Movement
         float cooldown = .1f;
         void LateUpdate()
         {
-            bubble.transform.position = Player.Instance.headCollider.transform.position - bubbleOffset * Player.Instance.scale;
+            bubble.transform.position = Player.Instance.headCollider.transform.position;
+            bubble.transform.position -= bubbleOffset * Player.Instance.scale;
+
             Vector3 leftPos = GestureTracker.Instance.leftHand.transform.position,
                 rightPos = GestureTracker.Instance.rightHand.transform.position;
 

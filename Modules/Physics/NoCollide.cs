@@ -37,7 +37,6 @@ namespace Bark.Modules.Physics
             {
                 if (!MenuController.Instance.Built) return;
                 base.OnEnable();
-                Logging.Debug("Disabling triggers");
                 activationLocation = Player.Instance.bodyCollider.transform.position;
                 activationAngle = Player.Instance.bodyCollider.transform.eulerAngles.y;
                 if (!Piggyback.mounted)
@@ -55,6 +54,7 @@ namespace Bark.Modules.Physics
                     }
                 }
 
+                Logging.Debug("Disabling triggers");
                 TriggerBoxPatches.triggersEnabled = false;
                 baseMask = Player.Instance.locomotionEnabledLayers;
                 Player.Instance.locomotionEnabledLayers = layerMask;

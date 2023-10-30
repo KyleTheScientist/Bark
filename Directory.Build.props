@@ -4,11 +4,11 @@
 		<OculusPath>D:\Program Files\Oculus\Software\Software\another-axiom-gorilla-tag</OculusPath>
 		<OculusPluginsPath>$(OculusPath)\BepInEx\plugins</OculusPluginsPath>
 
-    <SteamPath>D:\SteamLibrary\steamapps\common\Gorilla Tag\BepInEx\plugins</SteamPath>
+    <SteamPath>D:\SteamLibrary\steamapps\common\Gorilla Tag\</SteamPath>
     <SteamPluginsPath>$(SteamPath)\BepInEx\plugins</SteamPluginsPath>
     
-		<GameAssemblyPath>$(OculusPath)\Gorilla Tag_Data\Managed</GameAssemblyPath>
-		<BepInExAssemblyPath>$(OculusPath)\BepInEx\core</BepInExAssemblyPath>
+		<GameAssemblyPath>$(SteamPath)\Gorilla Tag_Data\Managed</GameAssemblyPath>
+		<BepInExAssemblyPath>$(SteamPath)\BepInEx\core</BepInExAssemblyPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(CI)'=='TRUE'">
 		<GameAssemblyPath>.\Libs</GameAssemblyPath>
@@ -19,6 +19,6 @@
 	</PropertyGroup>
 
   <PropertyGroup>  
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\WithoutCI\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\WithCI\**</DefaultItemExcludes>
   </PropertyGroup>
 </Project>

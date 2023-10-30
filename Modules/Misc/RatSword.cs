@@ -24,8 +24,8 @@ namespace Bark.Modules.Misc
                 sword.transform.localRotation = Quaternion.Euler(9, 0, 0);
                 sword.transform.localScale /= 2;
                 sword.SetActive(false);
-                GestureTracker.Instance.rightGrip.OnPressed += () => { sword.SetActive(true); };
-                GestureTracker.Instance.rightGrip.OnReleased += () => { sword.SetActive(false); };
+                GestureTracker.Instance.rightGrip.OnPressed += (_) => { sword.SetActive(true); };
+                GestureTracker.Instance.rightGrip.OnReleased += (_) => { sword.SetActive(false); };
             }
             catch (Exception e) { Logging.Exception(e); }
         }

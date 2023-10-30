@@ -65,7 +65,7 @@ namespace Bark.Modules.Teleportation
                 foreach (var system in smokeSystems)
                     system.gameObject.SetActive(false);
 
-                HideLauncher();
+                HideLauncher(null);
 
             }
             catch (Exception e) { Logging.Exception(e); }
@@ -76,7 +76,7 @@ namespace Bark.Modules.Teleportation
             UpdateCameraPortals();
         }
 
-        void ShowLauncher()
+        void ShowLauncher(InputTracker _)
         {
             foreach (var system in smokeSystems)
                 system.gameObject.SetActive(false);
@@ -84,7 +84,7 @@ namespace Bark.Modules.Teleportation
             audioFire.enabled = false;
         }
 
-        void HideLauncher()
+        void HideLauncher(InputTracker _)
         {
             launcher.SetActive(false);
             foreach (var system in smokeSystems)
@@ -264,8 +264,8 @@ namespace Bark.Modules.Teleportation
             secondary.OnPressed += FireB;
         }
 
-        void FireA() { Fire(0); }
-        void FireB() { Fire(1); }
+        void FireA(InputTracker _) { Fire(0); }
+        void FireB(InputTracker _) { Fire(1); }
 
         void Parent()
         {

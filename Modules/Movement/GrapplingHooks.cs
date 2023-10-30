@@ -7,6 +7,7 @@ using Bark.Tools;
 using Bark.Extensions;
 using GorillaLocomotion;
 using BepInEx.Configuration;
+using Bark.Interaction;
 
 namespace Bark.Modules.Movement
 {
@@ -82,13 +83,6 @@ namespace Bark.Modules.Movement
         {
             try
             {
-                if (bananaGunL)
-                    GestureTracker.Instance?.leftPalmInteractor?
-                    .RemoveFromValidTargets(bananaGunL.GetComponent<BananaGun>());
-                if (bananaGunR)
-                    GestureTracker.Instance?.rightPalmInteractor?
-                        .RemoveFromValidTargets(bananaGunR.GetComponent<BananaGun>());
-
                 holsterL?.gameObject?.Obliterate();
                 holsterR?.gameObject?.Obliterate();
                 bananaGunL?.gameObject?.Obliterate();
@@ -172,7 +166,7 @@ namespace Bark.Modules.Movement
         }
     }
 
-    public class BananaGun : XRGrabInteractable
+    public class BananaGun : BarkGrabbable
     {
         public enum RopeType
         {
@@ -184,14 +178,7 @@ namespace Bark.Modules.Movement
         private LineRenderer rope, laser;
         private bool isGrappling;
         private float baseLaserWidth, baseRopeWidth;
-        Vector3 hitPosition,
-            baseModelOffsetClosed,
-            baseModelOffsetOpen,
-            modelOffsetLeft = new Vector3(.055f, 0, .025f),
-            modelOffsetRight = new Vector3(-.055f, 0, .025f);
-        private XRBaseInteractor interactor;
-
-
+        Vector3 hitPosition;
         public RopeType ropeType;
         public float
             pullForce = 10f,
@@ -201,10 +188,11 @@ namespace Bark.Modules.Movement
         protected override void Awake()
         {
             base.Awake();
+            LocalPosition = new Vector3(.55f, 0, .85f);
             openModel = transform.Find("Banana Gun Open").gameObject;
             closedModel = transform.Find("Banana Gun Closed").gameObject;
-            baseModelOffsetClosed = closedModel.transform.localPosition;
-            baseModelOffsetOpen = openModel.transform.localPosition;
+            //baseModelOffsetClosed = closedModel.transform.localPosition;
+            //baseModelOffsetOpen = openModel.transform.localPosition;
             rope = openModel.GetComponentInChildren<LineRenderer>();
             rope.useWorldSpace = false;
             baseRopeWidth = rope.startWidth;
@@ -217,27 +205,25 @@ namespace Bark.Modules.Movement
         {
             Close();
             this.holster = holster;
-            transform.SetParent(holster, false);
-            transform.localPosition = new Vector3(0, 0, 0);
+            transform.SetParent(holster);
+            transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
             if (laser)
                 laser.enabled = false;
         }
 
         SpringJoint joint;
-        bool activated;
-        protected override void OnActivate(XRBaseInteractor interactor)
+        public override void OnActivate(BarkInteractor interactor)
         {
-            Logging.Debug("Activated");
             base.OnActivate(interactor);
-            activated = true;
+            Activated = true;
         }
 
-        protected override void OnDeactivate(XRBaseInteractor interactor)
+        public override void OnDeactivate(BarkInteractor interactor)
         {
-            Logging.Debug("Deactivated");
             base.OnDeactivate(interactor);
-            activated = false;
+            Activated = false;
             Close();
         }
 
@@ -283,13 +269,7 @@ namespace Bark.Modules.Movement
 
         void FixedUpdate()
         {
-            if (isSelected)
-            {
-                transform.localScale = Vector3.one * Player.Instance.scale;
-                transform.position = selectingInteractor.transform.position;
-            }
-
-            if (isSelected && !isGrappling && activated) { StartSwing(); return; }
+            if (Selected && !isGrappling && Activated) { StartSwing(); return; }
             if (isGrappling)
             {
                 var rigidBody = Player.Instance.bodyCollider.attachedRigidbody;
@@ -301,7 +281,7 @@ namespace Bark.Modules.Movement
 
         void UpdateLineRenderer()
         {
-            if (!isGrappling && isSelected)
+            if (!isGrappling && Selected)
             {
                 RaycastHit hit;
                 Ray ray = new Ray(rope.transform.position, transform.forward);
@@ -333,29 +313,9 @@ namespace Bark.Modules.Movement
             }
         }
 
-        protected override void OnSelectEntered(XRBaseInteractor interactor)
+        public override void OnDeselect(BarkInteractor interactor)
         {
-            base.OnSelectEntered(interactor);
-            this.interactor = interactor;
-            if (interactor == GestureTracker.Instance.leftPalmInteractor)
-            {
-                closedModel.transform.localPosition += modelOffsetLeft;
-                openModel.transform.localPosition += modelOffsetLeft;
-            }
-            else if (interactor == GestureTracker.Instance.rightPalmInteractor)
-            {
-                closedModel.transform.localPosition += modelOffsetRight;
-                openModel.transform.localPosition += modelOffsetRight;
-            }
-        }
-
-        protected override void OnSelectExited(XRBaseInteractor interactor)
-        {
-            base.OnSelectEntered(interactor);
-            this.interactor = null;
-
-            closedModel.transform.localPosition = baseModelOffsetClosed;
-            openModel.transform.localPosition = baseModelOffsetOpen;
+            base.OnDeselect(interactor);
             laser.enabled = false;
             Holster(holster);
 
@@ -363,22 +323,16 @@ namespace Bark.Modules.Movement
 
         public void SetupInteraction()
         {
-            gravityOnDetach = false;
-            movementType = MovementType.Instantaneous;
-            retainTransformParent = true;
-            throwOnDetach = false;
+            this.throwOnDetach = false;
             gameObject.layer = BarkInteractor.InteractionLayer;
             if (openModel)
                 openModel.layer = BarkInteractor.InteractionLayer;
             if (closedModel)
                 closedModel.layer = BarkInteractor.InteractionLayer;
-            interactionLayerMask = BarkInteractor.InteractionLayerMask;
-            interactionManager = BarkInteractor.manager;
         }
 
         void Open()
         {
-            Logging.Debug("Opened");
             openModel?.SetActive(true);
             closedModel?.SetActive(false);
             GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(96, false, 0.05f);
@@ -386,10 +340,9 @@ namespace Bark.Modules.Movement
 
         void Close()
         {
-            Logging.Debug("Closed");
             openModel?.SetActive(false);
             closedModel?.SetActive(true);
-            activated = false;
+            Activated = false;
             isGrappling = false;
             joint?.Obliterate();
         }

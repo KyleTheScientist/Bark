@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Bark.Extensions;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,21 +10,20 @@ namespace Bark.Tools
         public LineRenderer lineRenderer;
         public Color color = Color.red;
 
-        public void Start()
+        public void Awake()
         {
-            lineRenderer = gameObject.AddComponent<LineRenderer>();
+            Logging.Debug(this.name);
+            lineRenderer = gameObject.GetOrAddComponent<LineRenderer>();
             lineRenderer.startColor = color;
             lineRenderer.startWidth = .01f;
             lineRenderer.endWidth = .01f;
-
-            var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            lineRenderer.material = sphere.GetComponent<Renderer>().material;
-            Destroy(sphere);
+            //var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //lineRenderer.material = sphere.GetComponent<Renderer>().material;
+            //Destroy(sphere);
         }
 
         public void Set(Vector3 start, Vector3 direction)
         {
-            if (!lineRenderer) Start();
             try
             {
                 lineRenderer.material.color = color;
