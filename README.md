@@ -15,9 +15,11 @@
 ### Movement
 * `Airplane` - This allows the player to fly around. **Spread your arms out like and airplane** to activate and use your wrists to steer!
 * `Bubble` - (Networked!) Creates a bubble around your so you can float around.
+* `Fly` - Use the **joysticks** fly around
 * `Grappling Hooks` - **Grab one of the grapple guns** off of your hip holster with **either grip button and then press the trigger to fire**
 * `Platforms (Left/Right)` - **Press the grip button** on your controller to create a floating platform in the air that you can stand on. There's a toggle for each hand so that you can disable one if it clashes with another mod's inputs.
 * `Speed Boost` - Significantly increases the player's movement speed
+* `Nail Gun` - **Press the trigger** to summon the nail gun. **Release the trigger** to fire a nail into surfaces that you can **grip** to climb.
 * `Rockets` - **Press the grip button** to spawn a rocket in each hand that boosts you around.
 * `Wall Run` - Allows you to seamlessly transition between running on floors, walls, and ceilings! Push off to revert to normal movement.
 * `Zipline` - **Press the grip button** to spawn a zipline launcher. **Press and release the trigger** to fire a zipline.
@@ -29,10 +31,11 @@
 * `Slippery Hands` - Makes everything slippery so you can ski anywhere!
 ### Teleportation
 * `Checkpoint` - **Grip the left trigger** to start summoning a holographic banana above your hand. Grip the *right trigger* to warp back to it.
+* `Pearl` - Use **grip** to summon a teleport pearl. Throw it and you will warp to wherever it lands.
 * `Teleport` - **Make a triangle with your thumbs and index fingers and peer through it** to initiate a teleport. Use your head to aim more finely.
 ### Multiplayer
 * `Boxing` - Better known as "punch mod", this allows the player to be punched around by others in the lobby. You can't be punched while touching the ground.
-* `Piggyback` - Allows you to ride other players! To mount someone, **have them give you two-thumbs-up**, and then **grip their shoulder**. If they **give you two thumbs down** at any point, you'll stop riding them. *Consent is important!*
+* `Piggyback` - Allows you to ride other players! To mount someone, **have them give a thumbs-up**, and then **grip nearby them**. If they **give you a thumbs down** at any point, you'll stop riding them. *Consent is important!*
 * `Telekinesis` - If another player points at you with their grip button pressed, they can
   pick you up and throw you from afar.
 * `X-Ray` - Allows you to see other players through walls.
