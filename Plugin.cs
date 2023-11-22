@@ -15,11 +15,6 @@ using GorillaLocomotion;
 using UnityEngine.UI;
 using HarmonyLib;
 
-// TODO
-// fix teleport description
-// fix nail gun description
-// move the settings banana farther forward?
-
 namespace Bark
 {
     [ModdedGamemode]
