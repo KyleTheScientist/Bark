@@ -13,7 +13,7 @@ namespace Bark.Patches
         [HarmonyPatch("OnBoxTriggered", MethodType.Normal)]
         internal class GeoTriggerPatches
         {
-            private static bool Prefix(GorillaGeoHideShowTrigger __instance)
+            private static bool Prefix()
             {
                 return triggersEnabled;
             }
@@ -23,7 +23,7 @@ namespace Bark.Patches
         [HarmonyPatch("OnBoxTriggered", MethodType.Normal)]
         internal class DisconnectTriggerPatches
         {
-            private static bool Prefix(GorillaNetworkDisconnectTrigger __instance)
+            private static bool Prefix()
             {
                 return triggersEnabled;
             }
@@ -33,7 +33,7 @@ namespace Bark.Patches
         [HarmonyPatch("OnBoxTriggered", MethodType.Normal)]
         internal class JoinTriggerPatches
         {
-            private static bool Prefix(GorillaNetworkJoinTrigger __instance)
+            private static bool Prefix()
             {
                 return triggersEnabled;
             }
@@ -43,7 +43,7 @@ namespace Bark.Patches
         [HarmonyPatch("OnBoxTriggered", MethodType.Normal)]
         internal class QuitTriggerPatches
         {
-            private static bool Prefix(GorillaQuitBox __instance)
+            private static bool Prefix()
             {
                 if (!triggersEnabled)
                 {
@@ -58,7 +58,17 @@ namespace Bark.Patches
         [HarmonyPatch("OnBoxTriggered", MethodType.Normal)]
         internal class ZoneTriggerPatches
         {
-            private static bool Prefix(GorillaSetZoneTrigger __instance)
+            private static bool Prefix()
+            {
+                return triggersEnabled;
+            }
+        }
+
+        [HarmonyPatch(typeof(GorillaKeyboardButton))]
+        [HarmonyPatch("OnTriggerEnter", MethodType.Normal)]
+        internal class KeyboardButtonPatches
+        {
+            private static bool Prefix()
             {
                 return triggersEnabled;
             }

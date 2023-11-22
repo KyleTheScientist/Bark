@@ -13,6 +13,12 @@ using Bark.Gestures;
 using Bark.Networking;
 using GorillaLocomotion;
 using UnityEngine.UI;
+using HarmonyLib;
+
+// TODO
+// fix teleport description
+// fix nail gun description
+// move the settings banana farther forward?
 
 namespace Bark
 {
@@ -28,6 +34,8 @@ namespace Bark
         public static MenuController menuController;
         public static GameObject monkeMenuPrefab;
         public static ConfigFile configFile;
+        public static bool IsSteam { get; protected set; }
+        public static bool DebugMode { get; protected set; } = false;
         GestureTracker gt;
         NetworkPropertyHandler nph;
 
@@ -81,7 +89,7 @@ namespace Bark
             catch (Exception e) { Logging.Exception(e); }
         }
 
-    void Start()
+        void Start()
         {
             try
             {
@@ -96,17 +104,6 @@ namespace Bark
             }
         }
 
-        //void FixedUpdate()
-        //{
-
-        //    if (ControllerInputPoller.instance.rightControllerPrimaryButton)
-        //    {
-        //        var rigidbody = Player.Instance.bodyCollider.attachedRigidbody;
-        //        Vector3 velocity = Player.Instance.headCollider.transform.forward * 10;
-        //        rigidbody.velocity = Vector3.Lerp(rigidbody.velocity, velocity, .05f);
-        //    }
-        //}
-
         public static Text debugText;
         void CreateDebugGUI()
         {
@@ -120,17 +117,18 @@ namespace Bark
                         canvas = new GameObject("~~~Bark Debug Canvas").AddComponent<Canvas>();
                         canvas.renderMode = RenderMode.WorldSpace;
                         canvas.transform.SetParent(Player.Instance.headCollider.transform);
-                        canvas.transform.localPosition = Vector3.forward * 1;
+                        canvas.transform.localPosition = Vector3.forward * .35f;
                         canvas.transform.localRotation = Quaternion.identity;
                         canvas.transform.localScale = Vector3.one;
                         canvas.gameObject.AddComponent<CanvasScaler>();
                         canvas.gameObject.AddComponent<GraphicRaycaster>();
-                        canvas.GetComponent<RectTransform>().localScale = Vector3.one * .1f;
+                        canvas.GetComponent<RectTransform>().localScale = Vector3.one * .035f;
                         var text = new GameObject("~~~Text").AddComponent<Text>();
                         text.transform.SetParent(canvas.transform);
                         text.transform.localPosition = Vector3.zero;
                         text.transform.localRotation = Quaternion.identity;
                         text.transform.localScale = Vector3.one;
+                        text.color = Color.green;
                         //text.text = "Hello World";
                         text.fontSize = 24;
                         text.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
@@ -182,9 +180,20 @@ namespace Bark
 
         void OnGameInitialized(object sender, EventArgs e)
         {
-            Logging.Debug("OnGameInitialized");
-            initialized = true;
-            //CreateDebugGUI();
+            try
+            {
+                Logging.Debug("OnGameInitialized");
+                initialized = true;
+                string platform = (string)Traverse.Create(GorillaNetworking.PlayFabAuthenticator.instance).Field("platform").GetValue();
+                Logging.Info("Platform: ", platform);
+                IsSteam = platform.ToLower().Contains("steam");
+                if (DebugMode)
+                    CreateDebugGUI();
+            }
+            catch (Exception ex)
+            {
+                Logging.Exception(ex);
+            }
         }
 
         [ModdedGamemodeJoin]

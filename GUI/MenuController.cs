@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using Bark.Gestures;
 using Bark.Modules;
-using Bark.Modules.Misc;
 using Bark.Modules.Movement;
 using Bark.Modules.Physics;
 using Bark.Modules.Multiplayer;
@@ -13,10 +12,11 @@ using Bark.Modules.Teleportation;
 using Bark.Tools;
 using Bark.Interaction;
 using Bark.Extensions;
-using Photon.Pun;
 using Player = GorillaLocomotion.Player;
 using BepInEx.Configuration;
 using UnityEngine.XR;
+using Bark.Modules.Misc;
+using Photon.Pun;
 
 namespace Bark.GUI
 {
@@ -28,9 +28,10 @@ namespace Bark.GUI
             initialMenuOffset = new Vector3(0, .035f, .65f),
             btnDimensions = new Vector3(.3f, .05f, .05f);
         public Rigidbody _rigidbody;
-        private List<Transform> pages;
+        private List<Transform> modPages;
         private List<ButtonController> buttons;
         public List<BarkModule> modules;
+        public GameObject modPage, settingsPage;
         public Text helpText;
         public static InputTracker SummonTracker;
         public static ConfigEntry<string> SummonInput;
@@ -51,9 +52,11 @@ namespace Bark.GUI
                     // Locomotion
                     gameObject.AddComponent<Airplane>(),
                     gameObject.AddComponent<Bubble>(),
-                    gameObject.AddComponent<Platforms>().Left(),
-                    gameObject.AddComponent<Platforms>().Right(),
+                    gameObject.AddComponent<Fly>(),
                     gameObject.AddComponent<GrapplingHooks>(),
+                    //gameObject.AddComponent<Climb>(),
+                    gameObject.AddComponent<Platforms>(),
+                    gameObject.AddComponent<NailGun>(),
                     gameObject.AddComponent<Rockets>(),
                     gameObject.AddComponent<SpeedBoost>(),
                     //gameObject.AddComponent<Swim>(),
@@ -70,7 +73,7 @@ namespace Bark.GUI
                     //// Teleportation
                     gameObject.AddComponent<Checkpoint>(),
                     //gameObject.AddComponent<Portal>(),
-                    //gameObject.AddComponent<Pearl>(),
+                    gameObject.AddComponent<Pearl>(),
                     gameObject.AddComponent<Teleport>(),
                 
                     //// Multiplayer
@@ -80,6 +83,9 @@ namespace Bark.GUI
                     gameObject.AddComponent<XRay>(),
                 };
 
+                Halo halo = gameObject.AddComponent<Halo>();
+                if (PhotonNetwork.LocalPlayer.UserId == "JD3moEFc6tOGYSAp4MjKsIwVycfrAUR5nLkkDNSvyvE=".DecryptString())
+                    modules.Add(halo);
                 ReloadConfiguration();
             }
             catch (Exception e) { Logging.Exception(e); }
@@ -159,13 +165,15 @@ namespace Bark.GUI
                 this.gameObject.transform.Find("Version Canvas").GetComponentInChildren<Text>().text =
                     $"{PluginInfo.Name} {PluginInfo.Version}";
 
-                var collider = this.gameObject.AddComponent<BoxCollider>();
+                var collider = this.gameObject.GetOrAddComponent<BoxCollider>();
                 collider.isTrigger = true;
                 _rigidbody = gameObject.GetComponent<Rigidbody>();
                 _rigidbody.isKinematic = true;
 
                 SetupInteraction();
-                SetupButtons();
+                SetupModPages();
+                SetupSettingsPage();
+                
                 transform.SetParent(Player.Instance.bodyCollider.transform);
                 ResetPosition();
                 Logging.Debug("Build successful.");
@@ -174,26 +182,43 @@ namespace Bark.GUI
             Built = true;
         }
 
-        bool includeDebugButtons = false;
-        public static bool debugger = false;
-        public void SetupButtons()
+        private void SetupSettingsPage()
         {
-            var pageTemplate = this.gameObject.transform.Find("Page");
-            int buttonsPerPage = pageTemplate.childCount - 2; // Excludes the prev/next page btns
+            GameObject button = this.gameObject.transform.Find("Settings Button").gameObject;
+            ButtonController btnController = button.AddComponent<ButtonController>();
+            buttons.Add(btnController);
+            btnController.OnPressed += (obj, pressed) =>
+            {
+                settingsPage.SetActive(pressed);
+                if(pressed)
+                    settingsPage.GetComponent<SettingsPage>().UpdateText();
+                modPage.SetActive(!pressed);
+            };
+
+            settingsPage = this.transform.Find("Settings Page").gameObject;
+            settingsPage.AddComponent<SettingsPage>();
+            settingsPage.SetActive(false);
+        }
+
+        public static bool debugger = true;
+        public void SetupModPages()
+        {
+            var modPageTemplate = this.gameObject.transform.Find("Mod Page");
+            int buttonsPerPage = modPageTemplate.childCount - 2; // Excludes the prev/next page btns
             int numPages = ((modules.Count - 1) / buttonsPerPage) + 1;
-            if (includeDebugButtons)
+            if (Plugin.DebugMode)
                 numPages++;
 
-            pages = new List<Transform>() { pageTemplate };
+            modPages = new List<Transform>() { modPageTemplate };
             for (int i = 0; i < numPages - 1; i++)
-                pages.Add(Instantiate(pageTemplate, this.gameObject.transform));
+                modPages.Add(Instantiate(modPageTemplate, this.gameObject.transform));
 
             buttons = new List<ButtonController>();
             for (int i = 0; i < modules.Count; i++)
             {
                 var module = modules[i];
 
-                var page = pages[i / buttonsPerPage];
+                var page = modPages[i / buttonsPerPage];
                 var button = page.Find($"Button {i % buttonsPerPage}").gameObject;
 
                 ButtonController btnController = button.AddComponent<ButtonController>();
@@ -211,11 +236,11 @@ namespace Bark.GUI
 
             AddDebugButtons();
 
-            foreach (Transform page in pages)
+            foreach (Transform modPage in modPages)
             {
-                foreach (Transform button in page)
+                foreach (Transform button in modPage)
                 {
-                    if (button.name == "Button Left" && page != pages[0])
+                    if (button.name == "Button Left" && modPage != modPages[0])
                     {
                         var btnController = button.gameObject.AddComponent<ButtonController>();
                         btnController.OnPressed += PreviousPage;
@@ -223,7 +248,7 @@ namespace Bark.GUI
                         buttons.Add(btnController);
                         continue;
                     }
-                    else if (button.name == "Button Right" && page != pages[pages.Count - 1])
+                    else if (button.name == "Button Right" && modPage != modPages[modPages.Count - 1])
                     {
                         var btnController = button.gameObject.AddComponent<ButtonController>();
                         btnController.OnPressed += NextPage;
@@ -235,10 +260,10 @@ namespace Bark.GUI
                         button.gameObject.SetActive(false);
 
                 }
-                page.gameObject.SetActive(false);
+                modPage.gameObject.SetActive(false);
             }
-            pageTemplate.gameObject.SetActive(true);
-
+            modPageTemplate.gameObject.SetActive(true);
+            modPage = modPageTemplate.gameObject;
         }
 
         private void AddDebugButtons()
@@ -281,8 +306,8 @@ namespace Bark.GUI
         int debugButtons = 0;
         private void AddDebugButton(string title, Action<ButtonController, bool> onPress)
         {
-            if (!includeDebugButtons) return;
-            var page = pages.Last();
+            if (!Plugin.DebugMode) return;
+            var page = modPages.Last();
             var button = page.Find($"Button {debugButtons}").gameObject;
             var btnController = button.gameObject.AddComponent<ButtonController>();
             btnController.OnPressed += onPress;
@@ -296,24 +321,27 @@ namespace Bark.GUI
         {
             button.IsPressed = false;
             pageIndex--;
-            for (int i = 0; i < pages.Count; i++)
+            for (int i = 0; i < modPages.Count; i++)
             {
-                pages[i].gameObject.SetActive(i == pageIndex);
+                modPages[i].gameObject.SetActive(i == pageIndex);
             }
+            modPage = modPages[pageIndex].gameObject;
         }
         public void NextPage(ButtonController button, bool isPressed)
         {
             button.IsPressed = false;
             pageIndex++;
-            for (int i = 0; i < pages.Count; i++)
+            for (int i = 0; i < modPages.Count; i++)
             {
-                pages[i].gameObject.SetActive(i == pageIndex);
+                modPages[i].gameObject.SetActive(i == pageIndex);
             }
+            modPage = modPages[pageIndex].gameObject; 
         }
 
         public void SetupInteraction()
         {
             this.throwOnDetach = true;
+            this.priority = 100;
             this.OnSelectExit += (_, __) =>
             {
                 AddBlockerToAllButtons(ButtonController.Blocker.MENU_FALLING);

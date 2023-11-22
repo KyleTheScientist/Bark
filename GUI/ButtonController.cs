@@ -1,6 +1,5 @@
 ﻿using Bark.Gestures;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
 using System;
 using UnityEngine.UI;
 using System.Collections.Generic;
@@ -22,7 +21,7 @@ public class ButtonController : MonoBehaviour
         {Blocker.BUTTON_PRESSED, ""},
     };
 
-    private float buttonPushDistance = 0.03f; // Distance the button travels when pushed
+    public float buttonPushDistance = 0.03f; // Distance the button travels when pushed
     public Action<ButtonController, bool> OnPressed;
     private float cooldown = .1f, lastPressed = 0;
     public Canvas canvas;
@@ -38,7 +37,7 @@ public class ButtonController : MonoBehaviour
         set
         {
             _isPressed = value;
-            material.color = value ? Color.red : Color.white;
+            material.color = value ? Color.red : Color.white * .75f;
         }
     }
     public bool Interactable
@@ -47,7 +46,7 @@ public class ButtonController : MonoBehaviour
         private set
         {
             if (value)
-                material.color = IsPressed ? Color.red : Color.white;
+                material.color = IsPressed ? Color.red : Color.white * .75f;
             else
                 material.color = IsPressed ? new Color(.5f, .3f, .3f) : Color.gray;
         }
@@ -62,11 +61,12 @@ public class ButtonController : MonoBehaviour
             buttonModel = transform.GetChild(0);
             this.material = buttonModel.GetComponent<Renderer>().material;
             this.gameObject.layer = BarkInteractor.InteractionLayer;
-            this.text = GetComponentInChildren<Text>();
-            this.text.fontSize = 26;
             var observer = this.gameObject.AddComponent<CollisionObserver>();
             observer.OnTriggerEntered += Press;
             observer.OnTriggerExited += Unpress;
+            this.text = GetComponentInChildren<Text>();
+            if(text)
+                this.text.fontSize = 26;
         }
         catch (Exception e) { Logging.Exception(e); Logging.Debug("Reached", progress); }
     }

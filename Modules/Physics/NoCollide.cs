@@ -15,13 +15,13 @@ namespace Bark.Modules.Physics
     {
         public static readonly string DisplayName = "No Collide";
         public static NoCollide Instance;
-
         private LayerMask baseMask;
         private bool baseHeadIsTrigger, baseBodyIsTrigger;
         public static bool active;
         public static int layer = 29, layerMask = 1 << layer;
         private Vector3 activationLocation;
         private float activationAngle;
+        bool flyWasEnabled;
 
         private struct GorillaTriggerInfo
         {
@@ -43,14 +43,13 @@ namespace Bark.Modules.Physics
                 {
                     try
                     {
-                        foreach (var platformModule in Plugin.menuController.GetComponents<Platforms>())
-                        {
-                            platformModule.enabled = true;
-                        }
+                        var fly = Plugin.menuController.GetComponent<Fly>();
+                        flyWasEnabled = fly.enabled;
+                        fly.enabled = true;
                     }
                     catch
                     {
-                        Logging.Debug("Failed to enable platforms for noclip.");
+                        Logging.Debug("Failed to enable fly for noclip.");
                     }
                 }
 
@@ -84,9 +83,12 @@ namespace Bark.Modules.Physics
             Player.Instance.headCollider.isTrigger = baseHeadIsTrigger;
             TeleportPatch.TeleportPlayer(activationLocation, activationAngle);
             active = false;
+            // Wait for the telport to complete
+            yield return new WaitForFixedUpdate();
             yield return new WaitForFixedUpdate();
             yield return new WaitForFixedUpdate();
             TriggerBoxPatches.triggersEnabled = true;
+            Plugin.menuController.GetComponent<Fly>().enabled = flyWasEnabled;
             Logging.Debug("Enabling triggers");
         }
 

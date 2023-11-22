@@ -6,29 +6,145 @@ using UnityEngine.XR;
 using Bark.Extensions;
 using Bark.Gestures;
 using Bark.GUI;
-using Bark.Modules.Physics;
 using BepInEx.Configuration;
+using GorillaLocomotion.Climbing;
+using HarmonyLib;
 
 namespace Bark.Modules.Movement
 {
+    public class Platform : MonoBehaviour
+    {
+        public GorillaHandClimber climber;
+        public bool isSticky, isActive, isLeft;
+        Transform hand;
+        private Material cloudMaterial;
+        float spawnTime;
+        Collider collider;
+        Vector3 scale;
+        string modelName;
+        GameObject model;
+        Transform wings;
+        ParticleSystem rain;
+
+        public void Initialize(bool isLeft)
+        {
+            try
+            {
+                this.isLeft = isLeft;
+                this.name = "Bark Platform " + (isLeft ? "Left" : "Right");
+                this.Scale = 1;
+                foreach(Transform child in this.transform)
+                    child.gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 110;
+                var cloud = this.transform.Find("cloud");
+                cloudMaterial = cloud.GetComponent<Renderer>().material;
+                cloudMaterial.color = new Color(1, 1, 1, 0);
+                rain = cloud.GetComponent<ParticleSystem>();
+                wings = this.transform.Find("doug/wings");
+
+                var handObj = isLeft ? Player.Instance.leftControllerTransform : Player.Instance.rightControllerTransform;
+                this.hand = handObj.transform;
+
+                string climberName = isLeft ? "leftClimber" : "rightClimber";
+                climber = Traverse.Create(EquipmentInteractor.instance).Field<GorillaHandClimber>(climberName).Value;
+            }
+            catch (Exception e)
+            {
+                Logging.Exception(e);
+            }
+        }
+
+        public void Activate()
+        {
+            isActive = true;
+            this.spawnTime = Time.time;
+            this.transform.position = hand.transform.position;
+            this.transform.rotation = hand.transform.rotation;
+            this.transform.localScale = scale * Player.Instance.scale;
+            collider.enabled = !isSticky;
+            if (isSticky)
+                Sounds.Play(111, .1f, this.isLeft);
+            this.model.SetActive(true);
+            if(modelName == "storm cloud")
+                rain.Play();
+        }
+
+        public void Deactivate()
+        {
+            isActive = false;
+            collider.enabled = false;
+            if(!this.model.name.Contains("cloud"))
+                this.model.SetActive(false);
+            rain.Stop();
+
+        }
+
+        void FixedUpdate()
+        {
+            if (isActive)  
+                spawnTime = Time.time;
+
+            float transparency = Mathf.Clamp((Time.time - spawnTime) / 1f, 0.2f, 1);
+            float c = modelName == "storm cloud" ? .2f : 1;
+            cloudMaterial.color = new Color(c, c, c, Mathf.Lerp(1, 0, transparency));
+            if(model.name == "doug")
+            {
+                wings.transform.localRotation = Quaternion.Euler(Time.frameCount % 2 == 0 ? -30 : 0, 0, 0);
+            }
+        }
+
+        
+        public bool Sticky
+        {
+            set
+            {
+                this.isSticky = value;
+                if (isActive)
+                    collider.enabled = !isSticky;
+            }
+        }
+
+        public float Scale
+        {
+            set
+            {
+                this.scale = new Vector3(isLeft ? -1 : 1, 1, 1) * value;
+            }
+        }
+
+
+        public string Model
+        {
+            get
+            {
+                return this.modelName;
+            }
+            set
+            {
+                this.modelName = value;
+                var path = this.modelName;
+                if (modelName.Contains("cloud"))
+                    path = "cloud";
+                this.model = this.transform.Find(path).gameObject;
+                this.transform.Find("cloud").gameObject.SetActive(path == "cloud");
+                this.transform.Find("doug").gameObject.SetActive(path == "doug");
+                this.transform.Find("invisible").gameObject.SetActive(path == "invisible");
+                collider = model.GetComponent<BoxCollider>();
+            }
+        }
+    }
+
     public class Platforms : BarkModule
     {
         public static readonly string DisplayName = "Platforms";
         public static GameObject platformPrefab;
-        public GameObject platform, ghost;
-        BoxCollider normalCollider, stickyCollider;
-        private XRNode xrNode;
-        private Transform hand;
-        private float spawnTime;
-        private Material material;
-        InputTracker input;
+        public Platform left, right, main;
+        InputTracker inputL, inputR;
 
         void Awake()
         {
             if (!platformPrefab)
             {
-                platformPrefab = Plugin.assetBundle.LoadAsset<GameObject>("Cloud");
-                platformPrefab.SetActive(false);
+                platformPrefab = Plugin.assetBundle.LoadAsset<GameObject>("Bark Platform");
             }
         }
 
@@ -38,106 +154,106 @@ namespace Bark.Modules.Movement
             base.OnEnable();
             try
             {
-                platform = Instantiate(platformPrefab);
-                platform.name = "Cloud Solid";
-                platform.GetComponent<Renderer>().enabled = false;
-                normalCollider = platform.transform.Find("Normal Collider").GetComponent<BoxCollider>();
-                stickyCollider = platform.transform.Find("Sticky Collider").GetComponent<BoxCollider>();
-                normalCollider.gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 110;
-                stickyCollider.gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 110;
-
-                ghost = Instantiate(platformPrefab);
-                ghost.name = "Cloud Renderer";
-                foreach (var collider in ghost.GetComponentsInChildren<Collider>())
-                    collider.enabled = false;
-
-                material = ghost.GetComponent<Renderer>().material;
-                platform.gameObject.SetActive(false);
+                left = CreatePlatform(true);
+                right = CreatePlatform(false);
                 ReloadConfiguration();
             }
             catch (Exception e) { Logging.Exception(e); }
         }
 
-        bool gripped;
-        public void OnGrip(InputTracker _)
+        public Platform CreatePlatform(bool isLeft)
         {
-            if (enabled)
+            var platformObj = Instantiate(platformPrefab);
+            var platform = platformObj.AddComponent<Platform>();
+            platform.Initialize(isLeft);
+            return platform;
+        }
+
+        public void OnActivate(InputTracker tracker)
+        {
+            if (!enabled) return;
+            bool isLeft = (tracker == inputL);
+            main = isLeft ? left : right;
+            var other = !isLeft ? left : right;
+            main.Activate();
+            if (Sticky.Value)
             {
-                gripped = true;
-                platform.SetActive(true);
-                platform.transform.position = hand.position;
-                platform.transform.rotation = hand.rotation;
-                float scaleX = xrNode == XRNode.LeftHand ? -1 : 1;
-                platform.transform.localScale = new Vector3(scaleX, 1, 1) * Player.Instance.scale;
-
-                ghost.SetActive(true);
-                ghost.transform.position = hand.position;
-                ghost.transform.rotation = hand.rotation;
-                ghost.transform.localScale = platform.transform.localScale;
-
-                spawnTime = Time.time;
+                Player.Instance.bodyCollider.attachedRigidbody.velocity = Vector3.zero;
+                other.Deactivate();
             }
         }
 
-        public void OnRelease(InputTracker _)
+        public void OnDeactivate(InputTracker tracker)
         {
-            gripped = false;
-            platform?.SetActive(false);
+            bool isLeft = tracker == inputL;
+            var platform = isLeft ? left : right;
+            platform.Deactivate();
+            if (Sticky.Value && platform == main)
+            {
+                var rb = Player.Instance.bodyCollider.attachedRigidbody;
+                rb.velocity = Player.Instance.bodyVelocityTracker.GetAverageVelocity(true, 0.15f, false);
+            }
         }
 
-        public Platforms Left()
+        void LateUpdate()
         {
-            hand = Player.Instance.leftControllerTransform;
-            xrNode = XRNode.LeftHand;
-
-            return this;
-        }
-
-        public Platforms Right()
-        {
-            hand = Player.Instance.rightControllerTransform;
-            xrNode = XRNode.RightHand;
-            return this;
-        }
-
-        void FixedUpdate()
-        {
-            if (!Sticky.Value && gripped)
-                spawnTime = Time.time;
-            float transparency = (Time.time - spawnTime) / 1f;
-            material.color = new Color(1, 1, 1, Mathf.Lerp(1, 0, transparency));
-            normalCollider.gameObject.layer = NoCollide.active ? NoCollide.layer : 0;
-            stickyCollider.gameObject.layer = NoCollide.active ? NoCollide.layer : 0;
+            if (Sticky.Value && main.isActive)
+            {
+                Player.Instance.isClimbing = true;
+                Vector3 offset = main.climber.transform.position - main.transform.position;
+                var rb = Player.Instance.bodyCollider.attachedRigidbody;
+                rb.velocity = Vector3.zero;
+                rb.useGravity = false;
+                rb.MovePosition(rb.position - offset);
+            }
         }
 
         protected override void Cleanup()
         {
-            platform?.Obliterate();
-            ghost?.Obliterate();
-            if (input != null)
-            {
-                input.OnPressed -= OnGrip;
-                input.OnReleased -= OnRelease;
-            }
+            left.gameObject?.Obliterate();
+            right.gameObject?.Obliterate();
+            Unsub();
 
         }
         protected override void ReloadConfiguration()
         {
-            normalCollider.enabled = !Sticky.Value;
-            stickyCollider.enabled = Sticky.Value;
+            left.Model = Model.Value;
+            right.Model = Model.Value;
+            left.Sticky = Sticky.Value;
+            right.Sticky = Sticky.Value;
 
-            if (input != null)
+            float scale = MathExtensions.Map(Scale.Value, 0, 10, .5f, 1.5f);
+            left.Scale = scale;
+            right.Scale = scale;
+
+            Unsub();
+            inputL = GestureTracker.Instance.GetInputTracker(Input.Value, XRNode.LeftHand);
+            inputL.OnPressed += OnActivate;
+            inputL.OnReleased += OnDeactivate;
+
+            inputR = GestureTracker.Instance.GetInputTracker(Input.Value, XRNode.RightHand);
+            inputR.OnPressed += OnActivate;
+            inputR.OnReleased += OnDeactivate;
+        }
+
+        void Unsub()
+        {
+            if (inputL != null)
             {
-                input.OnPressed -= OnGrip;
-                input.OnReleased -= OnRelease;
+                inputL.OnPressed -= OnActivate;
+                inputL.OnReleased -= OnDeactivate;
             }
-            input = GestureTracker.Instance.GetInputTracker(Input.Value, xrNode);
-            input.OnPressed += OnGrip;
-            input.OnReleased += OnRelease;
+            if (inputR != null)
+            {
+                inputR.OnPressed -= OnActivate;
+                inputR.OnReleased -= OnDeactivate;
+            }
         }
 
         public static ConfigEntry<bool> Sticky;
+        public static ConfigEntry<int> Scale;
         public static ConfigEntry<string> Input;
+        public static ConfigEntry<string> Model;
         public static void BindConfigEntries()
         {
             try
@@ -149,6 +265,13 @@ namespace Bark.Modules.Movement
                     description: "Whether or not your hands stick to the platforms"
                 );
 
+                Scale = Plugin.configFile.Bind(
+                    section: DisplayName,
+                    key: "size",
+                    defaultValue: 5,
+                    description: "The size of the platforms"
+                );
+
                 Input = Plugin.configFile.Bind(
                     section: DisplayName,
                     key: "input",
@@ -158,20 +281,31 @@ namespace Bark.Modules.Movement
                         new AcceptableValueList<string>("grip", "trigger", "stick", "a/x", "b/y")
                     )
                 );
+
+                Model = Plugin.configFile.Bind(
+                    section: DisplayName,
+                    key: "model",
+                    defaultValue: "cloud",
+                    configDescription: new ConfigDescription(
+                        "Which button you press to activate the platform",
+                        new AcceptableValueList<string>("cloud", "storm cloud", "doug", "invisible")
+                    )
+                );
+
             }
             catch (Exception e) { Logging.Exception(e); }
         }
 
         public override string GetDisplayName()
         {
-            if (xrNode == XRNode.LeftHand) return "Platforms (Left)";
-            return "Platforms (Right)";
+            return "Platforms";
         }
 
         public override string Tutorial()
         {
-            return "Press [Grip] to spawn a platform you can stand on. " +
-                "Release [Grip] to disable it.";
+
+            return $"Press [{Input.Value}] to spawn a platform you can stand on. " +
+                $"Release [{Input.Value}] to disable it.";
         }
     }
 }

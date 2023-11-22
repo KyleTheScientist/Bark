@@ -37,7 +37,6 @@ namespace Bark.Modules.Movement
         public Vector3 targetPosition;
         public static Vector3 bubbleOffset = new Vector3(0, .15f, 0);
 
-
         void Awake()
         {
             if (!bubblePrefab)
@@ -45,6 +44,12 @@ namespace Bark.Modules.Movement
                 bubblePrefab = Plugin.assetBundle.LoadAsset<GameObject>("Bubble");
             }
             NetworkPropertyHandler.Instance.OnPlayerModStatusChanged += OnPlayerModStatusChanged;
+            Patches.VRRigCachePatches.OnRigCached += OnRigCached;
+        }
+
+        private void OnRigCached(Player player, VRRig rig)
+        {
+            rig?.gameObject?.GetComponent<BubbleMarker>()?.Obliterate();
         }
 
         void OnPlayerModStatusChanged(NetworkPlayer player, string mod, bool enabled)

@@ -11,11 +11,6 @@ namespace Bark.Modules.Movement
         public static readonly string DisplayName = "Airplane";
         float speedScale = 10f, acceleration = .1f;
 
-        protected override void Start()
-        {
-            base.Start();
-        }
-
         void OnGlide(Vector3 direction)
         {
             if (!enabled) return;

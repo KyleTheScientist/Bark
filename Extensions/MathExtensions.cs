@@ -6,10 +6,15 @@ namespace Bark.Extensions
     {
         public static int Wrap(int x, int min, int max)
         {
-            if (x < min) x = max - (min - x) + 1;
-            if (x > max) x = min + (max - x) + 1;
-            return x;
+            int range = max - min;
+            int result = (x - min) % range;
+            if (result < 0)
+            {
+                result += range;
+            }
+            return result + min;
         }
+
 
         public static float Map(float x, float a1, float a2, float b1, float b2)
         {
