@@ -17,8 +17,7 @@ namespace Bark.Tools
             lineRenderer.startColor = color;
             lineRenderer.startWidth = .01f;
             lineRenderer.endWidth = .01f;
-            //var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            //lineRenderer.material = sphere.GetComponent<Renderer>().material;
+            lineRenderer.material = Plugin.assetBundle.LoadAsset<Material>("X-Ray Material");
             //Destroy(sphere);
         }
 

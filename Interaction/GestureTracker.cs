@@ -1,7 +1,5 @@
 ﻿using Bark.Extensions;
-using Bark.GUI;
 using Bark.Tools;
-using ExitGames.Client.Photon.StructWrapping;
 using GorillaLocomotion;
 using HarmonyLib;
 using System;
@@ -20,15 +18,15 @@ namespace Bark.Gestures
 
         public InputDevice leftController, rightController;
 
-        public InputTracker
+        public InputTracker<float>
             leftGrip, rightGrip,
-            leftTrigger, rightTrigger,
+            leftTrigger, rightTrigger;
+        public InputTracker<bool>
             leftStick, rightStick,
             leftPrimary, rightPrimary,
-            leftSecondary, rightSecondary,
-            leftVelocity, rightVelocity,
-            leftAngularVelocity, rightAngularVelocity,
-            leftRotation, rightRotation;
+            leftSecondary, rightSecondary;
+        public InputTracker<Vector2>
+            leftStickAxis, rightStickAxis;
 
         public List<InputTracker> inputs;
 
@@ -93,6 +91,9 @@ namespace Bark.Gestures
             leftStick = new InputTracker<bool>(pollerExt.Field("leftControllerStickButton"), XRNode.LeftHand);
             rightStick = new InputTracker<bool>(pollerExt.Field("rightControllerStickButton"), XRNode.RightHand);
 
+            leftStickAxis = new InputTracker<Vector2>(pollerExt.Field("leftControllerStickAxis"), XRNode.LeftHand);
+            rightStickAxis = new InputTracker<Vector2>(pollerExt.Field("rightControllerStickAxis"), XRNode.RightHand);
+
             inputs = new List<InputTracker>()
             {
                 leftGrip, rightGrip,
@@ -100,6 +101,7 @@ namespace Bark.Gestures
                 leftPrimary, rightPrimary,
                 leftSecondary, rightSecondary,
                 leftStick, rightStick,
+                leftStickAxis, rightStickAxis
             };
             BuildColliders();
             var observer = chest.AddComponent<CollisionObserver>();
@@ -109,8 +111,7 @@ namespace Bark.Gestures
         public float camOffset = -45f;
         void FixedUpdate()
         {
-
-            // If it's been more than one second since you last beat your chest, 
+            // If it's been more than one second since you last beat your chest, reset
             if (Time.time - lastBeat > 1f)
                 meatBeatCollisions.Clear();
         }
@@ -380,7 +381,7 @@ namespace Bark.Gestures
             this.node = node;
         }
 
-        public T Get()
+        public T GetValue()
         {
             return traverse.GetValue<T>();
         }
@@ -402,21 +403,22 @@ namespace Bark.Gestures
     public class ControllerInputPollerExt
     {
         public bool rightControllerStickButton, leftControllerStickButton;
+        public Vector2 rightControllerStickAxis, leftControllerStickAxis;
         public static ControllerInputPollerExt Instance;
         bool steam;
 
         public ControllerInputPollerExt()
         {
             Instance = this;
-            var platform = (string)Traverse.Create(GorillaNetworking.PlayFabAuthenticator.instance).Field("platform").GetValue();
-            steam = platform.ToLower().Contains("steam");
         }
         public void Update()
         {
-            if (steam)
+            if (Plugin.IsSteam)
             {
                 leftControllerStickButton = SteamVR_Actions.gorillaTag_LeftJoystickClick.state;
-                rightControllerStickButton = SteamVR_Actions.gorillaTag_LeftJoystickClick.state;
+                rightControllerStickButton = SteamVR_Actions.gorillaTag_RightJoystickClick.state;
+                leftControllerStickAxis = SteamVR_Actions.gorillaTag_LeftJoystick2DAxis.axis;
+                rightControllerStickAxis = SteamVR_Actions.gorillaTag_RightJoystick2DAxis.axis;
             }
             else
             {
@@ -424,7 +426,10 @@ namespace Bark.Gestures
                 var right = GestureTracker.Instance.rightController;
                 left.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out leftControllerStickButton);
                 right.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out rightControllerStickButton);
+                left.TryGetFeatureValue(CommonUsages.primary2DAxis, out leftControllerStickAxis);
+                right.TryGetFeatureValue(CommonUsages.primary2DAxis, out rightControllerStickAxis);
             }
+
         }
     }
 }

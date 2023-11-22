@@ -4,6 +4,11 @@
 
 [![Mod Showcase Link](https://img.youtube.com/vi/geyMo9pVSEE/0.jpg)](https://www.youtube.com/watch?v=geyMo9pVSEE)
 
+## Links
+
+* Discord: https://discord.com/invite/K79j2arExP
+* YouTube: https://www.youtube.com/@kylethescientist
+
 ## Features
 *Bark* has various modules that can be toggled on and off, including:
 

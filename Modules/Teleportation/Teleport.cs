@@ -113,10 +113,7 @@ namespace Bark.Modules
 
         bool TriangleInRange()
         {
-            return Vector3.Distance(
-                window.transform.position,
-                Player.Instance.headCollider.transform.position
-            ) <= .2f * Player.Instance.scale;
+            return true;
         }
 
         void RenderTriangle()
@@ -170,8 +167,8 @@ namespace Bark.Modules
         public override string Tutorial()
         {
             return
-                "To teleport, make a triangle with your thumbs and index fingers " +
-                "and hold it close to your face.";
+                "To teleport, make a triangle with your thumbs and index fingers and" +
+                "look at where you want to teleport.";
         }
 
     }

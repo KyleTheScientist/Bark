@@ -8,7 +8,6 @@ using GorillaLocomotion;
 using BepInEx.Configuration;
 using Bark.Interaction;
 using System.Collections.Generic;
-using static SizeManager;
 using Bark.Networking;
 
 namespace Bark.Modules.Physics
@@ -37,6 +36,7 @@ namespace Bark.Modules.Physics
                 bottlePrefab = Plugin.assetBundle.LoadAsset<GameObject>("Potion Bottle");
                 shrinkMaterial = Plugin.assetBundle.LoadAsset<Material>("Portal A Material");
                 growMaterial = Plugin.assetBundle.LoadAsset<Material>("Portal B Material");
+                Patches.VRRigCachePatches.OnRigCached += OnRigCached;
             }
             catch (Exception e)
             {
@@ -44,9 +44,17 @@ namespace Bark.Modules.Physics
             }
         }
 
-        protected override void Start()
+        void OnRigCached(Player player, VRRig rig)
         {
-            base.Start();
+            try
+            {
+                rig.transform.localScale = Vector3.one;
+                rig.scaleFactor = 1;
+            }
+            catch (Exception e)
+            {
+                Logging.Exception(e);
+            }
         }
 
         void Setup()
@@ -103,9 +111,14 @@ namespace Bark.Modules.Physics
 
         void DrinkPotion(SizePotion potion)
         {
-            if (potion.gameObject == growPotion && !PositionValidator.Instance.isValidAndStable) return;
-            float delta = potion.gameObject == shrinkPotion ? .99f : 1.01f;
+            bool shrink = potion.gameObject == shrinkPotion;
+            if (!shrink && !PositionValidator.Instance.isValidAndStable) return;
+            float delta = shrink ? .99f : 1.01f;
             delta = Mathf.Clamp(sizeChanger.minScale * delta, .03f, 20f);
+            if(delta < 1)
+                potion.gulp.pitch = MathExtensions.Map(Player.Instance.scale, 0, 1, 1.5f, 1);
+            else
+                potion.gulp.pitch = MathExtensions.Map(Player.Instance.scale, 1, 20, 1, .5f);
             sizeChanger.minScale = delta;
             sizeChanger.maxScale = delta;
             active = true;
@@ -136,7 +149,7 @@ namespace Bark.Modules.Physics
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            foreach (VRRig rig in FindObjectsOfType<VRRig>())
+            foreach (VRRig rig in GorillaParent.instance.vrrigs)
             {
                 try
                 {
@@ -244,25 +257,35 @@ namespace Bark.Modules.Physics
         Vector3 corkOffset, corkScale;
         Cork cork;
         ParticleSystem drip;
+        public AudioSource gulp;
         public Action<SizePotion> OnDrink;
 
         protected override void Awake()
         {
-            base.Awake();
-            cork = this.transform.Find("Cork").gameObject.AddComponent<Cork>();
-            cork.enabled = false;
-            drip = this.transform.Find("Drip").GetComponent<ParticleSystem>();
             try
             {
-                drip.gameObject.GetComponent<ParticleSystemRenderer>().material =
-                    this.GetComponent<Renderer>().material;
+                base.Awake();
+                gulp = this.GetComponent<AudioSource>();
+                cork = this.transform.Find("Cork").gameObject.AddComponent<Cork>();
+                cork.enabled = false;
+                drip = this.transform.Find("Drip").GetComponent<ParticleSystem>();
+                try
+                {
+                    drip.gameObject.GetComponent<ParticleSystemRenderer>().material =
+                        this.GetComponent<Renderer>().material;
+                }
+                catch (Exception e) { Logging.Exception(e); }
+                corkOffset = cork.transform.localPosition;
+                corkScale = cork.transform.localScale;
+                this.LocalPosition = new Vector3(0.55f, 0, 0.425f);
+                this.LocalRotation = new Vector3(8, 0, 0);
+                this.throwOnDetach = false;
+                this.OnSelectExit += (_, __) =>
+                {
+                    gulp.Stop();
+                };
             }
             catch (Exception e) { Logging.Exception(e); }
-            corkOffset = cork.transform.localPosition;
-            corkScale = cork.transform.localScale;
-            this.LocalPosition = new Vector3(0.55f, 0, 0.425f);
-            this.LocalRotation = new Vector3(8, 0, 0);
-            this.throwOnDetach = false;
         }
 
         bool isFlipped, wasFlipped, inRange;
@@ -291,13 +314,16 @@ namespace Bark.Modules.Physics
                 Vector3 delta = bottlePosition - mouthPosition;
                 inRange = Vector3.Dot(delta, Vector3.up) > 0f && delta.magnitude < range * Player.Instance.scale;
                 if (isFlipped && inRange)
+                {
+                    if(!gulp.isPlaying)
+                        gulp.Play();
                     OnDrink?.Invoke(this);
-                //Logging.Debugger(
-                //    "isFlipped:", Vector3.Dot(transform.up, Vector3.down),
-                //    "atOrAboveHead:", Vector3.Dot(delta, Vector3.up),
-                //    "Distance:", delta.magnitude,
-                //    "inRange:", inRange
-                //);
+                }
+                else
+                {
+                    if(gulp.isPlaying)
+                        gulp.Stop();
+                }
             }
             catch (Exception e)
             {

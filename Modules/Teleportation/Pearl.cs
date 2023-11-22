@@ -7,6 +7,7 @@ using Bark.Extensions;
 using GorillaLocomotion;
 using BepInEx.Configuration;
 using Bark.Interaction;
+using Bark.Patches;
 
 namespace Bark.Modules.Teleportation
 {
@@ -22,7 +23,7 @@ namespace Bark.Modules.Teleportation
             try
             {
                 Instance = this;
-                pearlPrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                pearlPrefab = Plugin.assetBundle.LoadAsset<GameObject>("Pearl");
             }
             catch (Exception e)
             {
@@ -39,7 +40,7 @@ namespace Bark.Modules.Teleportation
         {
             try
             {
-                pearl = SetupPearl(Instantiate(pearlPrefab), true);
+                pearl = SetupPearl(Instantiate(pearlPrefab), false);
                 ReloadConfiguration();
             }
             catch (Exception e)
@@ -48,14 +49,12 @@ namespace Bark.Modules.Teleportation
             }
         }
 
-        ThrowablePearl SetupPearl(GameObject rocketObj, bool isLeft)
+        ThrowablePearl SetupPearl(GameObject pearlObj, bool isLeft)
         {
             try
             {
-                rocketObj.name = "Bark Pearl";
-                var pearl = rocketObj.AddComponent<ThrowablePearl>();
-                pearl.LocalPosition = new Vector3(0.51f, 0, 0f);
-                //pearl.LocalRotation = new Vector3(0, 0, -90);
+                pearlObj.name = "Bark Pearl";
+                var pearl = pearlObj.AddComponent<ThrowablePearl>();
                 return pearl;
             }
             catch (Exception e)
@@ -81,18 +80,19 @@ namespace Bark.Modules.Teleportation
             Setup();
         }
 
-        public static ConfigEntry<int> Power;
         protected override void ReloadConfiguration()
         {
+            pearl.throwForceMultiplier = (ThrowForce.Value);
         }
 
+        public static ConfigEntry<int> ThrowForce;
         public static void BindConfigEntries()
         {
-            Power = Plugin.configFile.Bind(
+            ThrowForce = Plugin.configFile.Bind(
                 section: DisplayName,
-                key: "power",
+                key: "throw force",
                 defaultValue: 5,
-                description: "The power of each rocket"
+                description: "How much to multiply the throw speed by on release"
             );
         }
 
@@ -103,7 +103,7 @@ namespace Bark.Modules.Teleportation
 
         public override string Tutorial()
         {
-            return $"Hold either [Grip] to summon a rocket.";
+            return $"Hold either [Grip] to summon a pearl. Throw it and you will to teleport where it lands.";
 
         }
     }
@@ -111,33 +111,89 @@ namespace Bark.Modules.Teleportation
     public class ThrowablePearl : BarkGrabbable
     {
         GestureTracker gt;
-
+        Rigidbody rigidbody;
+        AudioSource audioSource;
+        LayerMask mask;
+        bool thrown = false;
+        Material monkeMat, trailMat;
+        VRRig playerRig;
+        ParticleSystem trail;
         protected override void Awake()
         {
-            base.Awake();
-            this.throwOnDetach = true;
-            gameObject.layer = BarkInteractor.InteractionLayer;
-            var rb = gameObject.AddComponent<Rigidbody>();
-            rb.useGravity = true;
-            gt = GestureTracker.Instance;
-            gt.leftGrip.OnPressed += Attach;
-            gt.rightGrip.OnPressed += Attach;
+            try
+            {
+                base.Awake();
+                this.throwOnDetach = true;
+                this.throwForceMultiplier = 5;
+                this.LocalRotation = new Vector3(0, -90f, 0);
+                this.LocalPosition = Vector3.right * .8f;
+                this.monkeMat = GetComponentInChildren<SkinnedMeshRenderer>().material;
+                this.trailMat = GetComponentInChildren<ParticleSystemRenderer>().material;
+                this.trail = GetComponentInChildren<ParticleSystem>();
+                gameObject.layer = BarkInteractor.InteractionLayer;
+                rigidbody = gameObject.GetOrAddComponent<Rigidbody>();
+                rigidbody.useGravity = true;
+                gt = GestureTracker.Instance;
+                gt.rightGrip.OnPressed += Attach;
+                gt.leftGrip.OnPressed += Attach;
+                mask = Player.Instance.locomotionEnabledLayers;
+                audioSource = gameObject.GetComponent<AudioSource>();
+                playerRig = GorillaTagger.Instance.offlineVRRig;
+            }
+            catch (Exception e)
+            {
+                Logging.Exception(e);
+            }
         }
 
         void Attach(InputTracker tracker)
         {
-            var parent = (tracker == gt.leftGrip ? gt.leftPalmInteractor : gt.rightPalmInteractor);
-            if (!this.CanBeSelected(parent)) return;
-            this.transform.parent = null;
-            this.transform.localScale = Vector3.one * Player.Instance.scale * .1f;
-            parent.Select(this);
+            try
+            {
+                bool isLeft = (tracker == gt.leftGrip);
+                var parent = isLeft ? gt.leftPalmInteractor : gt.rightPalmInteractor;
+                if (!this.CanBeSelected(parent)) return;
+                float dir = isLeft ? 1 : -1;
+                this.transform.parent = null;
+                this.transform.localScale = Vector3.one * Player.Instance.scale * .1f;
+                this.LocalRotation = new Vector3(0, 90f * dir, 0);
+                parent.Select(this);
+
+                monkeMat.color = playerRig.playerColor;
+                trailMat.color = playerRig.playerColor;
+                trail.Stop();
+                Sounds.Play(Sounds.Sound.crystalhandtap, .05f);
+            }
+            catch (Exception e)
+            {
+                Logging.Exception(e);
+            }
         }
 
-        //public override void OnDeselect(BarkInteractor interactor)
-        //{
-        //    base.OnDeselect(interactor);
+        Ray ray = new Ray();
+        void FixedUpdate()
+        {
+            if (!thrown) return;
+            ray.origin = this.transform.position;
+            ray.direction = this.rigidbody.velocity;
+            RaycastHit hit;
+            UnityEngine.Physics.Raycast(ray, out hit, ray.direction.magnitude, mask);
 
-        //}
+            if (hit.collider != null)
+            {
+                TeleportPatch.TeleportPlayer(hit.point + hit.normal * Player.Instance.scale / 2f);
+                audioSource.Play();
+                thrown = false;
+            }
+        }
+
+        public override void OnDeselect(BarkInteractor interactor)
+        {
+            base.OnDeselect(interactor);
+            this.thrown = true;
+            trail.Play();
+
+        }
 
         public void SetupInteraction()
         {

@@ -2,7 +2,6 @@
 using Bark.Gestures;
 using Bark.GUI;
 using Bark.Tools;
-using BepInEx.Configuration;
 using GorillaLocomotion;
 using System;
 using System.Collections.Generic;
@@ -16,6 +15,8 @@ namespace Bark.Modules.Multiplayer
         public static Telekinesis Instance;
         private List<TKMarker> markers = new List<TKMarker>();
         public SphereCollider tkCollider;
+        ParticleSystem playerParticles, sithlordHandParticles;
+        AudioSource sfx;
         TKMarker sithLord;
         void Awake() { Instance = this; }
 
@@ -26,15 +27,27 @@ namespace Bark.Modules.Multiplayer
             try
             {
                 ReloadConfiguration();
-                var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere.name = "BarkTKDetector";
-                sphere.transform.SetParent(Player.Instance.bodyCollider.transform, false);
-                sphere.layer = BarkInteractor.InteractionLayer;
-                sphere.GetComponent<MeshRenderer>().enabled = false;
-
-                tkCollider = sphere.GetComponent<SphereCollider>();
+                var prefab = Plugin.assetBundle.LoadAsset<GameObject>("TK Hitbox");
+                var hitbox = Instantiate(prefab);
+                hitbox.name = "Bark TK Hitbox";
+                hitbox.transform.SetParent(Player.Instance.bodyCollider.transform, false);
+                hitbox.layer = BarkInteractor.InteractionLayer;
+                tkCollider = hitbox.GetComponent<SphereCollider>();
                 tkCollider.isTrigger = true;
+                playerParticles = hitbox.GetComponent<ParticleSystem>();
+                playerParticles.Stop();
+                playerParticles.Clear();
+                sfx = hitbox.GetComponent<AudioSource>();
 
+                var sithlordEffect = Instantiate(prefab);
+                sithlordEffect.name = "Bark Sithlord Particles";
+                sithlordEffect.transform.SetParent(Player.Instance.bodyCollider.transform, false);
+                sithlordEffect.layer = BarkInteractor.InteractionLayer;
+                sithlordHandParticles = sithlordEffect.GetComponent<ParticleSystem>();
+                var shape = sithlordHandParticles.shape;
+                shape.radius = .2f;
+                shape.position = Vector3.zero;
+                Destroy(sithlordEffect.GetComponent<SphereCollider>());
                 DistributeMidichlorians();
             }
             catch (Exception e)
@@ -56,14 +69,18 @@ namespace Bark.Modules.Multiplayer
                 if (!sithLord.IsGripping())
                 {
                     sithLord = null;
-                    rb.velocity *= 3f;
+                    sfx.Stop();
+                    sithlordHandParticles.Stop();
+                    sithlordHandParticles.Clear();
+                    playerParticles.Stop();
+                    playerParticles.Clear();
                     return;
                 }
 
                 Vector3 end = sithLord.controllingHand.position + sithLord.controllingHand.up * 3 * sithLord.rig.scaleFactor;
                 Vector3 direction = end - Player.Instance.bodyCollider.transform.position;
-                rb.AddForce(direction * 3, ForceMode.Impulse);
-                float dampingThreshold = direction.magnitude * 6;
+                rb.AddForce(direction * 10, ForceMode.Impulse);
+                float dampingThreshold = direction.magnitude * 20;
                 if (rb.velocity.magnitude > dampingThreshold)
                     rb.velocity = rb.velocity.normalized * dampingThreshold;
             }
@@ -74,10 +91,22 @@ namespace Bark.Modules.Multiplayer
         {
             foreach (var tk in markers)
             {
-                if (tk.IsGripping() && tk.PointingAtMe())
+                try
                 {
-                    sithLord = tk;
-                    break;
+                    if (tk && tk.IsGripping() && tk.PointingAtMe())
+                    {
+                        sithLord = tk;
+                        playerParticles.Play();
+                        sithlordHandParticles.transform.SetParent(tk.controllingHand);
+                        sithlordHandParticles.transform.localPosition = Vector3.zero;
+                        sithlordHandParticles.Play();
+                        sfx.Play();
+                        break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logging.Exception(e);
                 }
             }
         }
@@ -107,7 +136,8 @@ namespace Bark.Modules.Multiplayer
             {
                 m?.Obliterate();
             }
-            tkCollider?.gameObject.Obliterate();
+            tkCollider?.gameObject?.Obliterate();
+            sithlordHandParticles?.gameObject?.Obliterate();
             joint?.Obliterate();
             sithLord = null;
             markers.Clear();
@@ -180,6 +210,7 @@ namespace Bark.Modules.Multiplayer
                     if (!controllingBody) return false;
                     RaycastHit hit;
                     Ray ray = new Ray(hand.position, hand.up);
+                    Logging.Debug("DOING THE THING WITH THE COLLIDER");
                     var collider = Instance.tkCollider;
                     UnityEngine.Physics.SphereCast(ray, .2f * Player.Instance.scale, out hit, collider.gameObject.layer);
                     return hit.collider == collider;

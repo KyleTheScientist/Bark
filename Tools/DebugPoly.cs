@@ -23,7 +23,7 @@ namespace Bark.Tools
                 GameObject polygon = new GameObject("Debug Polygon");
                 polygon.transform.parent = this.transform;
                 renderer = polygon.AddComponent<MeshRenderer>();
-                renderer.material = Plugin.assetBundle.LoadAsset<Material>("Platform Material");
+                renderer.material = Plugin.assetBundle.LoadAsset<Material>("Cloud Material");
                 renderer.material.color = new Color(1, 1, 1, .1f);
                 // Add a mesh filter component and set the mesh to the one we just created
                 MeshFilter filter = polygon.AddComponent<MeshFilter>();

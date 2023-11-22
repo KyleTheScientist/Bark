@@ -1,19 +1,64 @@
 # CHANGELOG.md
 
+## 1.5.0 (2023-November-11) - The Settings Update
+
+### Features
+- Added a **built-in settings menu** that will let you modify the settings for each mod
+- Added the **Fly** module which is a really simple stick-driven fly mechanic
+- Added the **Pearl** module which allows you to throw ender pearls and warp to them
+- Added the **Nail Gun** module which allows you to fire nails into walls that you can climb with [Grip]
+- Added the **Halo** module which is a secret module that only I, KyleTheScientist, can activate. If you see it, you'll know it's really me.
+- Added new config options: 
+    - Platforms
+        - `Model` - You can now choose between **3 new platform models**:
+            - `Storm Cloud` - Makes the clouds dark and adds a rain particle effect
+            - `Invisible` - Invisible platform models
+            - `Doug` - Two Doug the Bug's to walk on
+    - Fly
+        - `Speed` - The top speed of the fly module
+        - `Acceleration` - The amount of easing that occurs before reaching top speed
+    - Pearl
+        - `Throw Force` - How much to multiply the pearl's speed by on release
+    - Nail Gun
+        - `Max Nail` - Maximum number of nails that can exist at one time (multiplied by 4)
+        - `Nailgun Hand` - Which hand holds the nail gun
+    - Rockets
+        - `Thruster Volume` - How loud the thrusters are
+- Added a particle effect/sound when telekinesis is being used to make it more obvious who is controlling you.
+- Added a sound effect when drinking potions so you know if it's working 
+
+### Changes
+- Buttons are now a little darker to prevent blindness.
+- **Platforms** is now a single mod.
+- Reworked the whole interaction system *again*.
+- Cloud platforms no longer fade while sticky and active.
+- **Boxing** is now 5 times stronger by default.
+- **Telekinesis** is now more responsive.
+- **No Collide** now enables **Fly** instead of **Platforms** when it is turned on. It also turns **Fly** off now when disabled.
+- **Teleport** no longer requires the triangle to be near your head to teleport.
+
+
+## Fixes
+- Setting [Right Stick] as an input setting no longer binds it to [Left Stick] instead.
+- Fixed bug where various mods would render on other players even if they didn't have the mod active.
+- Sticky platforms should no longer teleport you out of the map.
+- Keyboard keys can no longer be pressed while **No Collide** is active.
+
 ## 1.4.0 (2023-October-30) - The Potions Update
 
 Features
 - Added the **Potions** module which allows players to change their player size by drinking potions.
 - Added the **Rockets** module which allows you to spawn rockets that you can fly around with.
 - Added new config options: 
-	- Potions
-		- `Show Networked Size` - Whether or not to show other players' sizes
-	- Rockets
-		- `Power` - How fast the rockets accelerate you
-	
+    - Potions
+        - `Show Networked Size` - Whether or not to show other players' sizes
+    - Rockets
+        - `Power` - How fast the rockets accelerate you
 
 Changes
-- Bubble is now networked, so other players can see your bubble- New bubble material- X-ray material is now significantly improved
+- Bubble is now networked, so other players can see your bubble
+- New bubble material
+- X-ray material is now significantly improved
 - Boxing now plays a sound when you get punched
 - Reworked the entire internal grab interaction system because Unity can eat a d***
 - Zipline is now bound to trigger by default so it can be used with rockets
@@ -34,17 +79,17 @@ Fixes
 Features
 - Added the **Zipline** which gives the player a cannon that fires ziplines. Press [Grip] to spawn the cannon and [Trigger] to fire.
 - Added new config options: 
-	- Zipline
-		- `Max Ziplines` - How many ziplines can exist on screen at once
-		- `Launcher Hand` - Which hand the launcher spawns in
-		- `Gravity Multiplier` - How fast you accelerate downwards while riding on the zipline
-	- Bubble
-		-  `Bubble Size` - The size of the bubble's hitbox
-		-  `Bubble Speed` - The speed that the bubble gains when you punch it
-	- Checkpoint
-		-  `Charge Time` - How long it takes to set and return to the checkpoint
-	- Teleport
-		-  `Charge Time` - How long it takes to charge the teleport
+    - Zipline
+        - `Max Ziplines` - How many ziplines can exist on screen at once
+        - `Launcher Hand` - Which hand the launcher spawns in
+        - `Gravity Multiplier` - How fast you accelerate downwards while riding on the zipline
+    - Bubble
+        -  `Bubble Size` - The size of the bubble's hitbox
+        -  `Bubble Speed` - The speed that the bubble gains when you punch it
+    - Checkpoint
+        -  `Charge Time` - How long it takes to set and return to the checkpoint
+    - Teleport
+        -  `Charge Time` - How long it takes to charge the teleport
 
 Changes
 - Going forward there will be 2 releases for Bark; One with and one without the Computer Interface dependency. This way players
@@ -77,26 +122,26 @@ Features
 - Added the **Telekinesis** module which allows players to pick you and throw you
   with The Force!
 - Added configurable settings for a handful of mods
-	- General
-		- `Open menu` - Which button you press to open the menu
-		- `Open hand` - Which hand's buttons can open the menu
-	- Airplane
-		- `Speed` - How fast you fly
-		- `Steer with` - Whether you steer with your wrists or head
-	- Boxing
-		- `Punch force` - How far you'll fly when people punch you
-	- Grappling Hooks
-		- `Rope type` - Whether the rope will pull you or stay at the same length
-		- `Springiness` - If rope type is set to elastic, how springy the ropes are
-		- `Steering` - How much influence you have on your velocity while swinging
-		- `Max length` - How far the grappling hooks can reach
-	- Gravity
-		- `Multiplier` - How strong gravity will be while the module is active
-	- Platforms
-		- `Sticky` - Whether or not your hands stick to the platforms
-		- `Input` - Which button you press to activate the platform
-	- Speed Boost
-		- `Speed` - How fast you run while the module is active
+    - General
+        - `Open menu` - Which button you press to open the menu
+        - `Open hand` - Which hand's buttons can open the menu
+    - Airplane
+        - `Speed` - How fast you fly
+        - `Steer with` - Whether you steer with your wrists or head
+    - Boxing
+        - `Punch force` - How far you'll fly when people punch you
+    - Grappling Hooks
+        - `Rope type` - Whether the rope will pull you or stay at the same length
+        - `Springiness` - If rope type is set to elastic, how springy the ropes are
+        - `Steering` - How much influence you have on your velocity while swinging
+        - `Max length` - How far the grappling hooks can reach
+    - Gravity
+        - `Multiplier` - How strong gravity will be while the module is active
+    - Platforms
+        - `Sticky` - Whether or not your hands stick to the platforms
+        - `Input` - Which button you press to activate the platform
+    - Speed Boost
+        - `Speed` - How fast you run while the module is active
 
 Changes
 - Renamed `Speed` to `Speed Boost`
@@ -114,18 +159,18 @@ Fixes
 
 Features
 - Added the **Wall Run** module
-	- This module allows you to seamlessly transition between walking on the floor to walls and ceilings.
+    - This module allows you to seamlessly transition between walking on the floor to walls and ceilings.
 - Added the **Slippery Hands** module
-	- This module makes every surface slippery like ice. You can ski anywhere!
+    - This module makes every surface slippery like ice. You can ski anywhere!
 - Added the **No Slip** module
-	- This module disables all sliding (I already had the opposite made so why not just invert it?).
+    - This module disables all sliding (I already had the opposite made so why not just invert it?).
 - Added the **Freeze** module
-	- This mod freezes your player in place, essentially disabling physics for your body. Good for setting up camera angles, or just taking a breather!
+    - This mod freezes your player in place, essentially disabling physics for your body. Good for setting up camera angles, or just taking a breather!
 
 Changes
 - **All new look!**
-	- Prettied up the menu a little and moved the help text to the side for easier reading.
-	- The version is now always displayed at the bottom of the screen.
+    - Prettied up the menu a little and moved the help text to the side for easier reading.
+    - The version is now always displayed at the bottom of the screen.
 - Teleport is now much more user-friendly. 
 - You can now move your head freely while using Piggyback
 - Buttons now have a short cooldown after being pressed to prevent double-tapping
@@ -155,7 +200,7 @@ Changes
 - Made Teleport a little easier to activate and improved the tutorial
 - Made the Boxing collider a little smaller
 - Palm colliders are on the rig's hands now instead of the player's actual hand locations. This may reduce misleading feedback.
-	- This might be a bad idea because of the smoothing, and I might roll this back at some point
+    - This might be a bad idea because of the smoothing, and I might roll this back at some point
 - Refactored a lot of the code for readability and consistency
 
 Fixes
@@ -198,17 +243,17 @@ Fixes
 Features
 
 * Movement
-	* Platforms (Left/Right) - Press the grip button on your controller to create a floating platform in the air that you can stand on. There's a toggle for each hand so that you can disable one if it clashes with another mod's inputs.
-	* Double Jump - Press the primary button (A) on your right controller in the air to get a boost in the direction you're looking.
-	* Airplane - This allows the player to fly around. Spread your arms out like and airplane to activate and use your wrists to steer!
-	* Speed - Significantly increases the player's movement speed
+    * Platforms (Left/Right) - Press the grip button on your controller to create a floating platform in the air that you can stand on. There's a toggle for each hand so that you can disable one if it clashes with another mod's inputs.
+    * Double Jump - Press the primary button (A) on your right controller in the air to get a boost in the direction you're looking.
+    * Airplane - This allows the player to fly around. Spread your arms out like and airplane to activate and use your wrists to steer!
+    * Speed - Significantly increases the player's movement speed
 * Physics
-	* Low Gravity - Decreases the strength of gravity
-	* No Collide - Allows the player to fall through solid objects. Enabling this automatically enables platforms so you don't fall to your death!
+    * Low Gravity - Decreases the strength of gravity
+    * No Collide - Allows the player to fall through solid objects. Enabling this automatically enables platforms so you don't fall to your death!
 * Teleportation
-	* Checkpoint - Grip the left trigger to start summoning a holographic banana above your hand. Grip the right trigger to warp back to it.
-	* Teleport - Make a triangle with your thumbs and index fingers and peer through it to initiate a teleport. Use your head to aim more finely.
+    * Checkpoint - Grip the left trigger to start summoning a holographic banana above your hand. Grip the right trigger to warp back to it.
+    * Teleport - Make a triangle with your thumbs and index fingers and peer through it to initiate a teleport. Use your head to aim more finely.
 * Interactions
-	* Boxing - Better known as "punch mod", this allows the player to be punched around by others in the lobby. You can't be punched while touching the ground.
-	* Piggyback - Allows you to ride other players! To mount someone, have them give you two-thumbs-up, and then grip their shoulder. If they give you two thumbs down at any point, you'll stop riding them. Consent is important!
-	* X-Ray - Allows you to see other players through walls.
+    * Boxing - Better known as "punch mod", this allows the player to be punched around by others in the lobby. You can't be punched while touching the ground.
+    * Piggyback - Allows you to ride other players! To mount someone, have them give you two-thumbs-up, and then grip their shoulder. If they give you two thumbs down at any point, you'll stop riding them. Consent is important!
+    * X-Ray - Allows you to see other players through walls.

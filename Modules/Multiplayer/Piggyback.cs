@@ -18,7 +18,7 @@ namespace Bark.Modules.Multiplayer
         private Transform mount;
         private VRRig mountedRig;
         private bool latchedWithLeft;
-        private const float mountDistance = 1f;
+        private const float mountDistance = 1.5f;
         private Vector3 mountOffset = new Vector3(0, .05f, -.5f);
         private Vector3 mountPosition;
 
@@ -161,9 +161,10 @@ namespace Bark.Modules.Multiplayer
             noclip.enabled = false;
         }
 
-        bool TryMount()
+        bool TryMount(bool isLeft)
         {
-            RigScanResult closest = ClosestRig(GestureTracker.Instance.rightHand.transform);
+            var hand = isLeft ? GestureTracker.Instance.leftHand : GestureTracker.Instance.rightHand;
+            RigScanResult closest = ClosestRig(hand.transform);
             if (closest.distance < mountDistance && enabled && !mounted)
             {
                 if (GivingConsent(closest.rig))
@@ -183,9 +184,9 @@ namespace Bark.Modules.Multiplayer
         void Latch(InputTracker input)
         {
             if (input.node == XRNode.LeftHand)
-                latchedWithLeft = TryMount();
+                latchedWithLeft = TryMount(true);
             else
-                latchedWithLeft = !TryMount();
+                latchedWithLeft = !TryMount(false);
         }
 
         void Unlatch(InputTracker input)

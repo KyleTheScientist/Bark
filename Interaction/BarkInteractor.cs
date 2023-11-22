@@ -4,7 +4,7 @@ using Bark.Tools;
 using Bark.Interaction;
 using System.Collections.Generic;
 using UnityEngine.XR;
-using ModestTree;
+
 
 namespace Bark.Gestures
 {
@@ -13,11 +13,12 @@ namespace Bark.Gestures
         public static string InteractionLayerName = "TransparentFX";
         public static int InteractionLayer = LayerMask.NameToLayer(InteractionLayerName);
         public static int InteractionLayerMask = LayerMask.GetMask(InteractionLayerName);
-        public List<BarkGrabbable>
-            hovered = new List<BarkGrabbable>(),
-            selected = new List<BarkGrabbable>();
+        public List<BarkInteractable>
+            hovered = new List<BarkInteractable>(),
+            selected = new List<BarkInteractable>();
         public InputDevice device;
         public XRNode node;
+        public bool IsLeft { get; protected set; }
         public bool Selecting { get; protected set; }
         public bool Activating { get; protected set; }
         public bool PrimaryPressed { get; protected set; }
@@ -31,15 +32,15 @@ namespace Bark.Gestures
         {
             try
             {
-                bool isLeft = this.name.Contains("Left");
+                IsLeft = this.name.Contains("Left");
                 this.gameObject.AddComponent<SphereCollider>().isTrigger = true;
                 this.gameObject.layer = InteractionLayer;
 
                 var gt = GestureTracker.Instance;
-                this.device = isLeft ?
+                this.device = IsLeft ?
                     gt.leftController :
                     gt.rightController;
-                this.node = isLeft ? XRNode.LeftHand : XRNode.RightHand;
+                this.node = IsLeft ? XRNode.LeftHand : XRNode.RightHand;
 
                 gt.GetInputTracker("grip", this.node).OnPressed += OnGrip;
                 gt.GetInputTracker("grip", this.node).OnReleased += OnGripRelease;
@@ -51,59 +52,50 @@ namespace Bark.Gestures
             catch (Exception e) { Logging.Exception(e); }
         }
 
-        
-
-        public void Select(BarkGrabbable grabbable)
+        public void Select(BarkInteractable interactable)
         {
-            if (!grabbable.CanBeSelected(this)) return;
-
-            // Prioritize the menu over regular grabbables
-            if (!selected.IsEmpty())
+            try
             {
-                if (grabbable == Plugin.menuController)
-                    DeselectAll();
-                else return;
+                if (!interactable.CanBeSelected(this)) return;
+                // Prioritize 
+                if (selected.Count > 0)
+                {
+                    DeselectAll(interactable.priority);
+                    if (selected.Count > 0)
+                        return;
+                }
+                interactable.OnSelect(this);
+                selected.Add(interactable);
             }
-
-            grabbable.transform.SetParent(this.transform);
-
-            if ((((uint)device.characteristics) & ((uint)InputDeviceCharacteristics.Right)) == ((uint)InputDeviceCharacteristics.Right))
-                grabbable.transform.localPosition = grabbable.MirroredLocalPosition;
-            else
-                grabbable.transform.localPosition = grabbable.LocalPosition;
-            grabbable.transform.localRotation = Quaternion.Euler(grabbable.LocalRotation);
-            grabbable.OnSelect(this);
-            selected.Add(grabbable);
+            catch (Exception e) { Logging.Exception(e); }
         }
 
-        public void Deselect(BarkGrabbable grabbable, bool inPlace = true)
+        public void Deselect(BarkInteractable interactable)
         {
-            grabbable.transform.SetParent(null);
-            if(inPlace)
-                selected.Remove(grabbable);
-            grabbable.OnDeselect(this);
+            Logging.Debug("Dropped", interactable.name, $"(priority {interactable.priority})");
+            interactable.OnDeselect(this);
         }
 
-        public void Hover(BarkGrabbable grabbable)
+        public void Hover(BarkInteractable interactable)
         {
-            hovered.Add(grabbable);
+            hovered.Add(interactable);
         }
 
         void OnGrip(InputTracker _)
         {
             if (Selecting) return;
             Selecting = true;
-            BarkGrabbable grabbed = null;
-            foreach (var grabbable in hovered)
+            BarkInteractable selected = null;
+            foreach (var interactable in hovered)
             {
-                if (grabbable.CanBeSelected(this))
+                if (interactable.CanBeSelected(this))
                 {
-                    grabbed = grabbable;
+                    selected = interactable;
                     break;
                 }
             }
-            if (!grabbed) return;
-            Select(grabbed);
+            if (!selected) return;
+            Select(selected);
         }
 
         void OnGripRelease(InputTracker _)
@@ -113,18 +105,23 @@ namespace Bark.Gestures
             DeselectAll();
         }
 
-        void DeselectAll()
+        void DeselectAll(int competingPriority = -1)
         {
-            foreach (var grabbable in selected)
-                Deselect(grabbable, inPlace: false);
+            foreach (var interactable in selected)
+            {
+                if (competingPriority < 0 || interactable.priority < competingPriority)
+                {
+                    Deselect(interactable);
+                }
+            }
             selected.RemoveAll(g => !g.selectors.Contains(this));
         }
 
         void OnTrigger(InputTracker _)
         {
             Activating = true;
-            foreach (var grabbable in selected)
-                grabbable.OnActivate(this);
+            foreach (var interactable in selected)
+                interactable.OnActivate(this);
         }
 
         void OnTriggerRelease(InputTracker _)

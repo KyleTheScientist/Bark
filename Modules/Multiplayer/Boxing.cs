@@ -183,13 +183,9 @@ namespace Bark.Modules.Multiplayer
         {
             if (Time.time - lastPunch < 1) return;
             Vector3 force = glove.velocity.linearVelocity;
-            Logging.Debug("Raw Force", force.magnitude);
             if (force.magnitude < .5f * Player.Instance.scale) return;
-            if (force.magnitude > 5)
-                force.Normalize();
+            force.Normalize();
             force *= forceMultiplier;
-            Logging.Debug("Force multiplier", forceMultiplier);
-            Logging.Debug("Actual Force", force.magnitude);
             Player.Instance.bodyCollider.attachedRigidbody.velocity += force;
             lastPunch = Time.time;
             GestureTracker.Instance.HapticPulse(false);
@@ -201,7 +197,7 @@ namespace Bark.Modules.Multiplayer
 
         protected override void ReloadConfiguration()
         {
-            forceMultiplier = (PunchForce.Value);
+            forceMultiplier = (PunchForce.Value) * 5;
         }
 
         public static ConfigEntry<int> PunchForce;

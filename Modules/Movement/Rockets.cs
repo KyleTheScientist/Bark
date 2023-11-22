@@ -93,13 +93,15 @@ namespace Bark.Modules.Movement
         }
 
         public static ConfigEntry<int> Power;
+        public static ConfigEntry<int> Volume;
         protected override void ReloadConfiguration()
         {
-            var guns = new Rocket[] { rocketL?.GetComponent<Rocket>(), rocketR?.GetComponent<Rocket>() };
-            foreach (var gun in guns)
+            var rockets = new Rocket[] { rocketL?.GetComponent<Rocket>(), rocketR?.GetComponent<Rocket>() };
+            foreach (var rocket in rockets)
             {
-                if (!gun) continue;
-                gun.power = Power.Value * 2f;
+                if (!rocket) continue;
+                rocket.power = Power.Value * 2f;
+                rocket.volume = MathExtensions.Map(Volume.Value, 0, 10, 0, 1);
             }
         }
 
@@ -110,6 +112,13 @@ namespace Bark.Modules.Movement
                 key: "power",
                 defaultValue: 5,
                 description: "The power of each rocket"
+            );
+
+            Volume = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "thruster volume",
+                defaultValue: 10,
+                description: "How loud the thrusters sound"
             );
         }
 
@@ -127,12 +136,12 @@ namespace Bark.Modules.Movement
 
     public class Rocket : BarkGrabbable
     {
-        public float power = 5f;
+        public float power = 5f, volume = .2f;
         public Vector3 force { get; private set; }
         bool isLeft;
         GestureTracker gt;
         Rigidbody rb;
-        AudioSource exhaustSound;
+        public AudioSource exhaustSound;
 
         protected override void Awake()
         {
@@ -161,6 +170,7 @@ namespace Bark.Modules.Movement
             this.transform.parent = null;
             this.transform.localScale = Vector3.one * Player.Instance.scale;
             parent.Select(this);
+            exhaustSound.Stop();
             exhaustSound.time = Random.Range(0, exhaustSound.clip.length);
             exhaustSound.Play();
         }
@@ -180,7 +190,7 @@ namespace Bark.Modules.Movement
             this.exhaustSound.volume = Mathf.Lerp(.5f, 0, Vector3.Distance(
                 player.headCollider.transform.position, 
                 transform.position
-            ) / 20f);
+            ) / 20f) * volume;
         }
 
         public override void OnDeselect(BarkInteractor interactor)

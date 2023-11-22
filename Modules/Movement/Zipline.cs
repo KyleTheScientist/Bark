@@ -101,7 +101,7 @@ namespace Bark.Modules.Movement
 
             ziplines[nextZipline]?.Obliterate();
             ziplines[nextZipline] = MakeZipline();
-            nextZipline = MathExtensions.Wrap(nextZipline + 1, 0, ziplines.Length - 1);
+            nextZipline = MathExtensions.Wrap(nextZipline + 1, 0, ziplines.Length);
             gunStartHook.SetActive(false);
             gunEndHook.SetActive(false);
             HideLauncher();

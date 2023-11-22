@@ -20,10 +20,11 @@ namespace Bark.Patches
             {
                 if (Potions.active && t == Camera.main.transform)
                     __result = Potions.sizeChanger;
-                else if 
+                else if
                 (
+                    !(Potions.ShowNetworkedSizes is null) &&
                     Potions.ShowNetworkedSizes.Value &&
-                    t.GetComponentInParent<VRRig>() is VRRig rig && 
+                    t.GetComponentInParent<VRRig>() is VRRig rig &&
                     rig.ModuleEnabled(Potions.DisplayName)
                 )
                 {

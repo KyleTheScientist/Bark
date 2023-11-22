@@ -30,10 +30,10 @@ namespace Bark.Networking
             if (changedProps.ContainsKey(BarkModule.enabledModulesKey))
             {
                 var enabledModules = (Dictionary<string, bool>)changedProps[BarkModule.enabledModulesKey];
-                Logging.Debug(targetPlayer.NickName, "toggled mods:");
+                //Logging.Debug(targetPlayer.NickName, "toggled mods:");
                 foreach (var mod in enabledModules)
                 {
-                    Logging.Debug(mod.Value ? "  +" : "  -", mod.Key, mod.Value);
+                    //Logging.Debug(mod.Value ? "  +" : "  -", mod.Key, mod.Value);
                     OnPlayerModStatusChanged?.Invoke(targetPlayer, mod.Key, mod.Value);
                 }
             }

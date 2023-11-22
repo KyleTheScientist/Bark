@@ -66,7 +66,7 @@ namespace Bark.Extensions
 
         public static VRRig Rig(this Photon.Realtime.Player player)
         {
-            foreach (var rig in GameObject.FindObjectsOfType<VRRig>())
+            foreach (var rig in GorillaParent.instance.vrrigs)
             {
                 if (rig?.PhotonView()?.Owner == player)
                     return rig;
