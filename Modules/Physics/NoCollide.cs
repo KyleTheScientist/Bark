@@ -99,7 +99,7 @@ namespace Bark.Modules.Physics
 
         public override string Tutorial()
         {
-            return "Effect: Disables collisions. Automatically enables platforms.";
+            return "Effect: Disables collisions. Automatically enables Fly (Use the sticks to move).";
         }
 
     }

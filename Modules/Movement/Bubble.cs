@@ -186,7 +186,7 @@ namespace Bark.Modules.Movement
         public override string Tutorial()
         {
             return "Creates a bubble around you so you can float. " +
-                "Punch the sides to move around";
+                "Tap the side that you want to move towards to move.";
         }
     }
 }

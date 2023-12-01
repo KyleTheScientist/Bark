@@ -8,6 +8,7 @@ using UnityEngine.XR;
 using Bark.Extensions;
 using Bark.Tools;
 using System;
+using Bark.Networking;
 
 namespace Bark.Modules.Multiplayer
 {
@@ -115,34 +116,32 @@ namespace Bark.Modules.Multiplayer
 
         bool GivingConsent(VRRig rig)
         {
+            var np = rig.GetComponent<NetworkedPlayer>();
             return
-
-                    rig.rightIndex.calcT > .5f &&
-                    rig.rightMiddle.calcT > .5f &&
-                    rig.rightThumb.calcT < .25f &&
-                    Vector3.Dot(Vector3.up, rig.leftHandTransform.forward) > 0
-
-                ||
-
-                    rig.leftIndex.calcT > .5f &&
-                    rig.leftMiddle.calcT > .5f &&
-                    rig.leftThumb.calcT < .25f &&
+                    np.RightTriggerPressed &&
+                    np.RightGripPressed &&
+                    np.RightThumbAmount < .25f &&
                     Vector3.Dot(Vector3.up, rig.rightHandTransform.forward) > 0
-
+                ||
+                    np.LeftTriggerPressed &&
+                    np.LeftGripPressed &&
+                    np.LeftThumbAmount < .25f &&
+                    Vector3.Dot(Vector3.up, rig.leftHandTransform.forward) > 0
             ;
         }
 
         bool RevokingConsent(VRRig rig)
         {
+            var np = rig.GetComponent<NetworkedPlayer>();
             return
-                    rig.rightIndex.calcT > .5f &&
-                    rig.rightMiddle.calcT > .5f &&
-                    rig.rightThumb.calcT < .25f &&
+                    np.RightTriggerPressed &&
+                    np.RightGripPressed &&
+                    np.RightThumbAmount < .25f &&
                     Vector3.Dot(Vector3.down, rig.rightHandTransform.forward) > 0
                 ||
-                    rig.leftIndex.calcT > .5f &&
-                    rig.leftMiddle.calcT > .5f &&
-                    rig.leftThumb.calcT < .25f &&
+                    np.LeftTriggerPressed &&
+                    np.LeftGripPressed &&
+                    np.LeftThumbAmount < .25f &&
                     Vector3.Dot(Vector3.down, rig.leftHandTransform.forward) > 0
             ;
         }

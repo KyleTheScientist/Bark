@@ -80,6 +80,7 @@ namespace Bark.GUI
                     gameObject.AddComponent<Boxing>(),
                     gameObject.AddComponent<Piggyback>(),
                     gameObject.AddComponent<Telekinesis>(),
+                    gameObject.AddComponent<Fireflies>(),
                     gameObject.AddComponent<XRay>(),
                 };
 

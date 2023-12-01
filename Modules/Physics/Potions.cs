@@ -165,12 +165,10 @@ namespace Bark.Modules.Physics
                     if (manager.myType != SizeManager.SizeChangerType.LocalOffline)
                     {
                         var t = manager.targetRig?.transform;
-                        Logging.Debug($"Resizing {manager.name}");
                         if (!t) continue;
                         float scale = manager.ScaleFromChanger(manager.ControllingChanger(t), t);
                         t.localScale = Vector3.one * scale;
                         manager.targetRig.scaleFactor = scale;
-                        Logging.Debug($"Resized {t.name} to {t.localScale}");
                         NetworkPropertyHandler.Instance?.ChangeProperty(playerSizeKey, Player.Instance.scale);
                     }
                     else

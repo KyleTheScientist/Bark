@@ -49,7 +49,7 @@ namespace Bark.Modules.Movement
 
         public override string Tutorial()
         {
-            return "Use left stick to fly on the horizontally, and right stick to fly vertically.";
+            return "Use left stick to fly horizontally, and right stick to fly vertically.";
         }
 
         protected override void OnEnable()

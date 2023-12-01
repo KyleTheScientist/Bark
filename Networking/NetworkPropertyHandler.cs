@@ -6,6 +6,9 @@ using Photon.Realtime;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Bark.Extensions;
+using System.Collections;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 namespace Bark.Networking
 {
@@ -16,11 +19,21 @@ namespace Bark.Networking
         public static string versionKey = "BarkVersion";
         public Action<Player> OnPlayerJoined, OnPlayerLeft;
         public Action<Player, string, bool> OnPlayerModStatusChanged;
+        public Dictionary<Player, NetworkedPlayer> networkedPlayers = new Dictionary<Player, NetworkedPlayer>();
 
         void Awake()
         {
             Instance = this;
             ChangeProperty(versionKey, PluginInfo.Version);
+        }
+
+        void Start()
+        {
+            Logging.Debug("Found", GorillaParent.instance.vrrigs.Count, "vrrigs and ", PhotonNetwork.PlayerList.Length, "players.");
+            foreach (var player in PhotonNetwork.PlayerList)
+            {
+                StartCoroutine(CreateNetworkedPlayer(player));
+            }
         }
 
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
@@ -29,6 +42,7 @@ namespace Bark.Networking
             if (targetPlayer == PhotonNetwork.LocalPlayer) return;
             if (changedProps.ContainsKey(BarkModule.enabledModulesKey))
             {
+                networkedPlayers[targetPlayer].hasBark = true;
                 var enabledModules = (Dictionary<string, bool>)changedProps[BarkModule.enabledModulesKey];
                 //Logging.Debug(targetPlayer.NickName, "toggled mods:");
                 foreach (var mod in enabledModules)
@@ -43,12 +57,47 @@ namespace Bark.Networking
         {
             base.OnPlayerLeftRoom(otherPlayer);
             OnPlayerLeft?.Invoke(otherPlayer);
+            if (networkedPlayers.ContainsKey(otherPlayer))
+            {
+                Destroy(networkedPlayers[otherPlayer]);
+                networkedPlayers.Remove(otherPlayer);
+            }
         }
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
-            base.OnPlayerEnteredRoom(newPlayer);
-            OnPlayerJoined?.Invoke(newPlayer);
+            try
+            {
+                base.OnPlayerEnteredRoom(newPlayer);
+                OnPlayerJoined?.Invoke(newPlayer);
+                StartCoroutine(CreateNetworkedPlayer(newPlayer));
+            }
+            catch (Exception e) { Logging.Exception(e); }
+        }
+
+        IEnumerator CreateNetworkedPlayer(Player player = null, VRRig rig = null)
+        {
+            if (player is null && rig is null)
+                throw new Exception("Both player and rig are null");
+
+            if (player is null)
+                player = rig.myPlayer;
+            else if (rig is null)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    rig = player.Rig();
+                    if (rig is null)
+                    {
+                        yield return new WaitForSeconds(.1f);
+                        continue;
+                    }
+                }
+            }
+            var np = rig.gameObject.GetOrAddComponent<NetworkedPlayer>();
+            np.owner = player;
+            np.rig = rig;
+            networkedPlayers.Add(player, np);
         }
 
         float lastPropertyUpdate;
@@ -79,10 +128,5 @@ namespace Bark.Networking
             else
                 properties.Add(key, value);
         }
-
-        //public void ChangeProperties(Player player, Dictionary<string, object> properties)
-        //{
-
-        //}
     }
 }

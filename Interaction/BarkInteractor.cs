@@ -72,7 +72,6 @@ namespace Bark.Gestures
 
         public void Deselect(BarkInteractable interactable)
         {
-            Logging.Debug("Dropped", interactable.name, $"(priority {interactable.priority})");
             interactable.OnDeselect(this);
         }
 

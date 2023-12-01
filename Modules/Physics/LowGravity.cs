@@ -58,7 +58,7 @@ namespace Bark.Modules.Physics
 
         public override string Tutorial()
         {
-            return "Effect: Decreases the strength of gravity.";
+            return "Effect: Changes the strength of gravity. \n\nYou can modify the strength in the settings menu.";
         }
 
     }

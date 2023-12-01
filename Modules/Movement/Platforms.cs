@@ -9,6 +9,8 @@ using Bark.GUI;
 using BepInEx.Configuration;
 using GorillaLocomotion.Climbing;
 using HarmonyLib;
+using Bark.Modules.Physics;
+using Bark.Networking;
 
 namespace Bark.Modules.Movement
 {
@@ -33,7 +35,7 @@ namespace Bark.Modules.Movement
                 this.isLeft = isLeft;
                 this.name = "Bark Platform " + (isLeft ? "Left" : "Right");
                 this.Scale = 1;
-                foreach(Transform child in this.transform)
+                foreach (Transform child in this.transform)
                     child.gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 110;
                 var cloud = this.transform.Find("cloud");
                 cloudMaterial = cloud.GetComponent<Renderer>().material;
@@ -60,11 +62,13 @@ namespace Bark.Modules.Movement
             this.transform.position = hand.transform.position;
             this.transform.rotation = hand.transform.rotation;
             this.transform.localScale = scale * Player.Instance.scale;
+            collider.gameObject.layer = NoCollide.active ? NoCollide.layer : 0;
+            collider.gameObject.layer = NoCollide.active ? NoCollide.layer : 0;
             collider.enabled = !isSticky;
             if (isSticky)
                 Sounds.Play(111, .1f, this.isLeft);
             this.model.SetActive(true);
-            if(modelName == "storm cloud")
+            if (modelName == "storm cloud")
                 rain.Play();
         }
 
@@ -72,7 +76,7 @@ namespace Bark.Modules.Movement
         {
             isActive = false;
             collider.enabled = false;
-            if(!this.model.name.Contains("cloud"))
+            if (!this.model.name.Contains("cloud"))
                 this.model.SetActive(false);
             rain.Stop();
 
@@ -80,19 +84,19 @@ namespace Bark.Modules.Movement
 
         void FixedUpdate()
         {
-            if (isActive)  
+            if (isActive)
                 spawnTime = Time.time;
 
             float transparency = Mathf.Clamp((Time.time - spawnTime) / 1f, 0.2f, 1);
             float c = modelName == "storm cloud" ? .2f : 1;
             cloudMaterial.color = new Color(c, c, c, Mathf.Lerp(1, 0, transparency));
-            if(model.name == "doug")
+            if (model.name == "doug")
             {
                 wings.transform.localRotation = Quaternion.Euler(Time.frameCount % 2 == 0 ? -30 : 0, 0, 0);
             }
         }
 
-        
+
         public bool Sticky
         {
             set
@@ -306,6 +310,87 @@ namespace Bark.Modules.Movement
 
             return $"Press [{Input.Value}] to spawn a platform you can stand on. " +
                 $"Release [{Input.Value}] to disable it.";
+        }
+    }
+
+    public class NetworkedPlatformsHandler : MonoBehaviour
+    {
+        public GameObject platformLeft, platformRight;
+        public NetworkedPlayer networkedPlayer;
+
+        void Start()
+        {
+            try
+            {
+                networkedPlayer = this.gameObject.GetComponent<NetworkedPlayer>();
+                Logging.Debug("Networked player", networkedPlayer.owner.NickName, "turned on platforms");
+                platformLeft = Instantiate(Platforms.platformPrefab);
+                platformRight = Instantiate(Platforms.platformPrefab);
+                SetupPlatform(platformLeft);
+                SetupPlatform(platformRight);
+                platformLeft.name = networkedPlayer.owner.NickName + "'s Left Platform";
+                platformRight.name = networkedPlayer.owner.NickName + "'s Right Platform";
+                networkedPlayer.OnGripPressed += OnGripPressed;
+                networkedPlayer.OnGripReleased += OnGripReleased;
+            }
+            catch (Exception e) { Logging.Exception(e); }
+        }
+
+        void SetupPlatform(GameObject platform)
+        {
+            try
+            {
+                platform.SetActive(false);
+
+                foreach (Transform child in platform.transform)
+                {
+                    if (!child.name.Contains("cloud"))
+                    {
+                        child.gameObject.Obliterate();
+                    }
+                    else
+                    {
+                        child.GetComponent<Collider>()?.Obliterate();
+                        child.GetComponent<ParticleSystem>()?.Obliterate();
+                    }
+                }
+            }
+            catch (Exception e) { Logging.Exception(e); }
+        }
+
+        void OnGripPressed(NetworkedPlayer player, bool isLeft)
+        {
+            if (isLeft)
+            {
+                var leftHand = networkedPlayer.rig.leftHandTransform;
+                platformLeft.SetActive(true);
+                platformLeft.transform.position = leftHand.TransformPoint(new Vector3(-12, 18, -10) / 200f);
+                platformLeft.transform.rotation = leftHand.transform.rotation * Quaternion.Euler(215, 0, -15);
+            }
+            else
+            {
+                var rightHand = networkedPlayer.rig.rightHandTransform;
+                platformRight.SetActive(true);
+                platformRight.transform.localPosition = rightHand.TransformPoint(new Vector3(12, 18, 10) / 200f);
+                platformRight.transform.localRotation = rightHand.transform.rotation * Quaternion.Euler(-45, -25, -190);
+            }
+        }
+
+        void OnGripReleased(NetworkedPlayer player, bool isLeft)
+        {
+            if (isLeft)
+                platformLeft.SetActive(false);
+            else
+                platformRight.SetActive(false);
+        }
+
+        void OnDestroy()
+        {
+            Logging.Debug("Networked player", networkedPlayer.owner.NickName, "turned off platforms");
+            platformLeft?.Obliterate();
+            platformRight?.Obliterate();
+            networkedPlayer.OnGripPressed -= OnGripPressed;
+            networkedPlayer.OnGripReleased -= OnGripReleased;
         }
     }
 }
