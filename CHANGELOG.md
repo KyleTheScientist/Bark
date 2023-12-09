@@ -1,5 +1,17 @@
 # CHANGELOG.md
 
+## 1.5.1 (2023-December-9) - The Christmas Update
+
+### Features
+- Added the **Fireflies** mod which allows you to summon a firefly that will track a player in the lobby.
+- Added the **Join Bark Code** button which will let you join a private code for Bark users.
+- You can now summon Bark using the **B** button on your keyboard.
+- Added some Christmas lights to the menu
+
+### Fixed 
+- Fixed potions and teleport for the new update
+
+
 ## 1.5.0 (2023-November-11) - The Settings Update
 
 ### Features

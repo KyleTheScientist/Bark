@@ -74,15 +74,17 @@ namespace Bark.Modules.Multiplayer
                     sithlordHandParticles.Clear();
                     playerParticles.Stop();
                     playerParticles.Clear();
+                    rb.velocity = Player.Instance.bodyVelocityTracker.GetAverageVelocity(true, 0.15f, false) * 2;
                     return;
                 }
 
                 Vector3 end = sithLord.controllingHand.position + sithLord.controllingHand.up * 3 * sithLord.rig.scaleFactor;
                 Vector3 direction = end - Player.Instance.bodyCollider.transform.position;
                 rb.AddForce(direction * 10, ForceMode.Impulse);
-                float dampingThreshold = direction.magnitude * 20;
-                if (rb.velocity.magnitude > dampingThreshold)
-                    rb.velocity = rb.velocity.normalized * dampingThreshold;
+                float dampingThreshold = direction.magnitude * 10;
+                //if (rb.velocity.magnitude > dampingThreshold)
+                //if(direction.magnitude < 1)
+                rb.velocity = Vector3.Lerp(rb.velocity, Vector3.zero, .1f);
             }
 
         }

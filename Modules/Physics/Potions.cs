@@ -9,6 +9,7 @@ using BepInEx.Configuration;
 using Bark.Interaction;
 using System.Collections.Generic;
 using Bark.Networking;
+using HarmonyLib;
 
 namespace Bark.Modules.Physics
 {
@@ -20,6 +21,7 @@ namespace Bark.Modules.Physics
         private Transform holsterL, holsterR;
         private Vector3 holsterOffset = new Vector3(0.15f, -0.15f, 0.15f);
         public static SizeChanger sizeChanger;
+        public static Traverse sizeChangerTraverse, minScale, maxScale;
         public static Potions Instance;
         public static bool active;
 
@@ -66,9 +68,13 @@ namespace Bark.Modules.Physics
 
                 NetworkPropertyHandler.Instance?.ChangeProperty(playerSizeKey, Player.Instance.scale);
                 sizeChanger = new GameObject("Bark Size Changer").AddComponent<SizeChanger>();
-                sizeChanger.myType = SizeChanger.ChangerType.Static;
-                sizeChanger.minScale = Player.Instance.scale;
-                sizeChanger.maxScale = Player.Instance.scale;
+                sizeChangerTraverse = Traverse.Create(sizeChanger);
+                minScale = sizeChangerTraverse.Field("minScale");
+                maxScale = sizeChangerTraverse.Field("maxScale");
+                sizeChangerTraverse.Field("myType").SetValue(SizeChanger.ChangerType.Static);
+                sizeChangerTraverse.Field("staticEasing").SetValue(.5f);
+                minScale.SetValue(Player.Instance.scale);
+                maxScale.SetValue(Player.Instance.scale);
 
                 holsterL = new GameObject($"Holster (Left)").transform;
                 shrinkPotion = Instantiate(bottlePrefab);
@@ -90,6 +96,7 @@ namespace Bark.Modules.Physics
             try
             {
                 holster.SetParent(Player.Instance.bodyCollider.transform, false);
+                holster.localScale = Vector3.one;
                 var offset = new Vector3(
                     holsterOffset.x * (isLeft ? -1 : 1),
                     holsterOffset.y,
@@ -114,13 +121,13 @@ namespace Bark.Modules.Physics
             bool shrink = potion.gameObject == shrinkPotion;
             if (!shrink && !PositionValidator.Instance.isValidAndStable) return;
             float delta = shrink ? .99f : 1.01f;
-            delta = Mathf.Clamp(sizeChanger.minScale * delta, .03f, 20f);
+            delta = Mathf.Clamp(sizeChanger.MinScale * delta, .03f, 20f);
             if(delta < 1)
                 potion.gulp.pitch = MathExtensions.Map(Player.Instance.scale, 0, 1, 1.5f, 1);
             else
                 potion.gulp.pitch = MathExtensions.Map(Player.Instance.scale, 1, 20, 1, .5f);
-            sizeChanger.minScale = delta;
-            sizeChanger.maxScale = delta;
+            minScale.SetValue(delta);
+            maxScale.SetValue(delta);
             active = true;
         }
 
@@ -160,24 +167,25 @@ namespace Bark.Modules.Physics
             }
             foreach (SizeManager manager in FindObjectsOfType<SizeManager>())
             {
+                Traverse managerTraverse = Traverse.Create(manager);
+                Traverse scaleFromChanger = managerTraverse.Method("ScaleFromChanger");
+                Traverse controllingChanger = managerTraverse.Method("ControllingChanger");
                 try
                 {
                     if (manager.myType != SizeManager.SizeChangerType.LocalOffline)
                     {
                         var t = manager.targetRig?.transform;
                         if (!t) continue;
-                        float scale = manager.ScaleFromChanger(manager.ControllingChanger(t), t);
+                        float scale = scaleFromChanger.GetValue<float>(controllingChanger.GetValue<SizeChanger>(t), t);
                         t.localScale = Vector3.one * scale;
                         manager.targetRig.scaleFactor = scale;
                         NetworkPropertyHandler.Instance?.ChangeProperty(playerSizeKey, Player.Instance.scale);
                     }
                     else
                     {
+                        var t = manager.mainCameraTransform;
                         var player = manager.targetPlayer;
-                        float scale = manager.ScaleFromChanger(
-                                manager.ControllingChanger(manager.mainCameraTransform),
-                                manager.mainCameraTransform
-                            );
+                        float scale = scaleFromChanger.GetValue<float>(controllingChanger.GetValue<SizeChanger>(t), t);
                         player.turnParent.transform.localScale = Vector3.one * scale;
                         player.scale = scale;
                     }
@@ -223,6 +231,7 @@ namespace Bark.Modules.Physics
         }
         public static void TryGetSizeChangerForRig(VRRig rig, out SizeChanger sc)
         {
+            float size = rig.GetProperty<float>(Potions.playerSizeKey);
             if (!rig.HasProperty(Potions.playerSizeKey))
             {
                 sc = null;
@@ -231,20 +240,33 @@ namespace Bark.Modules.Physics
             if (sizeChangers.ContainsKey(rig))
             {
                 sc = sizeChangers[rig];
+                var sizeChangerTraverse = Traverse.Create(sc);
+                var minScale = sizeChangerTraverse.Field("minScale");
+                var maxScale = sizeChangerTraverse.Field("maxScale");
+
+                size = Mathf.Lerp(sc.MinScale, size, .75f * Time.fixedDeltaTime);
+                minScale.SetValue(size);
+                maxScale.SetValue(size);
             }
             else
             {
-                sc = new GameObject("Bark Size Changer").AddComponent<SizeChanger>();
-                sc.transform.SetParent(rig.transform);
-                sc.myType = SizeChanger.ChangerType.Static;
-                sc.minScale = rig.scaleFactor;
-                sc.maxScale = rig.scaleFactor;
+                size = Mathf.Lerp(rig.scaleFactor, size, .75f * Time.fixedDeltaTime);
+                sc = CreateSizeChanger(size);
                 sizeChangers.Add(rig, sc);
             }
-            float size = rig.GetProperty<float>(Potions.playerSizeKey);
-            size = Mathf.Lerp(sc.minScale, size, .75f * Time.fixedDeltaTime);
-            sc.minScale = size;
-            sc.maxScale = size;
+        }
+
+        public static SizeChanger CreateSizeChanger(float scale)
+        {
+            var sizeChanger = new GameObject("Bark Size Changer").AddComponent<SizeChanger>();
+            var sizeChangerTraverse = Traverse.Create(sizeChanger);
+            var minScale = sizeChangerTraverse.Field("minScale");
+            var maxScale = sizeChangerTraverse.Field("maxScale");
+            sizeChangerTraverse.Field("myType").SetValue(SizeChanger.ChangerType.Static);
+            sizeChangerTraverse.Field("staticEasing").SetValue(.5f);
+            minScale.SetValue(scale);
+            maxScale.SetValue(scale);
+            return sizeChanger;
         }
     }
 
@@ -370,6 +392,7 @@ namespace Bark.Modules.Physics
             transform.SetParent(holster);
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
 
             cork.enabled = false;
             cork.rb.isKinematic = true;

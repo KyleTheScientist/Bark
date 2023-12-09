@@ -18,8 +18,10 @@ namespace Bark.Patches
             if (!Plugin.inRoom) return;
             try
             {
-                if (Potions.active && t == Camera.main.transform)
+            if (Potions.active && t == GorillaTagger.Instance.offlineVRRig.transform)
+                {
                     __result = Potions.sizeChanger;
+                }
                 else if
                 (
                     !(Potions.ShowNetworkedSizes is null) &&
@@ -35,17 +37,17 @@ namespace Bark.Patches
         }
     }
 
-    [HarmonyPatch(typeof(SizeManager))]
-    [HarmonyPatch("LerpSizeToNormal", MethodType.Normal)]
-    public class SizeLerpPatch
-    {
-        private static void Postfix(float currentSize, ref float __result)
-        {
-            if (!Plugin.inRoom) return;
-            if (Mathf.Abs(1f - currentSize) < 0.05f)
-                __result = 1;
-            else
-                __result = Mathf.Lerp(currentSize, 1f, .75f * Time.fixedDeltaTime);
-        }
-    }
+    //[HarmonyPatch(typeof(SizeManager))]
+    //[HarmonyPatch("LerpSizeToNormal", MethodType.Normal)]
+    //public class SizeLerpPatch
+    //{
+    //    private static void Postfix(float currentSize, ref float __result)
+    //    {
+    //        if (!Plugin.inRoom) return;
+    //        if (Mathf.Abs(1f - currentSize) < 0.05f)
+    //            __result = 1;
+    //        else
+    //            __result = Mathf.Lerp(currentSize, 1f, .75f * Time.fixedDeltaTime);
+    //    }
+    //}
 }

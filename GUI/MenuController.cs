@@ -17,6 +17,7 @@ using BepInEx.Configuration;
 using UnityEngine.XR;
 using Bark.Modules.Misc;
 using Photon.Pun;
+using UnityEngine.InputSystem;
 
 namespace Bark.GUI
 {
@@ -36,6 +37,7 @@ namespace Bark.GUI
         public static InputTracker SummonTracker;
         public static ConfigEntry<string> SummonInput;
         public static ConfigEntry<string> SummonInputHand;
+        bool docked;
 
         protected override void Awake()
         {
@@ -82,6 +84,9 @@ namespace Bark.GUI
                     gameObject.AddComponent<Telekinesis>(),
                     gameObject.AddComponent<Fireflies>(),
                     gameObject.AddComponent<XRay>(),
+
+                    //// Misc
+                    gameObject.AddComponent<Lobby>(),
                 };
 
                 Halo halo = gameObject.AddComponent<Halo>();
@@ -134,6 +139,20 @@ namespace Bark.GUI
 
         void FixedUpdate()
         {
+            if (Keyboard.current.bKey.wasPressedThisFrame)
+            {
+                if (!docked)
+                    Summon();
+                else
+                {
+                    _rigidbody.isKinematic = false;
+                    _rigidbody.useGravity = true;
+                    transform.SetParent(null);
+                    AddBlockerToAllButtons(ButtonController.Blocker.MENU_FALLING);
+                    docked = false;
+                }
+            }
+
             // The potions tutorial needs to be updated frequently to keep the current size
             // up-to-date, even when the mod is disabled
             if (BarkModule.LastEnabled && BarkModule.LastEnabled == Potions.Instance)
@@ -154,6 +173,7 @@ namespace Bark.GUI
             {
                 button.RemoveBlocker(ButtonController.Blocker.MENU_FALLING);
             }
+            docked = true;
         }
 
         void BuildMenu()
@@ -174,7 +194,7 @@ namespace Bark.GUI
                 SetupInteraction();
                 SetupModPages();
                 SetupSettingsPage();
-                
+
                 transform.SetParent(Player.Instance.bodyCollider.transform);
                 ResetPosition();
                 Logging.Debug("Build successful.");
@@ -191,7 +211,7 @@ namespace Bark.GUI
             btnController.OnPressed += (obj, pressed) =>
             {
                 settingsPage.SetActive(pressed);
-                if(pressed)
+                if (pressed)
                     settingsPage.GetComponent<SettingsPage>().UpdateText();
                 modPage.SetActive(!pressed);
             };
@@ -336,7 +356,7 @@ namespace Bark.GUI
             {
                 modPages[i].gameObject.SetActive(i == pageIndex);
             }
-            modPage = modPages[pageIndex].gameObject; 
+            modPage = modPages[pageIndex].gameObject;
         }
 
         public void SetupInteraction()
@@ -346,6 +366,7 @@ namespace Bark.GUI
             this.OnSelectExit += (_, __) =>
             {
                 AddBlockerToAllButtons(ButtonController.Blocker.MENU_FALLING);
+                docked = false;
             };
             this.OnSelectEnter += (_, __) =>
             {

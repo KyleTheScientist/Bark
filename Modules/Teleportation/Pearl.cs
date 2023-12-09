@@ -114,7 +114,7 @@ namespace Bark.Modules.Teleportation
         Rigidbody rigidbody;
         AudioSource audioSource;
         LayerMask mask;
-        bool thrown = false;
+        bool thrown = false,landed = true;
         Material monkeMat, trailMat;
         VRRig playerRig;
         ParticleSystem trail;
@@ -184,6 +184,9 @@ namespace Bark.Modules.Teleportation
                 TeleportPatch.TeleportPlayer(hit.point + hit.normal * Player.Instance.scale / 2f);
                 audioSource.Play();
                 thrown = false;
+                landed = true;
+                trail.Stop();
+                this.transform.position = Vector3.down * 1000;
             }
         }
 

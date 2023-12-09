@@ -1,6 +1,7 @@
 ﻿using Bark.Extensions;
 using Bark.Gestures;
 using Bark.GUI;
+using Bark.Modules.Movement;
 using Bark.Patches;
 using Bark.Tools;
 using GorillaLocomotion;
@@ -13,11 +14,12 @@ namespace Bark.Modules.Multiplayer
     public class Firefly : MonoBehaviour
     {
         public VRRig rig;
-        public GameObject _object;
+        public GameObject fly;
         public ParticleSystem particles, trail;
+        Vector3 startPos;
         public Transform leftWing, rightWing;
         public float startTime;
-        public static float duration = 10f;
+        public static float duration = 1.5f;
         public ParticleSystemRenderer particleRenderer, trailRenderer;
         Renderer modelRenderer;
         public bool seek = false;
@@ -27,14 +29,14 @@ namespace Bark.Modules.Multiplayer
             try
             {
                 rig = this.gameObject.GetComponent<VRRig>();
-                _object = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Firefly")).gameObject;
-                modelRenderer = _object.transform.Find("Model").GetComponent<Renderer>();
-                leftWing = _object.transform.Find("Model/Wing L");
-                rightWing = _object.transform.Find("Model/Wing R");
-                particles = _object.GetComponent<ParticleSystem>();
+                fly = Instantiate(Plugin.assetBundle.LoadAsset<GameObject>("Firefly")).gameObject;
+                modelRenderer = fly.transform.Find("Model").GetComponent<Renderer>();
+                leftWing = fly.transform.Find("Model/Wing L");
+                rightWing = fly.transform.Find("Model/Wing R");
+                particles = fly.transform.Find("Particles").GetComponent<ParticleSystem>();
+                trail = fly.transform.Find("Trail").GetComponent<ParticleSystem>();
                 particleRenderer = particles.GetComponent<ParticleSystemRenderer>();
                 particleRenderer.material = Instantiate(particleRenderer.material);
-                trail = _object.transform.Find("Trail").GetComponent<ParticleSystem>();
                 trailRenderer = trail.GetComponent<ParticleSystemRenderer>();
                 trailRenderer.trailMaterial = Instantiate(trailRenderer.trailMaterial);
                 particles.Play();
@@ -43,6 +45,7 @@ namespace Bark.Modules.Multiplayer
             }
             catch (Exception e) { Logging.Exception(e); }
         }
+
 
         void FixedUpdate()
         {
@@ -61,22 +64,65 @@ namespace Bark.Modules.Multiplayer
                     //particleRenderer.material.SetColor("_EmissionColor", color);
                     trailRenderer.trailMaterial.color = color;
                     //trailRenderer.trailMaterial.SetColor("_EmissionColor", color);
+                    
+                    Vector3 targetPos = target.position + Vector3.up * .4f * rig.scaleFactor;
+                    fly.transform.LookAt(targetPos);
+
                     if (seek)
                     {
-                        _object.transform.position = Vector3.Slerp(
-                                         _object.transform.position,
-                                         target.position,
-                                         (Time.time - startTime) / duration);
-                        _object.transform.localScale = Vector3.Lerp(_object.transform.localScale, rig.scaleFactor * Vector3.one, .1f);
+                        float t = (Time.time - startTime) / duration;
+                        if (t < 1)
+                        {
+                            fly.transform.position = Vector3.Slerp(startPos, targetPos, t);
+                            fly.transform.localScale = Vector3.Lerp(
+                                Vector3.one * Player.Instance.scale,
+                                Vector3.one * rig.scaleFactor, t);
+                        }
+                        else
+                        {
+                            //make the fly circle around the player
+                            float angle = (Time.time * 5) % (Mathf.PI * 2);
+                            float x = Mathf.Cos(angle);
+                            float z = Mathf.Sin(angle);
+                            Vector3 offset = new Vector3(x, 0, z) * .2f * rig.scaleFactor;
+                            fly.transform.position = targetPos + offset;
+                            fly.transform.localScale = Vector3.one * rig.scaleFactor;
+
+                        }
+                        //trail.transform.localScale = Vector3.Lerp(
+                        //    Vector3.one * Player.Instance.scale,
+                        //    Vector3.one * rig.scaleFactor, .1f);
                     }
                 }
             }
             catch (Exception e) { Logging.Exception(e); }
         }
 
+        public void Reset(VRRig rig, Transform hand)
+        {
+            particles.Stop();
+            trail.Stop();
+            particles.Clear();
+            trail.Clear();
+            this.rig = rig;
+            this.hand = hand;
+            seek = false;
+            fly.transform.localScale = Vector3.one * Player.Instance.scale;
+            fly.transform.position = hand.position;
+        }
+
+        public void Launch()
+        {
+            startTime = Time.time;
+            startPos = fly.transform.position;
+            seek = true;
+            particles.Play();
+            trail.Play();
+        }
+
         void OnDestroy()
         {
-            _object?.Obliterate();
+            fly?.Obliterate();
         }
     }
 
@@ -116,6 +162,7 @@ namespace Bark.Modules.Multiplayer
                     firefly.Obliterate();
                 }
             }
+            StopAllCoroutines();
             fireflies.RemoveAll(fly => fly is null);
             bool isLeft = tracker == GestureTracker.Instance.leftGrip;
             var interactor = isLeft ? GestureTracker.Instance.leftPalmInteractor : GestureTracker.Instance.rightPalmInteractor;
@@ -127,21 +174,27 @@ namespace Bark.Modules.Multiplayer
         void FixedUpdate()
         {
             if (!charging || !hand) return;
-            for(int i = 0; i < fireflies.Count; i++)
+            for (int i = 0; i < fireflies.Count; i++)
             {
                 float angle = (i * Mathf.PI * 2 / fireflies.Count) + Time.time;
                 float x = Mathf.Cos(angle);
                 float z = Mathf.Sin(angle);
                 Vector3 offset = new Vector3(x, z, 0);
-                var fly = fireflies[i]._object;
+                var fly = fireflies[i].fly;
                 fly.transform.position = hand.transform.TransformPoint(offset * 2);
-                fly.transform.LookAt(fireflies[i].rig.transform);
+                fly.transform.localScale = Vector3.one * Player.Instance.scale;
             }
         }
 
-        void OnGripReleased(InputTracker _)
+        void OnGripReleased(InputTracker tracker)
         {
-            StartCoroutine(ReleaseFireflies());
+            if (
+                tracker == GestureTracker.Instance.leftGrip && hand == GestureTracker.Instance.leftPalmInteractor.transform
+                ||
+                tracker == GestureTracker.Instance.rightGrip && hand == GestureTracker.Instance.rightPalmInteractor.transform)
+            {
+                StartCoroutine(ReleaseFireflies());
+            }
         }
 
         IEnumerator ReleaseFireflies()
@@ -154,12 +207,8 @@ namespace Bark.Modules.Multiplayer
 
             foreach (var firefly in fireflies)
             {
-                firefly.startTime = Time.time;
-                firefly.seek = true;
-                firefly._object.transform.localScale = Vector3.zero;
-                firefly.particles.Play();
-                firefly.trail.Play();
-                Sounds.Play(Sounds.Sound.BeeSqueeze, .1f, hand == GestureTracker.Instance.leftPalmInteractor.transform); 
+                firefly.Launch();
+                Sounds.Play(Sounds.Sound.BeeSqueeze, .1f, hand == GestureTracker.Instance.leftPalmInteractor.transform);
                 yield return new WaitForSeconds(.05f);
             }
         }
@@ -177,16 +226,8 @@ namespace Bark.Modules.Multiplayer
                     if (rig != null && !rig.isOfflineVRRig)
                     {
                         var firefly = rig.gameObject.GetOrAddComponent<Firefly>();
-                        firefly.particles.Stop();
-                        firefly.trail.Stop();
-                        firefly.particles.Clear();
-                        firefly.trail.Clear();
-                        firefly.rig = rig;
-                        firefly.hand = hand;
-                        firefly.seek = false;
-                        firefly.particles.transform.localScale = Vector3.one * Player.Instance.scale;
-                        firefly.particles.transform.position = hand.position;
-                        if (!fireflies.Contains(firefly)) 
+                        firefly.Reset(rig, hand);
+                        if (!fireflies.Contains(firefly))
                             fireflies.Add(firefly);
                     }
                 }
@@ -236,8 +277,8 @@ namespace Bark.Modules.Multiplayer
         }
 
         //public static ConfigEntry<int> PunchForce;
-        public static void BindConfigEntries()
-        {
+        //public static void BindConfigEntries()
+        //{
             //Logging.Debug("Binding", DisplayName, "to config");
             //PunchForce = Plugin.configFile.Bind(
             //    section: DisplayName,
@@ -245,7 +286,7 @@ namespace Bark.Modules.Multiplayer
             //    defaultValue: 5,
             //    description: "How much force will be applied to you when you get punched"
             //);
-        }
+        //}
 
         public override string GetDisplayName()
         {
@@ -254,7 +295,7 @@ namespace Bark.Modules.Multiplayer
 
         public override string Tutorial()
         {
-            return "Effect: Press [Grip] to summon trails that will follow each player upon release";
+            return "Effect: Hold [Grip] to summon fireflies that will follow each player upon release";
         }
     }
 }

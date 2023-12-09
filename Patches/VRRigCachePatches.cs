@@ -19,7 +19,6 @@ namespace Bark.Patches
 
         static IEnumerable<MethodBase> TargetMethods()
         {
-            Logging.Debug(typeof(VRRig).AssemblyQualifiedName);
             return new MethodBase[] {
                 AccessTools.Method("VRRigCache:RemoveRigFromGorillaParent")
             };

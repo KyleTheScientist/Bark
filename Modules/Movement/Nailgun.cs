@@ -88,17 +88,6 @@ namespace Bark.Modules.Movement
             return null;
         }
 
-        void MakeSlideHelper(Transform parent)
-        {
-            GameObject slideHelper = new GameObject("SlideHelper");
-            slideHelper.transform.SetParent(parent, false);
-            slideHelper.AddComponent<GorillaSurfaceOverride>().overrideIndex = 89;
-            var climbable = slideHelper.AddComponent<GorillaClimbable>();
-            climbable.snapX = false;
-            climbable.snapY = false;
-            climbable.snapZ = false;
-        }
-
         Vector3? GetEndpoint(Vector3 origin, Vector3 forward)
         {
             Ray ray = new Ray(origin, forward);

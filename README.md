@@ -35,10 +35,13 @@
 * `Teleport` - **Make a triangle with your thumbs and index fingers and peer through it** to initiate a teleport. Use your head to aim more finely.
 ### Multiplayer
 * `Boxing` - Better known as "punch mod", this allows the player to be punched around by others in the lobby. You can't be punched while touching the ground.
+* `Fireflies` - Press [Grip] to summon a firefly for each player in the lobby. Release [Grip] to send them flying to their player.
 * `Piggyback` - Allows you to ride other players! To mount someone, **have them give a thumbs-up**, and then **grip nearby them**. If they **give you a thumbs down** at any point, you'll stop riding them. *Consent is important!*
 * `Telekinesis` - If another player points at you with their grip button pressed, they can
   pick you up and throw you from afar.
 * `X-Ray` - Allows you to see other players through walls.
+### Miscellaneous
+* `Join Bark Code` - Allows you to join a private lobby for Bark users.
 
 These modules can be useful for exploring the game world, experimenting with gameplay mechanics, or just having fun with friends. They are **not** meant to be used to harass others, which can result in a ban from the game.
 

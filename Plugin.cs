@@ -14,6 +14,9 @@ using Bark.Networking;
 using GorillaLocomotion;
 using UnityEngine.UI;
 using HarmonyLib;
+using System.Collections;
+using GorillaNetworking;
+using Photon.Pun;
 
 namespace Bark
 {
@@ -23,6 +26,7 @@ namespace Bark
 
     public class Plugin : BaseUnityPlugin
     {
+        public static Plugin Instance;
         public static bool initialized, inRoom;
         bool pluginEnabled = false;
         public static AssetBundle assetBundle;
@@ -34,6 +38,7 @@ namespace Bark
         GestureTracker gt;
         NetworkPropertyHandler nph;
 
+
         public void Setup()
         {
             if (menuController || !pluginEnabled || !inRoom) return;
@@ -41,7 +46,7 @@ namespace Bark
             try
             {
                 gt = this.gameObject.GetOrAddComponent<GestureTracker>();
-                nph = this.gameObject.GetOrAddComponent<NetworkPropertyHandler>();
+                nph = this.gameObject.GetOrAddComponent<NetworkPropertyHandler>();  
                 menuController = Instantiate(monkeMenuPrefab).AddComponent<MenuController>();
             }
             catch (Exception e)
@@ -69,6 +74,7 @@ namespace Bark
         {
             try
             {
+                Instance = this;
                 Logging.Init();
                 CI.Init();
                 configFile = new ConfigFile(Path.Combine(Paths.ConfigPath, "Bark.cfg"), true);
@@ -205,6 +211,34 @@ namespace Bark
             Logging.Debug("RoomLeft");
             inRoom = false;
             Cleanup();
+        }
+
+        public void JoinLobby(string name, string gamemode)
+        {
+            StartCoroutine(JoinLobbyInternal(name, gamemode));
+        }
+
+        IEnumerator JoinLobbyInternal(string name, string gamemode)
+        {
+            PhotonNetworkController.Instance.AttemptDisconnect();
+            do
+            {
+                yield return new WaitForSeconds(1f);
+                Logging.Debug("Waiting to disconnect");
+            }
+            while (PhotonNetwork.InRoom);
+            
+            string gamemodeCache = GorillaComputer.instance.currentGameMode;
+            Logging.Debug("Changing gamemode from", gamemodeCache, "to", gamemode);
+            GorillaComputer.instance.currentGameMode = gamemode;
+            PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(name);
+
+            while (!PhotonNetwork.InRoom)
+            {
+                yield return new WaitForSeconds(1f);
+                Logging.Debug("Waiting to connect");
+            }
+            GorillaComputer.instance.currentGameMode = gamemodeCache;
         }
     }
 }
